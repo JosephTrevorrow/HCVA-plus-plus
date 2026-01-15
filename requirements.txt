@@ -1,0 +1,9 @@
+pandas 
+argparse
+numpy
+scikit-learn
+juliapkg
+juliacall
+matplotlib
+cvxpy[ECOS,GUROBI]
+pyreadstat
