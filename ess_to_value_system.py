@@ -1,14 +1,4 @@
 """
-In this file we read the raw data from the ESS and we process
-the data according to the section 6 of the article.
-
-Religious maps to Traditionalist (unintentionally so)
-Non-Religious maps to Hedonist (unintentionally so)
-div is the mapping to the single action (for/against basic income scheme)
-'adp' is mentioned here but not used in the single action example. Here it is kept as a placeholder should two actions be required.
-"""
-
-"""
 This file has been adapted from work by Lera-Leri et al.. You can find their repository here: https://github.com/RogerXLera/ValueSystemsAggregation
 """
 
@@ -17,58 +7,7 @@ import csv
 import copy
 import numpy as np
 
-def process_action(element):
-    category_dic = {
-        4: 1,
-        3: 2,
-        2: 3,
-        1: 4
-    }
-    try:
-        # against the scheme 
-        div_value = element['basinc']
-        if div_value > 4:
-            raise BaseException
-        div_support = -(div_value - 2.5) / 1.5
-        # for the scheme
-        adp_value = category_dic[element['basinc']]
-        adp_support = -(adp_value - 2.5) / 1.5
-        return adp_support, div_support
-    except BaseException:
-        return None, None
-
-def process_principle(dataframe, caseno):
-    """
-    In this function we count the number of religious or non-religious
-    participants per country according to the proceeding Serramià et al. describe
-    INPUT: dataframe (pandas dataframe with the results of the EVS 2017)
-           country (code of the european country, e.g. ES for Spain)
-           caseno (number of case per country)
-    Return: tuple (tuple with three values: religious: True if religious
-                                            adp: float from -1, 1
-                                            div: float from -1, 1)
-    """
-    # religious or not v6 in EVS2017
-    dataframe_row = dataframe[dataframe['idno'] == caseno].iloc[0]
-    # smdfslv here is the variable that represents the egalitarianism, but this has been dropped
-    egalitarianism = dataframe_row['smdfslv']
-
-    try:
-        if egalitarianism == 5 or egalitarianism == 4:
-            egalitarian = False
-        elif egalitarianism == 2 or egalitarianism == 1:
-            egalitarian = True
-        else:
-            egalitarian = None
-    except BaseException:
-        egalitarian = None
-
-    if egalitarian is None:
-        return None
-    else:
-        return (egalitarian)
-
-def process_all_country(ess_df, country_col_name, values_dict):
+def process_all_country_values(ess_df, country_col_name, values_dict):
     """
     Docstring for process_all_country
     
@@ -126,110 +65,85 @@ def process_all_country(ess_df, country_col_name, values_dict):
     value_preferences = {}
     for country, values_list in country_values.items():
         # For every value in the values list, compare it to every other value
-        for value in values_list:
-            compare_list = values_list.remove(value)
-            for compare_val in compare_list:
-                diff = value - compare_val
-                
-                
+        diff = values_list[:, np.newaxis] - values_list
+        value_preferences[country] = copy.copy(diff)
+        """
+        array([1, 4, 6])
+        [0,0], [0, 1]
+        array([[ 0, -3, -5],
+               [ 3,  0, -2],
+               [ 5,  2,  0]])
 
-            
-    return
+        array([uni, ben, tra, con, sec, pow, ach, hed, sti, sel])
+        array([[ [uni, uni], [uni, ben], [uni, tra]],
+               [ [ben, uni], [ben, ben], [ben, tra]],
+               [ [tra, uni],  [tra,ben],  [tra, tra]]])
+        """
+    print("---\n")
+    print("Value Preferences:\n", value_preferences['AT'])
+    return value_preferences
     
-
-
-def process_country(dataframe, country, values_dict):
+def process_all_country_actions(ess_df, country_col_name, value_preferences, actions_dict, values_dict):
     """
-    Process information for each country
-    INPUT: dataframe (pandas dataframe with the results of the ESS)
-           country (code of the european country, e.g. ES for Spain)
-    Return: dict with # of religious and non-religious citizens,
-            a_rl(ad), a_pr(ad), a_rl(dv) and a_pr(dv)
+    Given a country's value preferences, find their action value judgements
+    INPUT: ess_df 
+        country_col_name
+        value_preferences: NxN np.array, comparing each value to every other value
+        actions_dict: dict of actions in form str(action_name) : question_id
     """
-    df = dataframe[dataframe['cntry'] == country]
-    n_row = df.shape[0]
+    # Find the list of all countries
+    ess_country_list = ess_df[country_col_name].unique()
 
-    # setting counters to compute the mean of each judgement value:
-    # a_rl(ad), a_pr(ad), a_rl(dv) and a_pr(dv)
-    # Religous or not are our values
-    n_religious = 0
-    n_nonreligious = 0
-    n_rel_adp = 0
-    n_nonrel_adp = 0
-    n_rel_div = 0
-    n_nonrel_div = 0
-    sum_a_adp_rel = 0
-    sum_a_adp_nonrel = 0
-    sum_a_div_rel = 0
-    sum_a_div_nonrel = 0
+    # Iterate through each country and find their actions
+    country_actions = {}
+    for country in ess_country_list:
+        country_df = ess_df.loc[ess_df[country_col_name] == country]
+        temp_actions = []
+        # Iterate through and find all values, summing for each 
+        #   question. temp_values will be in sameZ order as values_dict
+        # Then find the central preference by finding mean of each of these.
+        for _, action_id in actions_dict.items():
+            # No need to invert actions, as score between 1-10, where 10 is GOOD, 1 is BAD
+            # Find mean score for action (1 action, no need to find average of set)
+            mean_score = country_df[action_id].sum() / len(country_df)
+            # Centre the mean score. B
+            if action_id == "imbgeco":
+                # Because each action is between 1-10
+                centred_score = (((mean_score-1) * 2)/9) - 1
+            else:
+                # Actions are between 1-5, where 1 = agree strongly, 
+                # and 5 = disagree strongly. 
+                centred_score = (((mean_score-1) * 2)/4) - 1
+            temp_actions.append(copy.copy(centred_score))
+        # country_values contains the averaged, centred action for each action
+        country_actions[country] = copy.copy(temp_actions)
 
-    for i in range(0, n_row):
-        caseno = df.iloc[i]['idno']
-        tuple_ = process_participant(df, caseno, values_dict)  # information of the case
-        if tuple_:
-            if tuple_[0]:  # True for religious citizens
-                n_religious += 1
-                # ignore missing data
-                if tuple_[1] is not None:  # adopt judgement
-                    n_rel_adp += 1
-                    sum_a_adp_rel += tuple_[1]
-                if tuple_[2] is not None:  # divorce judgement
-                    n_rel_div += 1
-                    sum_a_div_rel += tuple_[2]
-            else:  # non-religious citizens
-                n_nonreligious += 1
-                if tuple_[1] is not None:  # adopt judgement
-                    n_nonrel_adp += 1
-                    sum_a_adp_nonrel += tuple_[1]
-                if tuple_[2] is not None:  # divorce judgement
-                    n_nonrel_div += 1
-                    sum_a_div_nonrel += tuple_[2]
-        else:
-            continue
+    # Convert responses to action judgements for every value considering the value preferences
+    action_judgements = {}
+    value_label_count = 0
+    # for every cell in the top triangle of the matrix (as it is symmetric), check pref, add action judgement for that cell.
+    #   Action judgement: A country that prefers value X over Y, supports the action Z amount.
+    #   Mathematically: action judgement for value x>y = centred_action * value_preference_p>y
+    # numpy arrays will iterate over each row
+    for value_pref_row in value_preferences:
+        for value_pref in value_pref_row:
+            # if the preference is positive (it prefers this value more than another
+            if value_pref > 0:
+                action_judgements[]
+            else:
+                action_judgements[]
+        # Every value where
+        value_label_count += 1
 
-    # Normalise the preferences and add to new vars
-    normalised_religious = n_religious / (n_religious+n_nonreligious)
-    normalised_nonreligious = n_nonreligious / (n_religious+n_nonreligious)
-    print("country", country)
-    return {
-        'rel_sum': n_religious,
-        'nonrel_sum': n_nonreligious,
-        'rel' : normalised_religious,
-        'nonrel' : normalised_nonreligious,
-        'a_div_rel': sum_a_div_rel / n_rel_div,
-        'a_div_nonrel': sum_a_div_nonrel / n_nonrel_div
-    }
+    # Normalise the action judgements between -1 and 1.
+    return action_judgements
 
-def principle_process_country(dataframe, country):
+def process_all_country_principles(ess_df, country_col_name, principles_dict):
     """
-    Process information for each country
-    INPUT: dataframe (pandas dataframe with the results of the EVS 2017)
-           country (code of the european country, e.g. ES for Spain)
-    Return: dict with # of religious and non-religious citizens,
-            a_rl(ad), a_pr(ad), a_rl(dv) and a_pr(dv)
+    
     """
-    df = dataframe[dataframe['cntry'] == country]
-    n_row = df.shape[0]
-    # setting counters to compute the mean of each judgement value:
-    # a_rl(ad), a_pr(ad), a_rl(dv) and a_pr(dv)
-    n_religious = 0
-    n_nonreligious = 0
-
-    for i in range(0, n_row):
-        caseno = df.iloc[i]['idno']
-        value = process_principle(df, caseno)  # information of the case
-        if value:
-            n_religious += 1
-        else:  # non-religious citizens
-            n_nonreligious += 1
-
-    print("country", country)
-    print('n_religious: ', n_religious)
-    print('n_nonreligious: ', n_nonreligious)
-    return {
-        'rel': n_religious,
-        'nonrel': n_nonreligious,
-    }
+    
+    return
 
 if __name__ == '__main__':
     df = pd.read_csv("ESS9-private/ESS9e03_2.csv")
@@ -267,6 +181,22 @@ if __name__ == '__main__':
         #'brexit' : ["vteumbgb"],
         'immigration': ["imbgeco"] # Immigration bad or good for country's economy
     }
+    """
+    0	Bad for the economy
+    1	1
+    2	2
+    3	3
+    4	4
+    5	5
+    6	6
+    7	7
+    8	8
+    9	9
+    10	Good for the economy
+    77	Refusal*
+    88	Don't know*
+    99	No answer*
+    """
 
     dicts = [values_dict, principle_dict, actions_dict]
     all_interested_cols = []
@@ -278,8 +208,12 @@ if __name__ == '__main__':
     print(df)
 
     country_col_name = 'cntry'
-    process_all_country(df, country_col_name, values_dict)
+    value_preferences = process_all_country_values(df, country_col_name, values_dict)
+    process_all_country_actions(df, country_col_name, value_preferences, actions_dict, values_dict)
 
+
+
+    # Old start:
     # we create a temp dictionary to store the data per country
     dictionary = {}
     for country in list(df['cntry'].unique()):
@@ -305,3 +239,4 @@ if __name__ == '__main__':
     with open('20-01-2026-agent-data.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerows(csv_rows)
+    # Old end
