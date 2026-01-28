@@ -112,8 +112,9 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
             # Find mean score for action (1 action, no need to find average of set)
             mean = country_df[action_id].mean()
             mean_score = mean.iloc[0]
-            # Centre the mean score. B
-            if action_id == "imbgeco":
+            # Centre the scores between -1 and 1. action_id is always a list of size 1
+            # immigration is between 1-10, where 10 is GOOD, 1 is BAD, others are between 1-5
+            if action_id[0] == "imbgeco":
                 # Because each action is between 1-10
                 centred_score = (((mean_score-1) * 2)/9) - 1
             else:
@@ -123,7 +124,6 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
             temp_actions.append(copy.copy(centred_score))
         # country_values contains the averaged, centred action for each action
         country_actions[country] = copy.copy(temp_actions)
-
     # Second, convert country actions into action judgements considering their value preferences
     action_judgements = {}
     for country in ess_country_list:
@@ -151,21 +151,15 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
                 for value_pref, j in zip(value_pref_row, range(0, len(value_pref_row))):
                     # if the preference is positive (it prefers this value more than another)
                     # TODO: Now prefs are normalised, the preferences are between 0-1, so midpoint is 0.5!
-                    to_save = action * value_pref
-                    if value_pref > 0:
+                    pref_strength = 2*(value_pref-0.5)
+                    to_save = action * pref_strength
+                    if value_pref > 0.5:
                         temp_key = actions_keys[x] + "_" + value_names[i] + "_over_" + value_names[j]
                         temp_action_judgements[temp_key] = copy.copy(to_save)
                     else:
                         temp_key = actions_keys[x] + "_" + value_names[j] + "_over_" + value_names[i]
                         temp_action_judgements[temp_key] = copy.copy(to_save)
-
-
-            # Normalise the action judgements found between -1 and 1.
-            for judgement in temp_action_judgements:
-                judgement = judgement # temp
-
             action_judgements[country] = copy.deepcopy(temp_action_judgements)
-    print("Test: action judgements for AT: ", action_judgements['AT'])
     return action_judgements
 
 def process_all_country_principles(ess_df, country_col_name, principles_dict):
@@ -208,7 +202,7 @@ if __name__ == '__main__':
     }
 
     actions_dict = {
-        #'brexit' : ["vteumbgb"],
+        #'brexit' : "vteumbgb",
         'immigration': ["imbgeco"] # Immigration bad or good for country's economy
     }
     """
