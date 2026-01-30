@@ -6,6 +6,7 @@ import pandas as pd
 import csv
 import copy
 import numpy as np
+from datetime import datetime as dt
 
 def process_all_country_values(ess_df, country_col_name, values_dict):
     """
@@ -24,14 +25,21 @@ def process_all_country_values(ess_df, country_col_name, values_dict):
         country_df = ess_df.loc[ess_df[country_col_name] == country]
         temp_values = []
         # Iterate through and find all values, summing for each 
-        #   question. temp_values will be in sameZ order as values_dict
+        #   question. temp_values will be in same order as values_dict
         # Then find the central preference by finding mean of each of these.
+
+        # For principles: We keep the iteration through the dict but note that for standard L_p regression there is only one P, with 3 questions.
         for _, values in values_dict.items():
             temp_questions = []
             for question in values:
                 # Invert all the items such that higher scores represent greater importance (inverted = 1 = worst, 6 = best)
-                country_df[question] = country_df[question].values[::-1]
-                # Find mean score for every col
+                # We base our principle preferences on how egalitarian the preferences are: therefore we don't invert the last question
+                #   then, utilitarian support is the opposite of egalitarian support, creating our preference matrix.
+                if question == "sofwrk":
+                    country_df[question] = country_df[question].values
+                else:
+                    country_df[question] = country_df[question].values[::-1]
+                # Find mean_score for every col
                 mean_score = country_df[question].sum() / len(country_df)
                 # temp_questions contains the mean score of every question for that specific value, in thesame order as the list for the values_dict
                 temp_questions.append(copy.copy(mean_score))
@@ -58,7 +66,7 @@ def process_all_country_values(ess_df, country_col_name, values_dict):
         temp_country_vals = np.array([np.mean(v) for v in country_values[country]])  
         country_values[country] = copy.copy(temp_country_vals) 
 
-    print("VERIFICATION, FR VALUES: ", country_values['FR'])
+    print("Verification of raw values: ", country_values)
 
     ## Now we have a list of centred country_values for every country, 
     # we find the preferences between each value and every other value, and store
@@ -81,10 +89,7 @@ def process_all_country_values(ess_df, country_col_name, values_dict):
                [ [tra, uni],  [tra,ben],  [tra, tra]]])
         """
     print("---\n")
-    print("Value Preferences:\n", value_preferences['AT'])
-
-    # TODO: normalise the value preferences
-
+    print("Verification, AT vals/prin: ", value_preferences['AT'])
     return value_preferences
     
 def process_all_country_actions(ess_df, country_col_name, value_preferences, actions_dict, values_dict):
@@ -150,7 +155,6 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
                 # for every value in the value row
                 for value_pref, j in zip(value_pref_row, range(0, len(value_pref_row))):
                     # if the preference is positive (it prefers this value more than another)
-                    # TODO: Now prefs are normalised, the preferences are between 0-1, so midpoint is 0.5!
                     pref_strength = 2*(value_pref-0.5)
                     to_save = action * pref_strength
                     if value_pref > 0.5:
@@ -160,14 +164,8 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
                         temp_key = actions_keys[x] + "_" + value_names[j] + "_over_" + value_names[i]
                         temp_action_judgements[temp_key] = copy.copy(to_save)
             action_judgements[country] = copy.deepcopy(temp_action_judgements)
+    print("Verification, AT actions: ", action_judgements['AT'])
     return action_judgements
-
-def process_all_country_principles(ess_df, country_col_name, principles_dict):
-    """
-    
-    """
-    
-    return
 
 if __name__ == '__main__':
     df = pd.read_csv("ESS9-private/ESS9e03_2.csv")
@@ -195,11 +193,44 @@ if __name__ == '__main__':
                 "Self-Direction": ["ipcrtiv", "impfree"],  
     }
 
+    #principle_dict = {
+    #    "income_dist" : ["sofrdst"],  # Society fair when income and wealth is equally distributed
+    #    "work_earnings" : ["sofrwrk"], # Society fair when hard-working people earn more than others
+    #    "care_of_poor" : ["sofrpr"] # Society fair when takes care of poor and in need, regardless of what give back
+    #}
+
+    # Principles are different than values, as instead of like me/not like me, it is agree/disagree.
     principle_dict = {
-        "income_dist" : ["sofrdst"],  # Society fair when income and wealth is equally distributed
-        "work_earnings" : ["sofrwrk"], # Society fair when hard-working people earn more than others
-        "care_of_poor" : ["sofrpr"] # Society fair when takes care of poor and in need, regardless of what give back 
+        "Egalitarian" : ["sofrdst", "sofrpr", "sofrwrk"],
     }
+    """ "sofrdst" 	Society fair when income and wealth is equally distributed
+    1 	Agree strongly
+    2 	Agree
+    3 	Neither agree nor disagree
+    4 	Disagree
+    5 	Disagree strongly
+    7 	Refusal*
+    8 	Don't know*
+    9 	No answer*
+    "sofrpr" 	Society fair when takes care of poor and in need, regardless of what give back"
+    1 	Agree strongly
+    2 	Agree
+    3 	Neither agree nor disagree
+    4 	Disagree
+    5 	Disagree strongly
+    7 	Refusal*
+    8 	Don't know*
+    9 	No answer*
+     "sofwrk" 	Society fair when hard-working people earn more than others
+    1 	Agree strongly
+    2 	Agree
+    3 	Neither agree nor disagree
+    4 	Disagree
+    5 	Disagree strongly
+    7 	Refusal*
+    8 	Don't know*
+    9 	No answer*
+    """
 
     actions_dict = {
         #'brexit' : "vteumbgb",
@@ -231,36 +262,51 @@ if __name__ == '__main__':
     df = df.dropna(subset=all_interested_cols)
     print(df)
 
+    # Remove irrelevant answers (refusal/don't know/no answer)
+    #   count the number of irrelevant answers per country, to report back.
+    for key, item_list in values_dict.items():
+        for item in item_list:
+            incorrect_value_responses = [7, 8, 9]
+            print("For value item ", item, "I am deleting ", len(df.loc[df[item].isin(incorrect_value_responses)]), " entries.")
+            df = df.loc[~df[item].isin(incorrect_value_responses)]
+    for key, item_list in principle_dict.items():
+        for item in item_list:
+            incorrect_principle_responses = [7, 8, 9]
+            print("For principle item ", item, "I am deleting ", len(df.loc[df[item].isin(incorrect_principle_responses)]), " entries.")
+            df = df.loc[~df[item].isin(incorrect_principle_responses)]
+    for key, item_list in actions_dict.items():
+        for item in item_list:
+            incorrect_action_responses = [77, 88, 99]
+            print("For action item ", item, "I am deleting ", len(df.loc[df[item].isin(incorrect_action_responses)]), " entries.")
+            df = df.loc[~df[item].isin(incorrect_action_responses)]
+            print("I now have ", len(df), " entries left.")
+
     country_col_name = 'cntry'
+    print("VALUES:")
     value_preferences = process_all_country_values(df, country_col_name, values_dict)
-    process_all_country_actions(df, country_col_name, value_preferences, actions_dict, values_dict)
+    print("ACTIONS:")
+    action_judgements = process_all_country_actions(df, country_col_name, value_preferences, actions_dict, values_dict)
+    print("PRINCIPLES:")
+    # because principle preferences are just preferences of each principle over every other principle, use same func.
+    principle_preferences = process_all_country_values(df, country_col_name, principle_dict)
 
-
-
-    # Old start:
-    # we create a temp dictionary to store the data per country
-    dictionary = {}
-    for country in list(df['cntry'].unique()):
-        temp_list = ['cntry', 'idno']
-        temp_list.extend(all_interested_cols)
-        print(temp_list)
-        dict_ = process_country(
-            df[temp_list], country, values_dict)
-        dictionary.update({country: dict_})
-    columns = ['country']
-    for key in dictionary[country].keys():
-        columns.append(key)
-    csv_rows = [columns]
-    for country in dictionary.keys():
-        csv_rows2 = [country]
-        for item in dictionary[country].keys():
-            csv_rows2.append(dictionary[country][item])
-        csv_rows.append(csv_rows2)
-    
-    # we store the data in a file
-    #with open('principle_processed_data_ess.csv', 'w', newline='') as csvfile:
-
-    with open('20-01-2026-agent-data.csv', 'w', newline='') as csvfile:
+    # TODO: Store in a file for aggregation
+    now = dt.now().isoformat()
+    principles_fn = now+"_ess_principles.csv"
+    # Principles:
+    with open(principles_fn, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerows(csv_rows)
-    # Old end
+        writer.writerow(["Country", "Principle"])
+        for country, values in principle_preferences.items():
+            for value in values:
+                writer.writerow([country, value])
+
+    # Values and actions:
+    value_sys_fn = now+"_ess_value_system.csv"
+    with open(value_sys_fn, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        # Header
+        writer.writerow(["Country"]+list(values_dict.keys())+list(actions_dict.keys()))
+        # Data
+        for country, values, actions in zip(df[country_col_name], value_preferences.values(), action_judgements.values()):
+            writer.writerow([country]+list(values)+list(actions))

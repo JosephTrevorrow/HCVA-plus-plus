@@ -126,8 +126,7 @@ if __name__ == '__main__':
             reader = csv.reader(csv_file)
             next(reader) # get rid of header row
             for row in reader:
-                # Normalise results (for real-world input)
-                temp_prefernce = float(row[1]) / (float(row[1]) + float(row[2]))
+                temp_prefernce = float(row[1])
                 principle_preferences.append(copy.copy(temp_prefernce))
         consensus_preference = sum(principle_preferences) / len(principle_preferences)
         print("Consensus preference is: ", consensus_preference)
