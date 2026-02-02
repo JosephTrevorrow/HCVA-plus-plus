@@ -88,8 +88,6 @@ def process_all_country_values(ess_df, country_col_name, values_dict):
                [ [ben, uni], [ben, ben], [ben, tra]],
                [ [tra, uni],  [tra,ben],  [tra, tra]]])
         """
-    print("---\n")
-    print("Verification, AT vals/prin: ", value_preferences['AT'])
     return value_preferences
     
 def process_all_country_actions(ess_df, country_col_name, value_preferences, actions_dict, values_dict):
@@ -102,9 +100,11 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
     """
     # Find the list of all countries
     ess_country_list = ess_df[country_col_name].unique()
+    value_names = list(values_dict.keys())
+    action_names = list(actions_dict.keys())
 
-    # First, iterate through each country and find their actions
-    country_actions = {}
+    # First, iterate through each country and find their centred actions (between -1 and 1)
+    country_centred_actions = {}
     for country in ess_country_list:
         country_df = ess_df.loc[ess_df[country_col_name] == country]
         temp_actions = []
@@ -112,7 +112,6 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
         #   question. temp_values will be in sameZ order as values_dict
         # Then find the central preference by finding mean of each of these.
         for _, action_id in actions_dict.items():
-            centred_score = 0.0
             # No need to invert actions, as score between 1-10, where 10 is GOOD, 1 is BAD
             # Find mean score for action (1 action, no need to find average of set)
             mean = country_df[action_id].mean()
@@ -126,45 +125,37 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
                 # Actions are between 1-5, where 1 = agree strongly, 
                 # and 5 = disagree strongly. 
                 centred_score = (((mean_score-1) * 2)/4) - 1
-            temp_actions.append(copy.copy(centred_score))
+            temp_actions.append(float(centred_score))
         # country_values contains the averaged, centred action for each action
-        country_actions[country] = copy.copy(temp_actions)
+        country_centred_actions[country] = np.array(temp_actions, dtype=float)
+
     # Second, convert country actions into action judgements considering their value preferences
     action_judgements = {}
     for country in ess_country_list:
-        country_values = value_preferences[country]
-        actions = country_actions[country]
-        # Convert responses to action judgements for every value considering the value preferences
-        temp_action_judgements = {}
-        # for every cell in the top triangle of the matrix (as it is symmetric), check pref, add action judgement for that cell.
-        #   Action judgement: A country that prefers value X over Y, supports the action Z amount.
-        #   Mathematically: action judgement for value x>y = centred_action * value_preference_p>y
-        # numpy arrays will iterate over each row
-        value_names = list(values_dict.keys())
+        # country_values shape is [x,x], x= num of values
+        country_values = np.array(value_preferences[country], dtype=float)
+        x = country_values.shape[0]
 
-        """
-        array([[[uni, uni], [uni, ben], [uni, tra]],
-               [[ben, uni], [ben, ben], [ben, tra]],
-               [[tra, uni], [tra, ben], [tra, tra]]])
-        """
-        # For every action
-        actions_keys = list(actions_dict.keys())
-        for action, x in zip(actions, range(0, len(actions_keys))):
-            # For every value row (each row is every preference for one value)
-            for value_pref_row, i in zip(country_values, range(0, len(country_values))):
-                # for every value in the value row
-                for value_pref, j in zip(value_pref_row, range(0, len(value_pref_row))):
-                    # if the preference is positive (it prefers this value more than another)
-                    pref_strength = 2*(value_pref-0.5)
-                    to_save = action * pref_strength
-                    if value_pref > 0.5:
-                        temp_key = actions_keys[x] + "_" + value_names[i] + "_over_" + value_names[j]
-                        temp_action_judgements[temp_key] = copy.copy(to_save)
-                    else:
-                        temp_key = actions_keys[x] + "_" + value_names[j] + "_over_" + value_names[i]
-                        temp_action_judgements[temp_key] = copy.copy(to_save)
-            action_judgements[country] = copy.deepcopy(temp_action_judgements)
-    print("Verification, AT actions: ", action_judgements['AT'])
+        # Convert the preferences to range [-1,1], where shifted_prefs[x,y] >0 means x preferred to y
+        shifted_prefs = 2.0 * (country_values - 0.5)
+
+        # Convert the shifted prefs to a symmetric matrix, and
+        #   then show preference relative to every other value. as a 1D array
+        np.fill_diagonal(shifted_prefs, 0.0)
+        strengths_of_prefs = shifted_prefs.sum(axis=1) / float(x-1)
+
+        # Sanity check, shouldn't need
+        strengths_of_prefs = np.clip(strengths_of_prefs, -1.0, 1.0)
+
+        # Get the centred actions computed above and clip for sanity
+        centred_actions = country_centred_actions[country]
+        centred_actions = np.clip(centred_actions, -1.0, 1.0)
+
+        ## Finally, convert the centred actions to judgements by multiplying by the strength
+        judgements = np.outer(strengths_of_prefs, centred_actions)
+        judgements = np.clip(judgements, -1.0, 1.0)
+
+        action_judgements[country] = judgements
     return action_judgements
 
 if __name__ == '__main__':
@@ -237,6 +228,7 @@ if __name__ == '__main__':
         'immigration': ["imbgeco"] # Immigration bad or good for country's economy
     }
     """
+    "imbgeco" 	Immigration bad or good for country's economy
     0	Bad for the economy
     1	1
     2	2
@@ -258,28 +250,22 @@ if __name__ == '__main__':
     for dict in dicts:
         for _, item_list in dict.items():
                 all_interested_cols.extend(item_list)
-    print(all_interested_cols)
     df = df.dropna(subset=all_interested_cols)
-    print(df)
 
     # Remove irrelevant answers (refusal/don't know/no answer)
     #   count the number of irrelevant answers per country, to report back.
     for key, item_list in values_dict.items():
         for item in item_list:
             incorrect_value_responses = [7, 8, 9]
-            print("For value item ", item, "I am deleting ", len(df.loc[df[item].isin(incorrect_value_responses)]), " entries.")
             df = df.loc[~df[item].isin(incorrect_value_responses)]
     for key, item_list in principle_dict.items():
         for item in item_list:
             incorrect_principle_responses = [7, 8, 9]
-            print("For principle item ", item, "I am deleting ", len(df.loc[df[item].isin(incorrect_principle_responses)]), " entries.")
             df = df.loc[~df[item].isin(incorrect_principle_responses)]
     for key, item_list in actions_dict.items():
         for item in item_list:
             incorrect_action_responses = [77, 88, 99]
-            print("For action item ", item, "I am deleting ", len(df.loc[df[item].isin(incorrect_action_responses)]), " entries.")
             df = df.loc[~df[item].isin(incorrect_action_responses)]
-            print("I now have ", len(df), " entries left.")
 
     country_col_name = 'cntry'
     print("VALUES:")
@@ -287,7 +273,7 @@ if __name__ == '__main__':
     print("ACTIONS:")
     action_judgements = process_all_country_actions(df, country_col_name, value_preferences, actions_dict, values_dict)
     print("PRINCIPLES:")
-    # because principle preferences are just preferences of each principle over every other principle, use same func.
+    # Because principle preferences are just preferences of each principle over every other principle, use the same func.
     principle_preferences = process_all_country_values(df, country_col_name, principle_dict)
 
     # TODO: Store in a file for aggregation
