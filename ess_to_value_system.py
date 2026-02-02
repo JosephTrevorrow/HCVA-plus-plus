@@ -288,11 +288,11 @@ if __name__ == '__main__':
         for country, value in principle_preferences.items():
             writer.writerow([country, value])
 
-        # Values + Preferences + Action Judgements in WIDE format
+        # Values + Preferences + Action Judgements
         value_names = list(values_dict.keys())
         action_names = list(actions_dict.keys())
 
-        wide_fn = now + "_ess_value_system_wide.csv"
+        wide_fn = now + "_ess_value_system.csv"
         with open(wide_fn, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             # Header
