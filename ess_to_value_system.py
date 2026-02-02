@@ -119,17 +119,19 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
         # Then find the central preference by finding mean of each of these.
         for _, action_id in actions_dict.items():
             # No need to invert actions, as score between 1-10, where 10 is GOOD, 1 is BAD
-            # Find mean score for action (1 action, no need to find average of set)
+            if action_id != "imbgeco":
+                country_df[action_id] = country_df[action_id].values[::-1]
+            # Find the mean score for action (1 action, no need to find average of set)
             mean = country_df[action_id].mean()
             mean_score = mean.iloc[0]
             # Centre the scores between -1 and 1. action_id is always a list of size 1
-            # immigration is between 1-10, where 10 is GOOD, 1 is BAD, others are between 1-5
+            # immigration is between 1-11, where 11 is GOOD, 1 is BAD, other actions are between 1 (good) - 5 (bad)
             if action_id[0] == "imbgeco":
-                # Because each action is between 1-10
-                centred_score = (((mean_score-1) * 2)/9) - 1
+                # Because each action is between 1-11
+                centred_score = (((mean_score-1) * 2)/9)
             else:
                 # Actions are between 1-5, where 1 = agree strongly, 
-                # and 5 = disagree strongly. 
+                # and 5 = disagree strongly.
                 centred_score = (((mean_score-1) * 2)/4) - 1
             temp_actions.append(float(centred_score))
         # country_values contains the averaged, centred action for each action
@@ -230,8 +232,10 @@ if __name__ == '__main__':
     """
 
     actions_dict = {
-        #'brexit' : "vteumbgb",
-        'immigration': ["imbgeco"] # Immigration bad or good for country's economy
+        # 'brexit' : "vteumbgb",
+        'immigration': ["imbgeco"], # Immigration bad or good for the country's economy
+        'lgbt_freedom' : ["freehms"], # Gay men and lesbians should be free to live life as they wish
+        'lgbt_adopt' : ["hmsacld"] # Gay men and lesbians should have the same rights to adopt children as straight couples
     }
     """
     "imbgeco" 	Immigration bad or good for country's economy
@@ -249,6 +253,26 @@ if __name__ == '__main__':
     77	Refusal*
     88	Don't know*
     99	No answer*
+    
+    "freehms"
+    1 	Agree strongly
+    2 	Agree
+    3 	Neither agree nor disagree
+    4 	Disagree
+    5 	Disagree strongly
+    7 	Refusal*
+    8 	Don't know*
+    9 	No answer*
+    
+    "hmsacld"
+    1 	Agree strongly
+    2 	Agree
+    3 	Neither agree nor disagree
+    4 	Disagree
+    5 	Disagree strongly
+    7 	Refusal*
+    8 	Don't know*
+    9 	No answer*
     """
 
     dicts = [values_dict, principle_dict, actions_dict]
@@ -270,8 +294,13 @@ if __name__ == '__main__':
             df = df.loc[~df[item].isin(incorrect_principle_responses)]
     for key, item_list in actions_dict.items():
         for item in item_list:
-            incorrect_action_responses = [77, 88, 99]
-            df = df.loc[~df[item].isin(incorrect_action_responses)]
+            if item == "imbgeco":
+                incorrect_action_responses = [77, 88, 99]
+                df = df.loc[~df[item].isin(incorrect_action_responses)]
+                df[item] = df[item] + 1
+            elif item == "freehms" or item == "hmsacld":
+                incorrect_action_responses = [7,8,9]
+                df = df.loc[~df[item].isin(incorrect_action_responses)]
 
     country_col_name = 'cntry'
     value_preferences = process_all_country_values(df, country_col_name, values_dict)
