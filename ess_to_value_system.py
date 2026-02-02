@@ -32,46 +32,52 @@ def process_all_country_values(ess_df, country_col_name, values_dict):
         for _, values in values_dict.items():
             temp_questions = []
             for question in values:
-                # Invert all the items such that higher scores represent greater importance (inverted = 1 = worst, 6 = best)
-                # We base our principle preferences on how egalitarian the preferences are: therefore we don't invert the last question
-                #   then, utilitarian support is the opposite of egalitarian support, creating our preference matrix.
+                # Invert items such that higher scores represent greater importance (inverted = 1 = worst, 6 = best)
                 if question == "sofwrk":
                     country_df[question] = country_df[question].values
                 else:
                     country_df[question] = country_df[question].values[::-1]
                 # Find mean_score for every col
                 mean_score = country_df[question].sum() / len(country_df)
-                # temp_questions contains the mean score of every question for that specific value, in thesame order as the list for the values_dict
-                temp_questions.append(copy.copy(mean_score))
+                # temp_questions contains the mean score of every question for that specific value, in the same
+                #   order as the list for the values_dict
+                temp_questions.append(mean_score)
+
             # temp_values contains the list of mean scores for each question for that value, in the same order as the values_dict
-            temp_values.append(copy.copy(temp_questions))
+            temp_values.append(temp_questions)
         # country_values contains the list of mean scores for every question for the country
-        country_values[country] = copy.copy(temp_values)
-    # Subtract the mean score across all values (for a single country) from a value's raw score. This produces centrered values.
+        country_values[country] = temp_values
+        print(country, country_values[country])
+
+    # Subtract the mean score across all values (for a single country) from a value's raw score. This produces centered values.
     # country_values = dict({country_name: [[value1_q1, value1_q2], [value2_q1, value2_q2], [..]]})
     for country, values in country_values.items():
-        # Find the sum of all the values in the nested list (values), and compute the mean
+        # Find the sum of all the values in the nested list (values) and compute the mean
         total = 0
         num_of_questions = 0
         for value_list in values:
-            num_of_questions += len(value_list)
+            num_of_questions += len(value_list) + 1
             total += sum(value_list)
         mean = total / num_of_questions
 
-        # For every value in the nested list: values, subtract the mean from it, to find a
+        # For every value in the nested lists: values, subtract the mean from it, to find a
         #  centered value for that question. Then find the mean of that list
         for value_list in values:
             for value in value_list:
                 value_list[value_list.index(value)] = value - mean
-        temp_country_vals = np.array([np.mean(v) for v in country_values[country]])  
-        country_values[country] = copy.copy(temp_country_vals) 
 
-    print("Verification of raw values: ", country_values)
+        temp_country_vals = np.array([np.mean(v) for v in country_values[country]])  
+        country_values[country] = copy.copy(temp_country_vals)
+        print(country, country_values[country])
 
     ## Now we have a list of centred country_values for every country, 
     # we find the preferences between each value and every other value, and store
     value_preferences = {}
     for country, values_list in country_values.items():
+        # Principle case: There is only one value, so just store
+        if len(values_list) == 1:
+            value_preferences[country] = values_list[0]
+            continue
         # For every value in the values list, compare it to every other value
         diff = values_list[:, np.newaxis] - values_list
         diff_norm = (diff- np.min(diff)) / (np.max(diff) - np.min(diff))
@@ -268,31 +274,50 @@ if __name__ == '__main__':
             df = df.loc[~df[item].isin(incorrect_action_responses)]
 
     country_col_name = 'cntry'
-    print("VALUES:")
     value_preferences = process_all_country_values(df, country_col_name, values_dict)
-    print("ACTIONS:")
     action_judgements = process_all_country_actions(df, country_col_name, value_preferences, actions_dict, values_dict)
-    print("PRINCIPLES:")
     # Because principle preferences are just preferences of each principle over every other principle, use the same func.
     principle_preferences = process_all_country_values(df, country_col_name, principle_dict)
-
-    # TODO: Store in a file for aggregation
+    print("Verify: ", principle_preferences)
     now = dt.now().isoformat()
     principles_fn = now+"_ess_principles.csv"
     # Principles:
     with open(principles_fn, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["Country", "Principle"])
-        for country, values in principle_preferences.items():
-            for value in values:
-                writer.writerow([country, value])
+        for country, value in principle_preferences.items():
+            writer.writerow([country, value])
 
-    # Values and actions:
-    value_sys_fn = now+"_ess_value_system.csv"
-    with open(value_sys_fn, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        # Header
-        writer.writerow(["Country"]+list(values_dict.keys())+list(actions_dict.keys()))
-        # Data
-        for country, values, actions in zip(df[country_col_name], value_preferences.values(), action_judgements.values()):
-            writer.writerow([country]+list(values)+list(actions))
+        # Values + Preferences + Action Judgements in WIDE format
+        value_names = list(values_dict.keys())
+        action_names = list(actions_dict.keys())
+
+        wide_fn = now + "_ess_value_system_wide.csv"
+        with open(wide_fn, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            # Header
+            header = ["country"]
+            # P__vi__vj columns
+            for vi in value_names:
+                for vj in value_names:
+                    header.append(f"P__{vi}__{vj}")
+            # VA__v__a columns
+            for v in value_names:
+                for a in action_names:
+                    header.append(f"VA__{v}__{a}")
+            writer.writerow(header)
+            # Rows
+            for country in df[country_col_name].unique():
+                P = np.array(value_preferences[country], dtype=float)
+                VA = np.array(action_judgements[country], dtype=float)
+
+                row = [country]
+                for i in range(len(value_names)):
+                    for j in range(len(value_names)):
+                        row.append(float(P[i, j]))
+
+                for i in range(len(value_names)):
+                    for k in range(len(action_names)):
+                        row.append(float(VA[i, k]))
+
+                writer.writerow(row)
