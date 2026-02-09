@@ -1,7 +1,3 @@
-"""
-This file has been adapted from work by Lera-Leri et al.. You can find their repository here: https://github.com/RogerXLera/ValueSystemsAggregation
-"""
-
 import pandas as pd
 import csv
 import copy
@@ -115,9 +111,10 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
         country_df = ess_df.loc[ess_df[country_col_name] == country]
         temp_actions = []
         # Iterate through and find all values, summing for each 
-        #   question. temp_values will be in sameZ order as values_dict
+        #   question. temp_values will be in same order as values_dict
         # Then find the central preference by finding mean of each of these.
         for _, action_id in actions_dict.items():
+            # TODO: Error here? Not inverting properly?
             # No need to invert actions, as score between 1-10, where 10 is GOOD, 1 is BAD
             if action_id != "imbgeco":
                 country_df[action_id] = country_df[action_id].values[::-1]
@@ -130,7 +127,7 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
                 # Because each action is between 1-11
                 centred_score = (((mean_score-1) * 2)/9)
             else:
-                # Actions are between 1-5, where 1 = agree strongly, 
+                # Actions other than "imbgeco" are between 1-5, where 1 = agree strongly,
                 # and 5 = disagree strongly.
                 centred_score = (((mean_score-1) * 2)/4) - 1
             temp_actions.append(float(centred_score))
