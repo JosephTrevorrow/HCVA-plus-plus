@@ -76,10 +76,9 @@ def process_all_country_values(ess_df, country_col_name, values_dict, higher_ord
             country_values[country] = copy.copy(abstracted_values)
             print("Abstracted: ", country_values[country])
 
-    # we find the preferences between each value and every other value, and store
+    # We find the preferences between each value and every other value and store
     value_preferences = {}
     for country, values_list in country_values.items():
-        print("type of values_list: ", type(values_list))
         print("values list: ", values_list)
         # Principle case: There is only one value, so just store
         if len(values_list) == 1:
@@ -87,6 +86,7 @@ def process_all_country_values(ess_df, country_col_name, values_dict, higher_ord
             continue
         # For every value in the values list, compare it to every other value
         diff = values_list[:, np.newaxis] - values_list
+        # Diff norm normalises the value preferences between 0 and 1
         diff_norm = (diff- np.min(diff)) / (np.max(diff) - np.min(diff))
         value_preferences[country] = copy.copy(diff_norm)
         """
@@ -99,8 +99,12 @@ def process_all_country_values(ess_df, country_col_name, values_dict, higher_ord
         array([uni, ben, tra, con, sec, pow, ach, hed, sti, sel])
         array([[ [uni, uni], [uni, ben], [uni, tra]],
                [ [ben, uni], [ben, ben], [ben, tra]],
-               [ [tra, uni],  [tra,ben],  [tra, tra]]])
+               [ [tra, uni],  [tra,ben],  [tra, tra]]])     
+        OR
+        array([st, st], [st, con], [st,se], [st, op],
+              [con, st], ...
         """
+        print(value_preferences[country])
     return value_preferences
     
 def process_all_country_actions(ess_df, country_col_name, value_preferences, actions_dict):
@@ -320,7 +324,7 @@ if __name__ == '__main__':
     #    print("verify DF, df size: ", df.shape)
 
     #value_preferences = process_all_country_values(df, country_col_name, values_dict, _, False)
-    value_preferences = process_all_country_values(df, country_col_name, values_dict, higher_order_values_index_list, True)
+    value_preferences = process_all_country_values(df, country_col_name, values_dict, higher_order_values_index_list, False)
     action_judgements = process_all_country_actions(df, country_col_name, value_preferences, actions_dict)
     # Because principle preferences are just preferences of each principle over every other principle, use the same func.
     principle_preferences = process_all_country_values(df, country_col_name, principle_dict, _, False)
