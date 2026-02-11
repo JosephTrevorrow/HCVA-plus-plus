@@ -37,18 +37,18 @@ if __name__ == '__main__':
     parser.add_argument(
         '-f',
         type=str,
-        default="22-01-2025-agent-data.csv",
-        help='CSV file with personal values data')
+        default="22-01-2025-agent-value_systems.csv",
+        help='CSV file with personal values value_systems')
     parser.add_argument(
         '-pf',
         type=str,
         default="input_data/principles/placeholder_principles.csv",
-        help='CSV file with principle data')
+        help='CSV file with principle value_systems')
     parser.add_argument(
         '-smlf',
         type=str,
         default="input_data/sml_principles/placeolder_sml.csv",
-        help='CSV file with data for Salas-Molina method SML'
+        help='CSV file with value_systems for Salas-Molina method SML'
     )    
     parser.add_argument(
         '-o', 

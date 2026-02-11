@@ -114,7 +114,7 @@ def Weights(df, n_countries, weights=0):
         return np.array(w)
 
 
-def FormalisationObjects(filename='data.csv', delimiter=',', weights=0, df=None):
+def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0, df=None):
     """
     This function computes the matrices P, J+ and J- and the weight vector of the formalisation.
     INPUT: filename -- str ; delimiter -- str ;
@@ -144,7 +144,7 @@ def FormalisationObjects(filename='data.csv', delimiter=',', weights=0, df=None)
             J_list.append((J_p, J_n))
         except:
             pass
-            #print("Could not find JMatrix, do you only have preference data?")
+            #print("Could not find JMatrix, do you only have preference value_systems?")
         P_list.append(P)
 
     w = Weights(df, n_countries, weights)
