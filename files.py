@@ -1,6 +1,7 @@
 import csv
 
 def save_metadata(filename, args, transition_p, consensus_p, consensus_preference):
+    # TODO: deal with inputs not given
     csv_rows = [{"args":args, "transition_p":transition_p, "consensus_p":consensus_p, "consensus_preference":consensus_preference}]
     with open(filename, 'w', newline='') as csvfile:
         # writing file
@@ -10,7 +11,7 @@ def save_metadata(filename, args, transition_p, consensus_p, consensus_preferenc
         writer.writerows(csv_rows)
     return None
     
-def output_file(p, U, cons, dist_1, dist_l, v, name):
+def output_file(p, U, cons, dist_1, dist_l, v, name, values_dict, actions_dict):
     """
     This function writes the results of solving the lp-regression for different p's.
     INPUT: p -- int, U -- list (Up distance function values), cons -- list of list
@@ -28,6 +29,7 @@ def output_file(p, U, cons, dist_1, dist_l, v, name):
             "p", "Up", "Dist1", "Distl", "Rel-Rel",
             "Rel-Nonrel", "Nonrel-Rel", "Nonrel-Nonrel"
         ]
+        # TODO: change headers to match values/actions_dicts
     else:
         # header for the aggregation of moral values
         header = [

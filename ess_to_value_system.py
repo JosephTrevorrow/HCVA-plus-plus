@@ -322,12 +322,12 @@ if __name__ == '__main__':
     #    # remove all rows where country != UK
     #    df = df.loc[df['cntry'] == 'GB']
     #    print("verify DF, df size: ", df.shape)
-
+    abstract_values = False
     #value_preferences = process_all_country_values(df, country_col_name, values_dict, _, False)
-    value_preferences = process_all_country_values(df, country_col_name, values_dict, higher_order_values_index_list, False)
+    value_preferences = process_all_country_values(df, country_col_name, values_dict, higher_order_values_index_list, abstract_values)
     action_judgements = process_all_country_actions(df, country_col_name, value_preferences, actions_dict)
     # Because principle preferences are just preferences of each principle over every other principle, use the same func.
-    principle_preferences = process_all_country_values(df, country_col_name, principle_dict, _, False)
+    principle_preferences = process_all_country_values(df, country_col_name, principle_dict, _, abstract_values)
     now = dt.now().isoformat()
     principles_fn = now+"_ess_principles.csv"
     # Principles:
@@ -338,8 +338,10 @@ if __name__ == '__main__':
             writer.writerow([country, value])
 
         # Values + Preferences + Action Judgements
-        #value_names = list(values_dict.keys())
-        value_names = list(higher_order_values_dict.keys())
+        if abstract_values:
+            value_names = list(higher_order_values_dict.keys())
+        else:
+            value_names = list(values_dict.keys())
         action_names = list(actions_dict.keys())
 
         wide_fn = now + "_ess_value_system.csv"

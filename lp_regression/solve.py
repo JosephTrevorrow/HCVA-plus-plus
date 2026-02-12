@@ -115,7 +115,7 @@ def Lp(A, b, p):
     else:  # vanilla IRLS implementation
         return IRLS(A, b, p)
 
-def mLp(A, b, ps, λs, weight=True):
+def mLp(A, b, ps, λs, weight=True, filename):
     """
     This function is used by the -slm arg to run the mLp method for finding consensus using multiple p values.
     This function is taken from the following repo: https://github.com/filippobistaffa/social-choice-pnorm
@@ -131,7 +131,7 @@ def mLp(A, b, ps, λs, weight=True):
     return x.value, res, prob.value / sum(wps), psi
 
 ## RUNNER FUNCTIONS HERE
-def transition_point(P_list, J_list, w, v, e, p):
+def transition_point(P_list, J_list, w, v, e):
     """
     Find the transition point given personal values
     """
@@ -197,21 +197,11 @@ def transition_point(P_list, J_list, w, v, e, p):
     return p_list, dist_p_list, dist_inf_list, diff_list, best_p
 
 def aggregate(P_list, J_list, w, p, v, filename):
-    A, b = FormalisationMatrix(P_list, J_list, w, 1, v)
-    cons_1, _, ua = Lp(A, b, 1)
-    print('L1 =', cons_1)
-    A, b = FormalisationMatrix(P_list, J_list, w, np.inf, v)
-    cons_l, _, _, = Linf(A, b)
-    dist_1p = np.linalg.norm(cons_1 - cons_1, 1)
-    dist_pl = np.linalg.norm(cons_l - cons_1, np.inf)
-    p = 1
-    print('{:.2f} \t \t {:.4f}'.format(p, ua))
-    incr = 0.1
-    p_list = [1.0]
-    u_list = [ua]
-    cons_list = [cons_1]
-    dist_1p_list = [dist_1p]
-    dist_pl_list = [dist_pl]
+    p_list = []
+    u_list = []
+    cons_list = []
+    dist_1p_list = []
+    dist_pl_list = []
 
     # Compute one aggregation using the P specified
     A, b = FormalisationMatrix(P_list, J_list, w, p, v)
@@ -234,3 +224,46 @@ def aggregate(P_list, J_list, w, p, v, filename):
         dist_pl_list,
         v,
         filename)
+
+def aggregate_all_p(P_list, J_list, w):
+    """
+    This function is used by the HCVA to aggregate over all principle preferences in main.py
+    """
+    A, b = FormalisationMatrix(P_list, J_list, w, 1, True)
+    cons_1, _, ua = L1(A, b)
+    print(cons_1)
+    # TODO: Check if these are correct cut points given number of values/principles
+    cons_1 = cons_1[1:3]
+    print(cons_1)
+    A, b = FormalisationMatrix(P_list, J_list, w, np.inf, True)
+    cons_l, _, _, = Linf(A, b)
+    print(cons_l)
+    cons_l = cons_l[1:3]
+    print(cons_l)
+    dist_1p = np.linalg.norm(cons_1 - cons_1, 1)
+    dist_pl = np.linalg.norm(cons_l - cons_1, np.inf)
+    p = 1
+    # print('{:.2f} \t \t {:.4f}'.format(p, ua))
+    incr = 0.1
+    p_list = [1.0]
+    u_list = [ua]
+    cons_list = [cons_1]
+    dist_1p_list = [dist_1p]
+    dist_pl_list = [dist_pl]
+
+    while p < 10:
+        p += incr
+        A, b = FormalisationMatrix(P_list, J_list, w, p, True)
+        cons, _, ub = Lp(A, b, p)
+        cons = cons[1:3]
+        p_list.append(p)
+        u_list.append(ub)
+        cons_list.append(cons)
+        dist_1p = np.linalg.norm(cons_1 - cons, p)
+        dist_pl = np.linalg.norm(cons_l - cons, p)
+        dist_1p_list.append(dist_1p)
+        dist_pl_list.append(dist_pl)
+        # print('{:.2f} \t \t {:.4f}'.format(p, ub))
+    return p_list, u_list, cons_list, dist_1p_list, dist_pl_list, cons_1, cons_l
+
+aggregate_slm(P_list, J_list)
