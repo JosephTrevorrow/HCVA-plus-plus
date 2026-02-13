@@ -4,10 +4,62 @@ import copy
 import numpy as np
 from datetime import datetime as dt
 
+def process_all_country_principles(ess_df, country_col_name, values_dict):
+    # Find the list of all countries
+    ess_country_list = ess_df[country_col_name].unique()
+
+    # Iterate through each country and find their values
+    country_values = {}
+    for country in ess_country_list:
+        country_df = ess_df.loc[ess_df[country_col_name] == country].copy()
+        temp_values = []
+        # Iterate through and find all values, summing for each
+        #   question. temp_values will be in the same order as values_dict
+        # Then find the central preference by finding mean of each of these.
+
+        # For principles only: We keep the iteration through the dict but note that for
+        # standard L_p regression there is only one P, with 3 questions.
+        for _, values in values_dict.items():
+            temp_questions = []
+            for question in values:
+                # Invert items such that higher scores represent greater importance
+                # For principles (inverted: 1 = worst, 5 = best)
+                if question == "sofrwrk":
+                    # Society fair when hard-working people earn *more* than others is the opposite to other two
+                    # principle questions, so we say disagreement is "best" as we are measuring egalitarianism
+                    print("Not reversing sofrwrk")
+                    country_df[question] = country_df[question]
+                elif question == "sofrdst" or question == "sofrpr":
+                    # Society fair when wealth equally distributed/the poor are cared for regardless of what they give back
+                    print("Reversing ", question)
+                    country_df[question] = 6 - country_df[question]
+                else:
+                    print("Something went wrong")
+
+                # Find mean_score for every col
+                mean_score = country_df[question].sum() / len(country_df)
+                # temp_questions contains the mean score of every question for that specific value, in the same
+                #   order as the list for the values_dict
+                temp_questions.append(mean_score)
+            # temp_values contains the list of mean scores for each question for that value, in the same order as the values_dict
+            temp_values.append(temp_questions)
+
+        # Find the mean of all the questions (as we only compute one principle value)
+        mean_principle = np.mean(temp_values)
+        print("mean_principle: ", mean_principle)
+        # Convert the mean from a scale of 1-5, to a scale of 0-1
+        preference = mean_principle / -1
+        preference = (((mean_principle - 1) * (1 - 0)) / (5 - 1)) + 0
+        #NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
+
+        print("preference: ", preference)
+        # country_values contains the preference
+        country_values[country] = preference
+    # Return the country_values
+    return country_values
+
 def process_all_country_values(ess_df, country_col_name, values_dict, higher_order_values_index_list, abstract):
     """
-    Docstring for process_all_country
-    
     :param ess_df: The dataframe containing all ESS value_systems
     :param country_col_name: typically 'cntry', the col that will state which country each row belongs to
     :param values_dict: Dict of form str(value): [question_id's that relates to each value]
@@ -31,16 +83,7 @@ def process_all_country_values(ess_df, country_col_name, values_dict, higher_ord
             for question in values:
                 # Invert items such that higher scores represent greater importance
                 # For personal values: (inverted = 1 = worst, 6 = best)
-                # For principles (inverted = 1 = worse, 5 = best)
-                if question == "sofrwrk":
-                    # Society fair when hard-working people earn *more* than others is the opposite to other two
-                    # principle questions, so we say disagreement is "best" as we are measuring egalitarianism
-                    country_df[question] = country_df[question]
-                elif question == "sofrdst" or question == "sofrpr":
-                    # Society fair when wealth equally distributed/the poor are cared for regardless of what they give back
-                    country_df[question] = 6 - country_df[question]
-                else:
-                    country_df[question] = 7 - country_df[question]
+                country_df[question] = 7 - country_df[question]
                 # Find mean_score for every col
                 mean_score = country_df[question].sum() / len(country_df)
                 # temp_questions contains the mean score of every question for that specific value, in the same
@@ -215,9 +258,9 @@ if __name__ == '__main__':
     principle_dict = {
         #"Egalitarian_3" : ["sofrdst", "sofrpr", "sofrwrk"],
         #"Egalitarian_2" : ["sofrdst", "sofrpr"],
-        #"eq_dist": ["sofrdst"],
+        "eq_dist": ["sofrdst"],
         #"hard_work": ["sofrwrk"],
-        "poor_care": ["sofrpr"],
+        #"poor_care": ["sofrpr"],
     }
     """ "sofrdst" 	Society fair when income and wealth is equally distributed
     1 	Agree strongly
@@ -348,7 +391,7 @@ if __name__ == '__main__':
     action_judgements = process_all_country_actions(df, country_col_name, value_preferences, actions_dict)
 
     # Because principle preferences are just preferences of each principle over every other principle, use the same func.
-    principle_preferences = process_all_country_values(df, country_col_name, principle_dict, _, abstract_values)
+    principle_preferences = process_all_country_principles(df, country_col_name, principle_dict)
 
     print("principle preferences are: ", principle_preferences)
 
@@ -365,7 +408,6 @@ if __name__ == '__main__':
         # Rows
         for country in df[country_col_name].unique():
             PriP = np.array(principle_preferences[country], dtype=float)
-            print("pri is: ", PriP)
             row = [country, PriP]
             writer.writerow(row)
 
