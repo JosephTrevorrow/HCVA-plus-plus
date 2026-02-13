@@ -1,30 +1,20 @@
 import argparse as ap
 import numpy as np
-import os
 import csv
 import copy
 from datetime import datetime as dt
-
-from fontTools.misc.bezierTools import epsilon
-
 from lp_regression.matrices import FormalisationObjects, FormalisationMatrix
-from lp_regression.solve import L1, L2, Linf, Lp, mLp, transition_point, aggregate, aggregate_all_p
-from files import output_file, limit_output, save_metadata
+from lp_regression.solve import L1, L2, Linf, Lp, mLp, transition_point, aggregate, aggregate_all_p, aggregate_slm
+from files import limit_output, save_metadata
 import pandas as pd
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-import cvxpy as cp
 import juliapkg
 juliapkg.require_julia("=1.10.3")
 juliapkg.resolve()
 from juliacall import Main as jl
-
 np.set_printoptions(edgeitems=1000, linewidth=1000, suppress=True, precision=4)
-
 
 if __name__ == '__main__':
     parser = ap.ArgumentParser()
-
     ## PARAMETER ARGS
     parser.add_argument('-n', type=int, default=7, help='n')
     parser.add_argument('-m', type=int, default=2, help='m')
@@ -35,7 +25,6 @@ if __name__ == '__main__':
         type=int,
         default=0,
         help='Weights')
-
     ## FILE ARGS
     parser.add_argument(
         '-f',
@@ -48,11 +37,10 @@ if __name__ == '__main__':
         default="input_data/principles/placeholder_principles.csv",
         help='CSV file with principle value_systems')
     parser.add_argument(
-        '-smlf',
+        '-slmf',
         type=str,
         default="input_data/sml_principles/placeolder_sml.csv",
-        help='CSV file with principles for Salas-Molina method SML'
-    )    
+        help='CSV file with principles for Salas-Molina method SML')
     parser.add_argument(
         '-o', 
         type=str, 
@@ -63,7 +51,6 @@ if __name__ == '__main__':
         type=str,
         default='none',
         help='store results in csv')
-    
     ## COMPUTE ARGS
     parser.add_argument(
         '-v',
@@ -74,52 +61,55 @@ if __name__ == '__main__':
         '-hcva',
         default=False,
         help='Compute HCVA',
-        action='store_true'
-        )    
+        action='store_true')
     parser.add_argument(
         '-hcva2',
         default=True,
         action='store_true',
-        help='Compute HCVA++'
-    )
+        help='Compute HCVA++')
     parser.add_argument(
-        '-sml',
+        '-slm',
         default=False,
         action='store_true',
-        help="Generate consensus using the method described by Salas-Molina et al."
-    )
+        help="Generate consensus using the method described by Salas-Molina et al.")
     parser.add_argument(
         '-t',
         default=False,
         help='compute the threshold p, the transition point',
-        action='store_true'
-    )
+        action='store_true')
 
     # Initialise args and params
     args = parser.parse_args()
     n = args.n
     m = args.m
-
-    # P_list, J_list, country_dict are the matricies created from the personal values
+    # P_list, J_list, country_dict are the matrices created from the personal values
     P_list, J_list, w, country_dict = FormalisationObjects(
         filename=args.f, delimiter=',', weights=args.w)
         
     ## AGGREGATIONS/COMPUTE
     if args.t:
         """
-        Compute the transition point and save to file
+        Compute the transition point, and find an aggregation with that transition point P
         """
-        p_list, dist_p_list, dist_inf_list, diff_list, _ = transition_point(P_list, J_list, w, args.v, args.e, p)
+        # 1. Compute transition point
+        p_list, dist_p_list, dist_inf_list, diff_list, t_point = transition_point(P_list, J_list, w, args.v, args.e)
         limit_output(
             p_list,
             dist_p_list,
             dist_inf_list,
             diff_list,
-            "limits.csv"
-        )
+            "limits.csv")
+        # 2. Aggregate and store to a file.
+        now = dt.now().isoformat()
+        filename_personal_vals = str("T_PERSONALS_"+now+".csv")
+        filename_action_judgements = str("T_ACTIONS_"+now+".csv")
+        filename_metadata = str("T_METADATA_"+now+".csv")
+        aggregate(P_list, J_list, w, t_point, True, filename_personal_vals)
+        aggregate(P_list, J_list, w, t_point, False, filename_action_judgements)
+        save_metadata(filename_metadata, args, t_point, _, _)
     elif args.hcva2:
         """
-        Compute HCVA (mean/JAIR)
+        Compute HCVA++ (mean/JAIR)
         """
         print("Computing HCVA++")
         # 1. Find the consensus priciple $p$
@@ -141,96 +131,43 @@ if __name__ == '__main__':
         # p the relative distance away from the transition point.
         consensus_p = pow(transition_p, (2*consensus_preference))
 
-        # 1.4 Aggregate all of the preference values, and action judgements submitted by agents
-        # using the average rule as described in paper. Do this twice, once for vals, other for action judgements
+        # 2. Aggregate all the preference values and action judgements submitted by agents
+        # using the average rule as described in the paper. Do this twice, once for vals, other for action judgements
         now = dt.now().isoformat()
-        filename_personal_vals = str("HCVA_PERSONALS_"+now+".csv")
-        filename_action_judgements = str("HCVA_ACTIONS_"+now+".csv")
-        filename_metadata = str("HCVA_METADATA_"+now+".csv")
-
+        filename_personal_vals = str("HCVApp_PERSONALS_"+now+".csv")
+        filename_action_judgements = str("HCVApp_ACTIONS_"+now+".csv")
+        filename_metadata = str("HCVApp_METADATA_"+now+".csv")
         aggregate(P_list, J_list, w, consensus_p, True, filename_personal_vals)
         aggregate(P_list, J_list, w, consensus_p, False, filename_action_judgements)
-
         save_metadata(filename_metadata, args, transition_p, consensus_p, consensus_preference)
-    elif args.sml:
+    elif args.slm:
         """
         Compute aggregation with Salas-Molina et al. baseline (Many P's)
         """
-        print("Computing SML")
-
+        print("Computing SLM")
         # 1. Read in the principles file. Each column contains a set of principles to use.
-        file_path = args.smlf
+        file_path = args.slmf
         principles = pd.read_csv(file_path)
-
-        consensus_df = pd.DataFrame()
-        for series_name, series in principles.items():
-            # 2. For each set of principle preferences, form a matrix.
-            p = series
-            ps = np.atleast_1d(p)
-            ps = np.where(ps == -1, np.inf, ps)
-            λs = np.ones_like(ps)
-            nλs = min(len(λs), len([]))
-            λs[:nλs] = [][:nλs]
-
-            P_list, J_list, w, country_dict = FormalisationObjects(
-                filename=args.f, delimiter=',', weights=args.w)
-            A, b = FormalisationMatrix(P_list, J_list, w, 1, args.v)
-            # w will always have weights equal to 1, shape needs to be equal. We do not use weights in the paper for simplicity.
-            w = np.repeat(w, A.shape[1])
-
-            # 3. Aggregate over all principles together using the matrix
-            cons, res, u, psi = mLp(A, b, ps, λs, False)
-
-            P_list, J_list, w, country_dict = FormalisationObjects(
-                filename=args.f, delimiter=',', weights=args.w)
-            A_1, b_1 = FormalisationMatrix(P_list, J_list, w, 1, not (args.v))
-            # w has weights equal to 1, shape needs to be equal
-            w = np.repeat(w, A_1.shape[1])
-
+        # 2. For each list of ps in principles, aggregate and save
+        for series_name, series in ps.items():
             now = dt.now().isoformat()
-            filename_personal_vals = str("HCVA_PERSONALS_" + now + ".csv")
-            filename_action_judgements = str("HCVA_ACTIONS_" + now + ".csv")
-            filename_metadata = str("HCVA_METADATA_" + now + ".csv")
-
-            cons_1, res, u, psi = mLp(A_1, b_1, ps, λs, False, )
-
-            # Note: mLp returns: x.value, res, prob.value / sum(wps), psi
-            """ Artefact from HCVA VALE work, will check and remove.
-            # NOTE: COLUMN NAMES ARE ONLY ACCURATE WHEN ARGS.V = FALSE
-            consensus_df = consensus_df._append({
-                'series_name': series_name,
-                'Rel_div_p': cons[0],
-                'Nonrel_div_p': cons[1],
-                'Rel_div_n': cons[2],
-                'Nonrel_div_n': cons[3],
-                'Rel-Rel': cons_1[0],
-                'Rel-Nonrel': cons_1[1],
-                'Nonrel-Rel': cons_1[2],
-                'Nonrel-Nonrel': cons_1[3]
-            }, ignore_index=True)
-            print("len of cons: ", len(cons))
-            print("len of cons_1: ", len(cons_1))
-            """
-            # 4. Save to a file
-
-
-
-
-            save_metadata(filename_metadata, args, _, con_p, _)
-
+            filename_personal_vals = str("SLM_PERSONALS_" + series_name + "_" + now + ".csv")
+            filename_action_judgements = str("SLM_ACTIONS_" + series_name + "_" + now + ".csv")
+            filename_metadata = str("SLM_METADATA_" + series_name + "_" + now + ".csv")
+            aggregate_slm(P_list, J_list, w, series, True, filename_personal_vals)
+            aggregate_slm(P_list, J_list, w, series, False, filename_action_judgements)
+            save_metadata(filename_metadata, args, _, series, _)
     elif args.hcva:
         """
         Compute HCVA (closest P/VALE)
         """
         print("Computing HCVA")
-        #  1.1 Formalise the principle preferences as matrices
+        # 1. Formalise the principle preferences as matrices
         Pri_P_list, Pri_J_list, Pri_w, Pri_Country_dict = FormalisationObjects(
             filename=args.pf, delimiter=',', weights=args.w)
-
-        # 1.2 Aggregate over all principle preferences
+        # 2. Aggregate over all principle preferences
         p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_all_p(Pri_P_list, Pri_J_list, Pri_w)
-
-        # 1.3 Find a cutoff point given $\epsilon$
+        # 3. Find a cutoff point given $\epsilon$
         cut_point = 10
         incr = 0.1
         j = 0
@@ -244,11 +181,11 @@ if __name__ == '__main__':
                 cut_point = i
                 print('Not improving anymore at cut_point = ', cut_point, '. Stopping...')
                 break
-        # 1.4 Cut the list of consensuses using the cut_point, find mean
+        # 4. Cut the list of consensuses using the cut_point, find mean
         cut_list = [cons_list[i] for i in range(len(cons_list)) if p_list[i] <= cut_point]
         con_vals = [sum(i[0] for i in cut_list) / len(cut_list), sum(i[1] for i in cut_list) / len(cut_list)]
 
-        # 1.5 Find the value of p from the mean of these consensuses
+        # 5. Find the value of p from the mean of these consensuses
         con_p = 1.0
         best_dist = 999
         for j in range(len(cut_list)):
@@ -260,17 +197,15 @@ if __name__ == '__main__':
                 con_p = (j / 10) + 1
         print("Nearest P to mean con_vals is: ", con_p)
 
-        # 1.6 Aggregate using that value of p
-        # 1.4 Aggregate all of the preference values, and action judgements submitted by agents
+        # 6. Aggregate using that value of p
+        # 7. Aggregate all of the preference values, and action judgements submitted by agents
         # using the average rule as described in paper. Do this twice, once for vals, other for action judgements
         now = dt.now().isoformat()
         filename_personal_vals = str("HCVA_PERSONALS_" + now + ".csv")
         filename_action_judgements = str("HCVA_ACTIONS_" + now + ".csv")
         filename_metadata = str("HCVA_METADATA_" + now + ".csv")
-
         aggregate(P_list, J_list, w, con_p, True, filename_personal_vals)
         aggregate(P_list, J_list, w, con_p, False, filename_action_judgements)
-
         save_metadata(filename_metadata, args, _, con_p, _)
     elif args.v:
         """

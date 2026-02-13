@@ -200,8 +200,6 @@ def aggregate(P_list, J_list, w, p, v, filename):
     p_list = []
     u_list = []
     cons_list = []
-    dist_1p_list = []
-    dist_pl_list = []
 
     # Compute one aggregation using the P specified
     A, b = FormalisationMatrix(P_list, J_list, w, p, v)
@@ -209,10 +207,6 @@ def aggregate(P_list, J_list, w, p, v, filename):
     p_list.append(p)
     u_list.append(ub)
     cons_list.append(cons)
-    dist_1p = np.linalg.norm(cons_1 - cons, p)
-    dist_pl = np.linalg.norm(cons_l - cons, p)
-    dist_1p_list.append(dist_1p)
-    dist_pl_list.append(dist_pl)
     #print('{:.2f} \t \t {:.4f}'.format(p, ub))
     print('p: {:.2f}, cons: '.format(p), cons)
 
@@ -220,8 +214,6 @@ def aggregate(P_list, J_list, w, p, v, filename):
         p_list,
         u_list,
         cons_list,
-        dist_1p_list,
-        dist_pl_list,
         v,
         filename)
 
@@ -266,4 +258,30 @@ def aggregate_all_p(P_list, J_list, w):
         # print('{:.2f} \t \t {:.4f}'.format(p, ub))
     return p_list, u_list, cons_list, dist_1p_list, dist_pl_list, cons_1, cons_l
 
-aggregate_slm(P_list, J_list)
+def aggregate_slm(P_list, J_list, w, list_of_ps, v, filename):
+    p_list = []
+    u_list = []
+    cons_list = []
+    dist_1p_list = []
+    dist_pl_list = []
+
+    # Form a matrix.
+    p = list_of_ps
+    ps = np.atleast_1d(p)
+    ps = np.where(ps == -1, np.inf, ps)
+    λs = np.ones_like(ps)
+    nλs = min(len(λs), len([]))
+    λs[:nλs] = [][:nλs]
+
+    A, b = FormalisationMatrix(P_list, J_list, w, 1, v)
+    # w will always have weights equal to 1, shape needs to be equal. We do not use weights in the paper for simplicity.
+    w = np.repeat(w, A.shape[1])
+    # Aggregate over all principles together using the matrix
+    cons, res, u, psi = mLp(A, b, ps, λs, False)
+    # TODO: Check if output_file will work with these params.
+    output_file(
+        p_list,
+        u_list,
+        cons,
+        v,
+        filename)

@@ -10,7 +10,7 @@ def process_all_country_values(ess_df, country_col_name, values_dict, higher_ord
     
     :param ess_df: The dataframe containing all ESS value_systems
     :param country_col_name: typically 'cntry', the col that will state which country each row belongs to
-    :param values_dict: Dict of form str(value) : [question_id's that relate to each value]
+    :param values_dict: Dict of form str(value): [question_id's that relates to each value]
     """
     # Find the list of all countries
     ess_country_list = ess_df[country_col_name].unique()
@@ -21,17 +21,24 @@ def process_all_country_values(ess_df, country_col_name, values_dict, higher_ord
         country_df = ess_df.loc[ess_df[country_col_name] == country].copy()
         temp_values = []
         # Iterate through and find all values, summing for each 
-        #   question. temp_values will be in same order as values_dict
+        #   question. temp_values will be in the same order as values_dict
         # Then find the central preference by finding mean of each of these.
 
-        # For principles only: We keep the iteration through the dict but note that for standard L_p regression there is only
-        # one P, with 3 questions.
+        # For principles only: We keep the iteration through the dict but note that for
+        # standard L_p regression there is only one P, with 3 questions.
         for _, values in values_dict.items():
             temp_questions = []
             for question in values:
-                # Invert items such that higher scores represent greater importance (inverted = 1 = worst, 6 = best)
-                if question == "sofwrk":
+                # Invert items such that higher scores represent greater importance
+                # For personal values: (inverted = 1 = worst, 6 = best)
+                # For principles (inverted = 1 = worse, 5 = best)
+                if question == "sofrwrk":
+                    # Society fair when hard-working people earn *more* than others is the opposite to other two
+                    # principle questions, so we say disagreement is "best" as we are measuring egalitarianism
                     country_df[question] = country_df[question]
+                elif question == "sofrdst" or question == "sofrpr":
+                    # Society fair when wealth equally distributed/the poor are cared for regardless of what they give back
+                    country_df[question] = 6 - country_df[question]
                 else:
                     country_df[question] = 7 - country_df[question]
                 # Find mean_score for every col
@@ -58,8 +65,10 @@ def process_all_country_values(ess_df, country_col_name, values_dict, higher_ord
         # For every value in the nested lists: values, subtract the mean from it, to find a
         #  centered value for that question. Then find the mean of that list
         for value_list in values:
-            for value in value_list:
-                value_list[value_list.index(value)] = value - mean
+            # Check for principles or values with 1 question, they are already centred
+            if len(value_list) != 1:
+                for value in value_list:
+                    value_list[value_list.index(value)] = value - mean
         temp_country_vals = np.array([np.mean(v) for v in country_values[country]])
         country_values[country] = copy.copy(temp_country_vals)
         ## Now we have a list of centred country_values for every country, if we want to convert these to higher order values
@@ -204,7 +213,11 @@ if __name__ == '__main__':
     }
     # Principles are different than values, as instead of like me/not like me, it is agree/disagree.
     principle_dict = {
-        "Egalitarian" : ["sofrdst"],
+        #"Egalitarian_3" : ["sofrdst", "sofrpr", "sofrwrk"],
+        #"Egalitarian_2" : ["sofrdst", "sofrpr"],
+        #"eq_dist": ["sofrdst"],
+        #"hard_work": ["sofrwrk"],
+        "poor_care": ["sofrpr"],
     }
     """ "sofrdst" 	Society fair when income and wealth is equally distributed
     1 	Agree strongly
@@ -224,7 +237,7 @@ if __name__ == '__main__':
     7 	Refusal*
     8 	Don't know*
     9 	No answer*
-     "sofwrk" 	Society fair when hard-working people earn more than others
+     "sofrwrk" 	Society fair when hard-working people earn more than others
     1 	Agree strongly
     2 	Agree
     3 	Neither agree nor disagree
@@ -290,7 +303,14 @@ if __name__ == '__main__':
     for dict in dicts:
         for _, item_list in dict.items():
                 all_interested_cols.extend(item_list)
-    df = df.dropna(subset=all_interested_cols)
+    print(all_interested_cols)
+    # Remove duplicates
+    all_interested_cols = list(dict.fromkeys(all_interested_cols))
+    print(all_interested_cols)
+    try:
+        df = df.dropna(subset=all_interested_cols)
+    except KeyError:
+        print("KeyError: ", all_interested_cols)
 
     # Remove irrelevant answers (refusal/don't know/no answer)
     #   count the number of irrelevant answers per country, to report back.
@@ -326,16 +346,28 @@ if __name__ == '__main__':
     #value_preferences = process_all_country_values(df, country_col_name, values_dict, _, False)
     value_preferences = process_all_country_values(df, country_col_name, values_dict, higher_order_values_index_list, abstract_values)
     action_judgements = process_all_country_actions(df, country_col_name, value_preferences, actions_dict)
+
     # Because principle preferences are just preferences of each principle over every other principle, use the same func.
     principle_preferences = process_all_country_values(df, country_col_name, principle_dict, _, abstract_values)
+
+    print("principle preferences are: ", principle_preferences)
+
     now = dt.now().isoformat()
     principles_fn = now+"_ess_principles.csv"
     # Principles:
     with open(principles_fn, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["Country", "Principle"])
-        for country, value in principle_preferences.items():
-            writer.writerow([country, value])
+        # Header
+        header = ["country"]
+        for pri in principle_dict.keys():
+            header.append(pri)
+        writer.writerow(header)
+        # Rows
+        for country in df[country_col_name].unique():
+            PriP = np.array(principle_preferences[country], dtype=float)
+            print("pri is: ", PriP)
+            row = [country, PriP]
+            writer.writerow(row)
 
         # Values + Preferences + Action Judgements
         if abstract_values:
