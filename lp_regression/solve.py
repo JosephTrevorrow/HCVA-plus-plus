@@ -139,9 +139,11 @@ def transition_point(P_list, J_list, w, v, e):
     #   to get a single consensus list for p=1 and p=\infty
     A, b = FormalisationMatrix(P_list, J_list, w, 1, v)
     cons_1, r_1, u_1 = L1(A, b)
+    # TODO: why are we cutting these values?
     cons_1 = cons_1[1:3]
     A, b = FormalisationMatrix(P_list, J_list, w, 1, not(v))
     cons_1_1, r_1_1, u_1_1 = L1(A, b)
+    print("CONS_1_1 = ", cons_1_1)
     cons_1_1 = cons_1_1[1:3]
     cons_1 = np.concatenate((cons_1, cons_1_1))
     
@@ -160,6 +162,8 @@ def transition_point(P_list, J_list, w, v, e):
     dist_p_list = []
     dist_inf_list = []
     diff_list = []
+    # Check all values until 10
+    p = 10
     for i in np.arange(1 + incr, p, incr):
         A, b = FormalisationMatrix(P_list, J_list, w, i, v)
         cons, r, u = Lp(A, b, i)

@@ -20,7 +20,7 @@ def PMatrix(df_row, list_of_prefs):
         print("P-matrix: ", p_matrix, "\n")
     return p_matrix
 
-def JMatrixs(df_row, list_of_actions):
+def JMatrixs(df_row, list_of_actions, num_values=4, num_actions=3):
     """This function reconstructs the J matrices. A J matrix is a matrix of action judgements
     INPUT: pd.DataFrame object
     RETURN: J+ and J- matrices. J+ is positives only, J- is negatives
@@ -37,13 +37,13 @@ def JMatrixs(df_row, list_of_actions):
         [-df_row['a_adp_nonrel'], -df_row['a_div_nonrel']]
     ]
     """
-    size = len(list_of_actions)
-    J_p = np.zeros((size, size))
-    J_n = np.zeros((size, size))
-
-    k = 0
-    for i in range(size):
-        for j in range(size):
+    J_p = np.zeros((num_values, num_actions))
+    J_n = np.zeros((num_values, num_actions))
+    k = 1
+    # for every value
+    for i in range(num_values):
+        # for every action judgement
+        for j in range(num_actions):
             J_p[i][j] = df_row[k]
             J_n[i][j] = -df_row[k]
             k+=1
@@ -76,20 +76,15 @@ def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0)
     P_list = []
     country_dict = {}
     list_of_prefs = [col for col in df.columns if 'P__' in col]
+    list_of_actions = [col for col in df.columns if 'VA__' in col]
     # Note that this is a list of all matrices, not a sum of all matrices.
     for i in range(n_agents):
         country = df.iloc[i]['country']
         country_dict.update({i: country})
         P = PMatrix(df.iloc[i], list_of_prefs)
-        try:
-            # J_n is only used in the creation of a BVector.
-            J_p, J_n = JMatrixs(df.iloc[i])
-            J_list.append((J_p, J_n))
-        except:
-            # This will happen if you are not aggregating action judgements, just preferences.
-            if __debug__:
-                print("Could not find JMatrix, do you only have preference value_systems?")
-            pass
+        # J_n is only used in the creation of a BVector.
+        J_p, J_n = JMatrixs(df.iloc[i], list_of_actions)
+        J_list.append((J_p, J_n))
         P_list.append(P)
 
     w = Weights(df, n_agents, weights)

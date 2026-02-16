@@ -27,9 +27,10 @@ if __name__ == '__main__':
     ## COMPUTE ARGS
     parser.add_argument('-v', default=False, help='computes the preference aggregation with p given in arg -p', action='store_true')
     parser.add_argument('-hcva', default=False, help='Compute HCVA', action='store_true')
-    parser.add_argument('-hcva2', default=True, action='store_true', help='Compute HCVA++')
+    parser.add_argument('-hcva2', default=False, action='store_true', help='Compute HCVA++')
     parser.add_argument('-slm', default=False, action='store_true', help="Generate consensus using the method described by Salas-Molina et al.")
     parser.add_argument('-t', default=False, help='compute the threshold p, the transition point', action='store_true')
+    parser.add_argument('-b', default=False, help='Compute the baseline aggregations (p=1. p=\infty)', action='store_true')
 
     # Initialise args and params
     args = parser.parse_args()
@@ -150,7 +151,7 @@ if __name__ == '__main__':
         aggregate(P_list, J_list, w, con_p, True, filename_personal_vals)
         aggregate(P_list, J_list, w, con_p, False, filename_action_judgements)
         save_metadata(filename_metadata, args, _, con_p, _)
-    elif args.baselines:
+    elif args.b:
         """ Compute aggregation for all other baselines (Util, Egal) """
         baseline_ps = [1, np.inf()]
         now = dt.now().isoformat()
