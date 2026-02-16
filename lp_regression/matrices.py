@@ -1,80 +1,55 @@
 import numpy as np
 import pandas as pd
 
-def PMatrix(df_row):
-    """
-    This function computes the P matrix of the formalisation.
+def PMatrix(df_row, list_of_prefs):
+    """Reconstructs the P matrix of the formalisation. The P matrix is the preference matrix."""
+    """P-Matrix example:
+    [[st, st], [st,co], [st,se], [st,op],
+    [co, st], [co, co], [co, se], [co, op]]
+    , etc. etc.,]] """
+    # 1. Find the number of values (that becomes width/height of matrix)
+    num_vals = 4 # TODO: Make this automatically generate: num of possible comparisons is n(n-1)/2
+    p_matrix = np.zeros((num_vals, num_vals))
+    # 2. Iterate over every row that starts with a "P__" (so it is a preference), and store appropriately.
+    k = 1 # Set at 1 to avoid col 1: "country" # TODO: Debug to make sure this works
+    for i in range(num_vals):
+        for j in range(num_vals):
+            p_matrix[i][j] = df_row[k]
+            k+=1
+    if __debug__:
+        print("P-matrix: ", p_matrix, "\n")
+    return p_matrix
+
+def JMatrixs(df_row, list_of_actions):
+    """This function reconstructs the J matrices. A J matrix is a matrix of action judgements
     INPUT: pd.DataFrame object
-    RETURN: P matrix
+    RETURN: J+ and J- matrices. J+ is positives only, J- is negatives
     """
-    rel = df_row['rel'] / (df_row['rel'] + df_row['nonrel'])
-    per = df_row['nonrel'] / (df_row['rel'] + df_row['nonrel'])
-    p = [[0, rel], [per, 0]]
-    """
-    p example: [ [0, 0.5], 
-                 [0.5, 0], ]
-    Preference matrix of the country for considering values (Columns 2/3 Table 3 in paper)
-    """
-    return np.array(p)
-
-
-def JMatrixs(df_row):
-    """
-    This function computes the J matrices of the formalisation.
-    INPUT: pd.DataFrame object
-    RETURN: J+ and J- matrices
-    """
-
-    """
-    Note that:  n_val=J_list[0][0].shape[0],
-                n_actions=J_list[0][0].shape[1],
-    """
-    
-    
+    """Note that:  n_val=J_list[0][0].shape[0]
+                   n_actions=J_list[0][0].shape[1]"""
+    """ Example J matrix: (1 row per value, actions in order)
     J_p = [
-        [
-            df_row['a_div_rel']
-        ], 
-        [
-            df_row['a_div_nonrel']
-        ]
+        [df_row['a_adp_rel'], df_row['a_div_rel']],
+        [df_row['a_adp_nonrel'], df_row['a_div_nonrel']]
     ]
-    
     J_n = [
-        [
-            -df_row['a_div_rel']
-        ], 
-        [
-            -df_row['a_div_nonrel']
-        ]
+        [-df_row['a_adp_rel'], -df_row['a_div_rel']],
+        [-df_row['a_adp_nonrel'], -df_row['a_div_nonrel']]
     ]
-
-    """ 
-    J_p = [
-        [
-            df_row['a_adp_rel'],
-            df_row['a_div_rel']
-        ],
-        [
-            df_row['a_adp_nonrel'],
-            df_row['a_div_nonrel']
-        ]
-    ]
-    
-    J_n = [
-        [
-            -df_row['a_adp_rel'],
-            -df_row['a_div_rel']
-        ],
-        [
-            -df_row['a_adp_nonrel'],
-            -df_row['a_div_nonrel']
-        ]
-    ]
-    
     """
-    return np.array(J_p), np.array(J_n)
+    size = len(list_of_actions)
+    J_p = np.zeros((size, size))
+    J_n = np.zeros((size, size))
 
+    k = 0
+    for i in range(size):
+        for j in range(size):
+            J_p[i][j] = df_row[k]
+            J_n[i][j] = -df_row[k]
+            k+=1
+    if __debug__:
+        print("J_p: ", J_p, "\nJ_n: ", J_n, "\n")
+    return J_p, J_n
 
 def Weights(df, n_countries, weights=0):
     """
@@ -113,10 +88,9 @@ def Weights(df, n_countries, weights=0):
             w.append(1)
         return np.array(w)
 
-
-def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0, df=None):
+def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0):
     """
-    This function computes the matrices P, J+ and J- and the weight vector of the formalisation.
+    This function computes the matrices P, J+ and J-, and the weight vector of the formalisation.
     INPUT: filename -- str ; delimiter -- str ;
            weights -- int (weights' set up option:
            · if weights = 0, we consider no weights
@@ -124,30 +98,29 @@ def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0,
            · if weights = 2), we consider the total population of the country
     RETURN: np.array with weights
     """
-    if df is not None:
-        df = df
-    else:   
-        df = pd.read_csv(filename, delimiter=delimiter)
-    n_countries = df.shape[0]  # number of rows
+    df = pd.read_csv(filename, delimiter=delimiter)
+    n_agents = df.shape[0]  # number of rows
     J_list = []
     P_list = []
     country_dict = {}
-    """
-    Note that this is a list of all matrices, not a sum of all matrices.
-    """
-    for i in range(n_countries):  # compute array of matrices for every country
+    list_of_prefs = [col for col in df.columns if 'P__' in col]
+    # Note that this is a list of all matrices, not a sum of all matrices.
+    for i in range(n_agents):
         country = df.iloc[i]['country']
         country_dict.update({i: country})
-        P = PMatrix(df.iloc[i])
+        P = PMatrix(df.iloc[i], list_of_prefs)
         try:
+            # J_n is only used in the creation of a BVector.
             J_p, J_n = JMatrixs(df.iloc[i])
             J_list.append((J_p, J_n))
         except:
+            # This will happen if you are not aggregating action judgements, just preferences.
+            if __debug__:
+                print("Could not find JMatrix, do you only have preference value_systems?")
             pass
-            #print("Could not find JMatrix, do you only have preference value_systems?")
         P_list.append(P)
 
-    w = Weights(df, n_countries, weights)
+    w = Weights(df, n_agents, weights)
     return P_list, J_list, w, country_dict
 
 def Vectorisation(M):
