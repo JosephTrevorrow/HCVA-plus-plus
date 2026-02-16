@@ -18,74 +18,26 @@ if __name__ == '__main__':
     ## PARAMETER ARGS
     parser.add_argument('-n', type=int, default=7, help='n')
     parser.add_argument('-m', type=int, default=2, help='m')
-    parser.add_argument('-p', type=float, default=10, help='p')
-    parser.add_argument('-e', type=float, default=1e-4, help='e')
-    parser.add_argument(
-        '-w',
-        type=int,
-        default=0,
-        help='Weights')
+    parser.add_argument('-e', type=float, default=1e-4, help='Epsilon cut-point for T, HCVA')
+    parser.add_argument('-w', type=int, default=0, help='Weights')
     ## FILE ARGS
-    parser.add_argument(
-        '-f',
-        type=str,
-        default="22-01-2025-agent-value_systems.csv",
-        help='CSV file with personal values value_systems')
-    parser.add_argument(
-        '-pf',
-        type=str,
-        default="input_data/principles/placeholder_principles.csv",
-        help='CSV file with principle value_systems')
-    parser.add_argument(
-        '-slmf',
-        type=str,
-        default="input_data/sml_principles/placeolder_sml.csv",
-        help='CSV file with principles for Salas-Molina method SML')
-    parser.add_argument(
-        '-o', 
-        type=str, 
-        default="consensus_args_o.csv",
-        help='write consensus arguments to file')
-    parser.add_argument(
-        '-g',
-        type=str,
-        default='none',
-        help='store results in csv')
+    parser.add_argument('-f', type=str, default="22-01-2025-agent-value_systems.csv", help='CSV file with personal values value_systems')
+    parser.add_argument('-pf', type=str, default="input_data/principles/placeholder_principles.csv", help='CSV file with principle value_systems')
+    parser.add_argument('-slmf', type=str, default="input_data/sml_principles/placeolder_sml.csv", help='CSV file with principles for Salas-Molina method SML')
     ## COMPUTE ARGS
-    parser.add_argument(
-        '-v',
-        default=False,
-        help='computes the preference aggregation with p given in arg -p',
-        action='store_true')    
-    parser.add_argument(
-        '-hcva',
-        default=False,
-        help='Compute HCVA',
-        action='store_true')
-    parser.add_argument(
-        '-hcva2',
-        default=True,
-        action='store_true',
-        help='Compute HCVA++')
-    parser.add_argument(
-        '-slm',
-        default=False,
-        action='store_true',
-        help="Generate consensus using the method described by Salas-Molina et al.")
-    parser.add_argument(
-        '-t',
-        default=False,
-        help='compute the threshold p, the transition point',
-        action='store_true')
+    parser.add_argument('-v', default=False, help='computes the preference aggregation with p given in arg -p', action='store_true')
+    parser.add_argument('-hcva', default=False, help='Compute HCVA', action='store_true')
+    parser.add_argument('-hcva2', default=True, action='store_true', help='Compute HCVA++')
+    parser.add_argument('-slm', default=False, action='store_true', help="Generate consensus using the method described by Salas-Molina et al.")
+    parser.add_argument('-t', default=False, help='compute the threshold p, the transition point', action='store_true')
 
     # Initialise args and params
     args = parser.parse_args()
     n = args.n
     m = args.m
     # P_list, J_list, country_dict are the matrices created from the personal values
-    P_list, J_list, w, country_dict = FormalisationObjects(
-        filename=args.f, delimiter=',', weights=args.w)
-        
+    P_list, J_list, w, country_dict = FormalisationObjects(filename=args.f, delimiter=',', weights=args.w)
+
     ## AGGREGATIONS/COMPUTE
     if args.t:
         """ Compute the transition point, and find an aggregation with that transition point P """
@@ -188,7 +140,6 @@ if __name__ == '__main__':
                 # to convert from ordinal list num to corresponding p
                 con_p = (j / 10) + 1
         print("Nearest P to mean con_vals is: ", con_p)
-
         # 6. Aggregate using that value of p
         # 7. Aggregate all preference values and action judgements submitted by agents
         # using the average rule as described in the paper. Do this twice, once for vals, other for action judgements
@@ -219,11 +170,5 @@ if __name__ == '__main__':
                 # Some other p
                 aggregate(P_list, J_list, w, p, True, filename_personal_vals)
                 aggregate(P_list, J_list, w, p, False, filename_action_judgements)
-
-    elif args.v:
-        """ Compute aggregation with a set P (Lera-Leri et al., Util, Egal, T etc.)
-        P (principle) value must be given """
-        print("Computing aggregation with set P: ", args.p)
-        p = args.p
 
         
