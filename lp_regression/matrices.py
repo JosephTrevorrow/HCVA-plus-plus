@@ -107,13 +107,12 @@ def Vectorisation(M):
             vector.append(M[i][j])
     return vector
 
-
 def BMatrix(w, n_val=2, n_actions=2, p=2):
     """
-    This function computes the B matrix.
+    This function computes the B matrix. (A in ||Ax-b||_p problem) where v = False (action aggregation, not preferences)
     INPUT: w (weights), n_val -- int (number of values), n_actions -- int (number of actions),
            p -- int
-    RETURN: np.array shape = 2·n_val·n_actions·n_countres x 2·n_val·n_actions
+    RETURN: np.array shape = 2·n_val·n_actions·n_countries x 2·n_val·n_actions
     """
     I = np.identity(2 * n_val * n_actions)
     B = np.array((w[0] ** (1 / p)) * I)
@@ -121,12 +120,11 @@ def BMatrix(w, n_val=2, n_actions=2, p=2):
         B = np.concatenate((B, (w[i] ** (1 / p)) * I))
     return B
 
-
 def BVector(J_list, w, p=2):
     """
     This function computes the b vector.
     INPUT: J_list (list of J matrices), w (weights), p -- int
-    RETURN: np.array shape = 2·n_val·n_actions·n_countres x 1
+    RETURN: np.array shape = 2·n_val·n_actions·n_countries x 1
     """
     b = []
     for i in range(len(w)):
@@ -138,12 +136,11 @@ def BVector(J_list, w, p=2):
             b.append((w[i]**(1 / p)) * j_n[k])
     return np.array(b)
 
-
 def CMatrix(w, n_val=2, p=2):
     """
-    This function computes the C matrix.
+    This function computes the C matrix. (A in ||Ax-b||_p problem) where v = True (preference aggregation, not actions)
     INPUT: w (weights), n_val -- int (number of values), p -- int
-    RETURN: np.array shape = n_val·n_val·n_countres x n_val·n_val
+    RETURN: np.array shape = n_val·n_val·n_countries x n_val·n_val
     """
     I = np.identity(n_val * n_val)
     C = np.array((w[0] ** (1 / p)) * I)
@@ -151,26 +148,21 @@ def CMatrix(w, n_val=2, p=2):
         C = np.concatenate((C, (w[i] ** (1 / p)) * I))
     return C
 
-
 def CVector(P_list, w, p=2):
     """
-    This function computes the c vector.
+    This function computes the c vector. (b in ||Ax-b||_p problem) where v = True (preference aggregation, not actions)
     INPUT: P_list (list of P matrices), w (weights), p -- int
-    RETURN: np.array shape = n_val·n_val·n_countres x 1
+    RETURN: np.array shape = n_val·n_val·n_countries x 1
     """
     c = []
     for i in range(len(w)):
         pref = Vectorisation(P_list[i])
         for k in range(len(pref)):
             c.append((w[i] ** (1 / p)) * pref[k])
-
     return np.array(c)
 
-
 def FormalisationMatrix(P_list, J_list, w, p=2, v=True):
-    """
-    This function computes the A matrix and b vector of the lp-regression problem,
-    i.e. minimizing ||Ax-b||_p problem.
+    """ This function computes the A matrix and b vector of the lp-regression problem, i.e. minimising ||Ax-b||_p problem.
     INPUT: P_list (list of P matrices), J_list (list of J matrices), w (weights),
            p -- int, v -- boolean (parameter, when v = True, we solve the preference aggregation
            over moral values, when v = False, we solve the aggregation of moral values)
@@ -184,13 +176,8 @@ def FormalisationMatrix(P_list, J_list, w, p=2, v=True):
                     n_actions=J_list[0][0].shape[1], p=p)
         b = BVector(J_list, w, p=p)
     """
-    In this case, A and b correspond to the matrices described in Theorem 5.1 of the paper.
+    In this case, A and b correspond to the matrices described in Theorem 5.1 from Lera-Leri et al. (2024)
     A = $[w_1^{1/p}*I...w_N^{1/p}*I]$
     b = $[w_1^{1/p}*T_1...w_N^{1/p}*T_N]$
     """
     return A, b
-
-
-if __name__ == '__main__':
-    P_list, J_list, w, country_dict = FormalisationObjects()
-    A, b = FormalisationMatrix(P_list, J_list, w)
