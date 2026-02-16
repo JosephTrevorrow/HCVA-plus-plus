@@ -229,14 +229,15 @@ def aggregate(P_list, J_list, w, p, v):
     print('p: {:.2f}, cons: '.format(p), cons)
     return p, u, cons
 
-def aggregate_all_p(P_list, J_list, w):
+def aggregate_all_p(P_list, J_list, w, step_size, incr):
     """
     This function is used by the HCVA to aggregate over all principle preferences in main.py
     """
     A, b = FormalisationMatrix(P_list, J_list, w, 1, True)
     cons_1, _, ua = L1(A, b)
     print(cons_1)
-    # TODO: Check if these are correct cut points given number of values/principles
+    # TODO: remove these cut points, pointless, ensure that aggregating all P does values and actions.
+    # TODO: Make an aggregate preferences only function that copies this structure for HCVA VALE purposes.
     cons_1 = cons_1[1:3]
     print(cons_1)
     A, b = FormalisationMatrix(P_list, J_list, w, np.inf, True)
@@ -270,7 +271,7 @@ def aggregate_all_p(P_list, J_list, w):
         # print('{:.2f} \t \t {:.4f}'.format(p, ub))
     return p_list, u_list, cons_list, dist_1p_list, dist_pl_list, cons_1, cons_l
 
-def aggregate_slm(P_list, J_list, w, list_of_ps, v, filename):
+def aggregate_slm(P_list, J_list, w, list_of_ps, v):
     p_list = []
     u_list = []
     cons_list = []
@@ -290,52 +291,20 @@ def aggregate_slm(P_list, J_list, w, list_of_ps, v, filename):
     w = np.repeat(w, A.shape[1])
     # Aggregate over all principles together using the matrix
     cons, res, u, psi = mLp(A, b, ps, λs, False)
-    # TODO: Check if output_file will work with these params.
-    output_file(
-        p_list,
-        u_list,
-        cons,
-        v,
-        filename)
+    return p, u, cons
 
-def aggregate_inf(P_list, J_list, w, p, v, filename):
-    p_list = []
-    u_list = []
-    cons_list = []
-
+def aggregate_inf(P_list, J_list, w, p, v):
     # Compute one aggregation using the P specified
     A, b = FormalisationMatrix(P_list, J_list, w, p, v)
-    cons, _, ub = Linf(A, b)
-    p_list.append(p)
-    u_list.append(ub)
-    cons_list.append(cons)
+    cons, _, u = Linf(A, b)
     #print('{:.2f} \t \t {:.4f}'.format(p, ub))
     print('p: {:.2f}, cons: '.format(p), cons)
-
-    output_file(
-        p_list,
-        u_list,
-        cons_list,
-        v,
-        filename)
+    return p, u, cons
 
 def aggregate_one(P_list, J_list, w, p, v, filename):
-    p_list = []
-    u_list = []
-    cons_list = []
-
     # Compute one aggregation using the P specified
     A, b = FormalisationMatrix(P_list, J_list, w, p, v)
-    cons, _, ub = L1(A, b)
-    p_list.append(p)
-    u_list.append(ub)
-    cons_list.append(cons)
+    cons, _, u = L1(A, b)
     #print('{:.2f} \t \t {:.4f}'.format(p, ub))
     print('p: {:.2f}, cons: '.format(p), cons)
-
-    output_file(
-        p_list,
-        u_list,
-        cons_list,
-        v,
-        filename)
+    return p, u, cons

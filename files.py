@@ -20,23 +20,16 @@ def output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, 
     csv_rows = [header]
     # Baselines # TODO: dist_l and dist_1 are placeholders
     row = [p, u_pref, u_act, 0, 0]
-    # Write cons prefs
-    for j in range(len(cons[i])):
-        # writing consensus
-        el.append(cons[i][j])
-    # Write cons acts
-    for i in range:
-
+    # Write cons
+    row = row + list(cons_pref) + list(cons_act)
     # Write to a file
-    csv_rows.append(el)
+    csv_rows.append(row)
     with open(filename, 'w', newline='') as csvfile:
         # writing file
         writer = csv.writer(csvfile)
         writer.writerows(csv_rows)
     csvfile.close()
     return None
-
-
 
 def output_file(p, U, cons, dist_1, dist_l, v, name, values_dict, actions_dict):
     """
