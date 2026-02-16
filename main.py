@@ -4,7 +4,7 @@ import csv
 import copy
 from datetime import datetime as dt
 from lp_regression.matrices import FormalisationObjects, FormalisationMatrix
-from lp_regression.solve import L1, L2, Linf, Lp, mLp, transition_point, aggregate, aggregate_all_p, aggregate_slm
+from lp_regression.solve import L1, L2, Linf, Lp, mLp, transition_point, aggregate, aggregate_all_p, aggregate_slm, aggregate_inf, aggregate_one
 from files import limit_output, save_metadata
 import pandas as pd
 import juliapkg
@@ -88,9 +88,7 @@ if __name__ == '__main__':
         
     ## AGGREGATIONS/COMPUTE
     if args.t:
-        """
-        Compute the transition point, and find an aggregation with that transition point P
-        """
+        """ Compute the transition point, and find an aggregation with that transition point P """
         # 1. Compute transition point
         p_list, dist_p_list, dist_inf_list, diff_list, t_point = transition_point(P_list, J_list, w, args.v, args.e)
         limit_output(
@@ -108,9 +106,7 @@ if __name__ == '__main__':
         aggregate(P_list, J_list, w, t_point, False, filename_action_judgements)
         save_metadata(filename_metadata, args, t_point, _, _)
     elif args.hcva2:
-        """
-        Compute HCVA++ (mean/JAIR)
-        """
+        """ Compute HCVA++ (mean/JAIR) """
         print("Computing HCVA++")
         # 1. Find the consensus priciple $p$
         # 1.1 Find the consensus principle preference
@@ -141,9 +137,7 @@ if __name__ == '__main__':
         aggregate(P_list, J_list, w, consensus_p, False, filename_action_judgements)
         save_metadata(filename_metadata, args, transition_p, consensus_p, consensus_preference)
     elif args.slm:
-        """
-        Compute aggregation with Salas-Molina et al. baseline (Many P's)
-        """
+        """ Compute aggregation with Salas-Molina et al. baseline (Many P's) """
         print("Computing SLM")
         # 1. Read in the principles file. Each column contains a set of principles to use.
         file_path = args.slmf
@@ -158,9 +152,7 @@ if __name__ == '__main__':
             aggregate_slm(P_list, J_list, w, series, False, filename_action_judgements)
             save_metadata(filename_metadata, args, _, series, _)
     elif args.hcva:
-        """
-        Compute HCVA (closest P/VALE)
-        """
+        """ Compute HCVA (closest P/VALE) """
         print("Computing HCVA")
         # 1. Formalise the principle preferences as matrices
         Pri_P_list, Pri_J_list, Pri_w, Pri_Country_dict = FormalisationObjects(
@@ -198,8 +190,8 @@ if __name__ == '__main__':
         print("Nearest P to mean con_vals is: ", con_p)
 
         # 6. Aggregate using that value of p
-        # 7. Aggregate all of the preference values, and action judgements submitted by agents
-        # using the average rule as described in paper. Do this twice, once for vals, other for action judgements
+        # 7. Aggregate all preference values and action judgements submitted by agents
+        # using the average rule as described in the paper. Do this twice, once for vals, other for action judgements
         now = dt.now().isoformat()
         filename_personal_vals = str("HCVA_PERSONALS_" + now + ".csv")
         filename_action_judgements = str("HCVA_ACTIONS_" + now + ".csv")
@@ -207,11 +199,30 @@ if __name__ == '__main__':
         aggregate(P_list, J_list, w, con_p, True, filename_personal_vals)
         aggregate(P_list, J_list, w, con_p, False, filename_action_judgements)
         save_metadata(filename_metadata, args, _, con_p, _)
+    elif args.baselines:
+        """ Compute aggregation for all other baselines (Util, Egal) """
+        baseline_ps = [1, np.inf()]
+        now = dt.now().isoformat()
+        for p in baseline_ps:
+            # Generate filenames
+            filename_personal_vals = str(p + "_PERSONALS_" + now + ".csv")
+            filename_action_judgements = str(p + "_ACTIONS_" + now + ".csv")
+            filename_metadata = str(p + "_METADATA_" + now + ".csv")
+            # Aggregate and store
+            if p == np.inf:
+                aggregate_inf(P_list, J_list, w, p, True, filename_personal_vals)
+                aggregate_inf(P_list, J_list, w, p, False, filename_action_judgements)
+            elif p == 1:
+                aggregate_one(P_list, J_list, w, p, True, filename_personal_vals)
+                aggregate_one(P_list, J_list, w, p, False, filename_action_judgements)
+            else:
+                # Some other p
+                aggregate(P_list, J_list, w, p, True, filename_personal_vals)
+                aggregate(P_list, J_list, w, p, False, filename_action_judgements)
+
     elif args.v:
-        """
-        Compute aggregation with set P (Lera-Leri et al., Util, Egal, T etc.)
-        P (principle) value must be given
-        """
+        """ Compute aggregation with a set P (Lera-Leri et al., Util, Egal, T etc.)
+        P (principle) value must be given """
         print("Computing aggregation with set P: ", args.p)
         p = args.p
 

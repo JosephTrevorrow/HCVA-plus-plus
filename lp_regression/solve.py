@@ -115,7 +115,7 @@ def Lp(A, b, p):
     else:  # vanilla IRLS implementation
         return IRLS(A, b, p)
 
-def mLp(A, b, ps, λs, weight=True, filename):
+def mLp(A, b, ps, λs, weight=True):
     """
     This function is used by the -slm arg to run the mLp method for finding consensus using multiple p values.
     This function is taken from the following repo: https://github.com/filippobistaffa/social-choice-pnorm
@@ -283,5 +283,47 @@ def aggregate_slm(P_list, J_list, w, list_of_ps, v, filename):
         p_list,
         u_list,
         cons,
+        v,
+        filename)
+
+def aggregate_inf(P_list, J_list, w, p, v, filename):
+    p_list = []
+    u_list = []
+    cons_list = []
+
+    # Compute one aggregation using the P specified
+    A, b = FormalisationMatrix(P_list, J_list, w, p, v)
+    cons, _, ub = Linf(A, b)
+    p_list.append(p)
+    u_list.append(ub)
+    cons_list.append(cons)
+    #print('{:.2f} \t \t {:.4f}'.format(p, ub))
+    print('p: {:.2f}, cons: '.format(p), cons)
+
+    output_file(
+        p_list,
+        u_list,
+        cons_list,
+        v,
+        filename)
+
+def aggregate_one(P_list, J_list, w, p, v, filename):
+    p_list = []
+    u_list = []
+    cons_list = []
+
+    # Compute one aggregation using the P specified
+    A, b = FormalisationMatrix(P_list, J_list, w, p, v)
+    cons, _, ub = L1(A, b)
+    p_list.append(p)
+    u_list.append(ub)
+    cons_list.append(cons)
+    #print('{:.2f} \t \t {:.4f}'.format(p, ub))
+    print('p: {:.2f}, cons: '.format(p), cons)
+
+    output_file(
+        p_list,
+        u_list,
+        cons_list,
         v,
         filename)
