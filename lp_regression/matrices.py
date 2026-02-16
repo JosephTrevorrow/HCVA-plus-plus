@@ -53,50 +53,22 @@ def JMatrixs(df_row, list_of_actions):
 
 def Weights(df, n_countries, weights=0):
     """
-    This function computes the weight vector of the formalisation.
-    INPUT: df -- pd.DataFrame object ; n_countries -- int ;
-           weights -- int (weights' set up option:
-           · if weights = 0, we consider no weights
-           · if weights = 1, we consider the population of each country that participated in the study (scenario not contemplated in the paper)
-           · if weights = 2), we consider the total population of the country
-    RETURN: np.array with weights
+    This function computes a weights vector. We do not consider weights in this work.
+    # TODO: Check if this can be removed safely.
     """
     w = []
     n_total = 0
-    if weights == 1:  # population of each country that participated in the study
-        for i in range(n_countries):
-            n_participants = df.iloc[i]['rel'] + df.iloc[i]['nonrel']
-            n_total += n_participants
-            w.append(n_participants)
-        w = np.array(w)  # vector without normalisation
-        w_norm = []
-        for i in range(n_countries):  # normalizing w
-            w_norm.append(w[i] / n_total)
-        return np.array(w_norm)
-    elif weights == 2:  # total population of the country
-        for i in range(n_countries):
-            n_participants = df.iloc[i]['population']
-            n_total += n_participants
-            w.append(n_participants)
-        w = np.array(w)  # vector without normalisation
-        w_norm = []
-        for i in range(n_countries):  # normalizing w
-            w_norm.append(w[i] / n_total)
-        return np.array(w_norm)
-    else:  # no weights, i.e. w = 1
-        for i in range(n_countries):
-            w.append(1)
-        return np.array(w)
+    # no weights, i.e. w = 1
+    for i in range(n_countries):
+        w.append(1)
+    return np.array(w)
 
 def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0):
     """
     This function computes the matrices P, J+ and J-, and the weight vector of the formalisation.
     INPUT: filename -- str ; delimiter -- str ;
-           weights -- int (weights' set up option:
-           · if weights = 0, we consider no weights
-           · if weights = 1, we consider the population of each country that participated in the study (scenario not contemplated in the paper)
-           · if weights = 2), we consider the total population of the country
-    RETURN: np.array with weights
+           weights -- int (weights' arg is always 0).
+    RETURN: np.array with weights (array only contains 1's)
     """
     df = pd.read_csv(filename, delimiter=delimiter)
     n_agents = df.shape[0]  # number of rows
@@ -125,7 +97,7 @@ def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0)
 
 def Vectorisation(M):
     """
-    This function vectorize any matrix.
+    This function vectorises any matrix.
     INPUT: M (matrix)
     RETURN: np.array shape = dim x dim
     """
