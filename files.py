@@ -10,7 +10,34 @@ def save_metadata(filename, args, transition_p, consensus_p, consensus_preferenc
         writer.writeheader()
         writer.writerows(csv_rows)
     return None
-    
+
+def output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list):
+    """
+    This function writes the results of solving the lp-regression for a single p
+    This is usually the output of a single experiment.
+    """
+    header = ['p', 'U_pref', 'u_act', 'dist_1', 'dist_l'] + values_list + actions_list
+    csv_rows = [header]
+    # Baselines # TODO: dist_l and dist_1 are placeholders
+    row = [p, u_pref, u_act, 0, 0]
+    # Write cons prefs
+    for j in range(len(cons[i])):
+        # writing consensus
+        el.append(cons[i][j])
+    # Write cons acts
+    for i in range:
+
+    # Write to a file
+    csv_rows.append(el)
+    with open(filename, 'w', newline='') as csvfile:
+        # writing file
+        writer = csv.writer(csvfile)
+        writer.writerows(csv_rows)
+    csvfile.close()
+    return None
+
+
+
 def output_file(p, U, cons, dist_1, dist_l, v, name, values_dict, actions_dict):
     """
     This function writes the results of solving the lp-regression for different p's.

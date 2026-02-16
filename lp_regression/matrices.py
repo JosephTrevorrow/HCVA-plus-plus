@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-def PMatrix(df_row, list_of_prefs):
+def PMatrix(prefs):
     """Reconstructs the P matrix of the formalisation. The P matrix is the preference matrix."""
     """P-Matrix example:
     [[st, st], [st,co], [st,se], [st,op],
@@ -11,16 +11,16 @@ def PMatrix(df_row, list_of_prefs):
     num_vals = 4 # TODO: Make this automatically generate: num of possible comparisons is n(n-1)/2
     p_matrix = np.zeros((num_vals, num_vals))
     # 2. Iterate over every row that starts with a "P__" (so it is a preference), and store appropriately.
-    k = 1 # Set at 1 to avoid col 1: "country" # TODO: Debug to make sure this works
+    k = 0 # Set at 1 to avoid col 1: "country" # TODO: Debug to make sure this works
     for i in range(num_vals):
         for j in range(num_vals):
-            p_matrix[i][j] = df_row[k]
+            p_matrix[i][j] = prefs[k]
             k+=1
     if __debug__:
         print("P-matrix: ", p_matrix, "\n")
     return p_matrix
 
-def JMatrixs(df_row, list_of_actions, num_values=4, num_actions=3):
+def JMatrixs(actions, num_values=4, num_actions=3):
     """This function reconstructs the J matrices. A J matrix is a matrix of action judgements
     INPUT: pd.DataFrame object
     RETURN: J+ and J- matrices. J+ is positives only, J- is negatives
@@ -39,13 +39,13 @@ def JMatrixs(df_row, list_of_actions, num_values=4, num_actions=3):
     """
     J_p = np.zeros((num_values, num_actions))
     J_n = np.zeros((num_values, num_actions))
-    k = 1
+    k = 0
     # for every value
     for i in range(num_values):
         # for every action judgement
         for j in range(num_actions):
-            J_p[i][j] = df_row[k]
-            J_n[i][j] = -df_row[k]
+            J_p[i][j] = actions[k]
+            J_n[i][j] = -actions[k]
             k+=1
     if __debug__:
         print("J_p: ", J_p, "\nJ_n: ", J_n, "\n")
@@ -81,9 +81,12 @@ def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0)
     for i in range(n_agents):
         country = df.iloc[i]['country']
         country_dict.update({i: country})
-        P = PMatrix(df.iloc[i], list_of_prefs)
+        # Filter such that p and j matrix are passed df's with only the relevant cols
+        p_row = df[list_of_prefs].iloc[i]
+        j_row = df[list_of_actions].iloc[i]
+        P = PMatrix(p_row)
         # J_n is only used in the creation of a BVector.
-        J_p, J_n = JMatrixs(df.iloc[i], list_of_actions)
+        J_p, J_n = JMatrixs(j_row)
         J_list.append((J_p, J_n))
         P_list.append(P)
 

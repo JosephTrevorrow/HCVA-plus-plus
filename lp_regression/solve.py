@@ -17,6 +17,10 @@ def L1(A, b):
     """
     This function runs the L1 norm on values and returns consensus.
     Note that this is the fully utilitarian case P=1
+    OUTPUT:
+    cons - the consensus matrix in the same format as the P or J matrix inputted
+    r - The value of the solved function ||Ax - b||
+    u - The distance between the value of the solved function ||Ax - b|| and 1
     """
     import cvxpy as cp
     # create variables
@@ -51,7 +55,10 @@ def L2(A, b):
 def Linf(A, b):
     """
     This function runs the Linf norm on values and returns consensus
-    Note that this is the fully egalitarian case P=inf
+    OUTPUT:
+    cons - the consensus matrix in the same format as the P or J matrix inputted
+    r - The value of the solved function ||Ax - b||
+    u - The distance between the value of the solved function ||Ax - b|| and np.inf
     """
     import cvxpy as cp
     # create variables
@@ -77,6 +84,10 @@ def IRLS(A, b, p, max_iter=int(1e6), e=1e-3, d=1e-4):
     """
     This function runs the IRLS method for finding consensus for any P >= 3
     using a python implementation
+        OUTPUT:
+    cons - the consensus matrix in the same format as the P or J matrix inputted
+    r - The value of the solved function ||Ax - b||
+    u - The distance between the value of the solved function ||Ax - b|| and p
     """
     # l = A.shape[1]
     n = A.shape[0]
@@ -97,6 +108,12 @@ def IRLS(A, b, p, max_iter=int(1e6), e=1e-3, d=1e-4):
     return x, r, np.linalg.norm(r, p)
 
 def Lp(A, b, p):
+    """
+    OUTPUT:
+    cons - the consensus matrix in the same format as the P or J matrix inputted
+    r - The value of the solved function ||Ax - b||
+    u - The distance between the value of the solved function ||Ax - b|| and p
+    """
     # l = A.shape[1]
     if p >= 2 :  # pIRLS implementation (NIPS 2019) (always use this for continuity)
         jl.include(os.path.dirname(
@@ -106,8 +123,17 @@ def Lp(A, b, p):
         C = np.zeros_like(A)
         d = np.zeros_like(b)
         epsilon = 1e-10
+        # jl.pNorm has the following parameters:
+        # ϵ : accuracy we want to achieve
+        # A,b : the objective we are minimizing is ||Ax-b||_p^p
+        # p : the norm we want to minimize
+        # C,d : The linear constraints are Cx = d
+        # x : Initial solution
+        # lb : lower bound on the optimum
+        # function pNorm(ϵ,A,b,p,C,d, x, lb)
         cons, it = jl.pNorm(epsilon, A, b.reshape(-1, 1),
                               p, C, d.reshape(-1, 1))
+        # So the cons we return is the same as
         # cons, it = IRLS.pNorm(epsilon, A, b.reshape(-1, 1), p, C, d.reshape(-1, 1))
         r = np.abs(A @ cons - b)
         jl.collector()
@@ -131,52 +157,46 @@ def mLp(A, b, ps, λs, weight=True):
     return x.value, res, prob.value / sum(wps), psi
 
 ## RUNNER FUNCTIONS HERE
-def transition_point(P_list, J_list, w, v, e):
+def transition_point(P_list, J_list, w, e):
     """
     Find the transition point given personal values
     """
+    # Cons values are a flattened consensus matrix for either preferences or actions.
+
     # Join the two consensus lists of preferences and action judgements
     #   to get a single consensus list for p=1 and p=\infty
-    A, b = FormalisationMatrix(P_list, J_list, w, 1, v)
-    cons_1, r_1, u_1 = L1(A, b)
-    # TODO: why are we cutting these values?
-    cons_1 = cons_1[1:3]
-    A, b = FormalisationMatrix(P_list, J_list, w, 1, not(v))
-    cons_1_1, r_1_1, u_1_1 = L1(A, b)
-    print("CONS_1_1 = ", cons_1_1)
-    cons_1_1 = cons_1_1[1:3]
-    cons_1 = np.concatenate((cons_1, cons_1_1))
-    
-    A, b = FormalisationMatrix(P_list, J_list, w, np.inf, v)
-    cons_l, r_l, u_l = Linf(A, b)
-    cons_l = cons_l[1:3]
-    A, b = FormalisationMatrix(P_list, J_list, w, np.inf, not(v))
-    cons_l_1, r_l_1, u_l_1 = Linf(A, b)
-    cons_l_1 = cons_l_1[1:3]
-    cons_l = np.concatenate((cons_l, cons_l_1))
+    A, b = FormalisationMatrix(P_list, J_list, w, 1, True)
+    cons_1_pref, r_1_pref, u_1_pref = L1(A, b)
+    A, b = FormalisationMatrix(P_list, J_list, w, 1, False)
+    cons_1_act, r_1_act, u_1_act = L1(A, b)
+    cons_1 = np.concatenate((cons_1_pref, cons_1_act))
+
+    A, b = FormalisationMatrix(P_list, J_list, w, np.inf, True)
+    cons_l_pref, r_l_pref, u_l_pref = Linf(A, b)
+    A, b = FormalisationMatrix(P_list, J_list, w, np.inf, False)
+    cons_l_act, r_l_act, u_l_act = Linf(A, b)
+    cons_l = np.concatenate((cons_l_pref, cons_l_act))
 
     diff = np.inf
     incr = 0.1
-
     p_list = []
     dist_p_list = []
     dist_inf_list = []
     diff_list = []
     # Check all values until 10
     p = 10
+    best_p = 0 # base val
     for i in np.arange(1 + incr, p, incr):
-        A, b = FormalisationMatrix(P_list, J_list, w, i, v)
-        cons, r, u = Lp(A, b, i)
-        cons = cons[1:3]
-        A, b = FormalisationMatrix(P_list, J_list, w, i, not(v))
-        cons_cons, r_cons, u_cons = Lp(A, b, i)
-        cons_cons = cons_cons[1:3]
-        cons = np.concatenate((cons, cons_cons))
+        A, b = FormalisationMatrix(P_list, J_list, w, i, True)
+        cons_pref, r, u = Lp(A, b, i)
+        A, b = FormalisationMatrix(P_list, J_list, w, i, False)
+        cons_act, r_act, u_act = Lp(A, b, i)
+        cons = np.concatenate((cons_pref, cons_act))
         print('p: {:.2f}, cons: '.format(i), cons)
 
         dist_1p = np.linalg.norm(cons_1 - cons, i)
         dist_pl = np.linalg.norm(cons_l - cons, i)
-        if (abs(dist_1p - dist_pl) < e):
+        if abs(dist_1p - dist_pl) < e:
             best_p = i
             print('Not improving anymore, stopping!')
         else:
@@ -189,7 +209,7 @@ def transition_point(P_list, J_list, w, v, e):
                     i, i, p, abs(
                         dist_1p - dist_pl)))
             print(
-                'Current best difference (L1<-->L{:.2f}) - (L{:.2f}<-->L{:.2f}) = {:.4f}'.format(i, i, p, diff))
+                'Current best difference (L1<-->L{:.2f}) - (L{:.2f}<-->L{:.2f}) = {:.4f}'.format(i, i, best_p, diff))
             if abs(dist_1p - dist_pl) < diff:
                 diff = abs(dist_1p - dist_pl)
                 best_p = i
@@ -200,26 +220,14 @@ def transition_point(P_list, J_list, w, v, e):
         print('Transition point: {:.2f}'.format(best_p))
     return p_list, dist_p_list, dist_inf_list, diff_list, best_p
 
-def aggregate(P_list, J_list, w, p, v, filename):
-    p_list = []
-    u_list = []
-    cons_list = []
+def aggregate(P_list, J_list, w, p, v):
 
     # Compute one aggregation using the P specified
     A, b = FormalisationMatrix(P_list, J_list, w, p, v)
-    cons, _, ub = Lp(A, b, p)
-    p_list.append(p)
-    u_list.append(ub)
-    cons_list.append(cons)
+    cons, _, u = Lp(A, b, p)
     #print('{:.2f} \t \t {:.4f}'.format(p, ub))
     print('p: {:.2f}, cons: '.format(p), cons)
-
-    output_file(
-        p_list,
-        u_list,
-        cons_list,
-        v,
-        filename)
+    return p, u, cons
 
 def aggregate_all_p(P_list, J_list, w):
     """
