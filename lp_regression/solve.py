@@ -221,8 +221,7 @@ def transition_point(P_list, J_list, w, e):
     return p_list, dist_p_list, dist_inf_list, diff_list, best_p
 
 def aggregate(P_list, J_list, w, p, v):
-
-    # Compute one aggregation using the P specified
+    """Compute one aggregation using the P specified"""
     A, b = FormalisationMatrix(P_list, J_list, w, p, v)
     cons, _, u = Lp(A, b, p)
     #print('{:.2f} \t \t {:.4f}'.format(p, ub))
@@ -230,28 +229,28 @@ def aggregate(P_list, J_list, w, p, v):
     return p, u, cons
 
 def aggregate_all_p(P_list, J_list, w, step_size, incr):
-    """
-    This function is used by the HCVA to aggregate over all principle preferences in main.py
-    """
+    """This function aggregates over all P between 1-10, given a step size"""
     A, b = FormalisationMatrix(P_list, J_list, w, 1, True)
-    cons_1, _, ua = L1(A, b)
-    print(cons_1)
-    # TODO: remove these cut points, pointless, ensure that aggregating all P does values and actions.
-    # TODO: Make an aggregate preferences only function that copies this structure for HCVA VALE purposes.
-    cons_1 = cons_1[1:3]
-    print(cons_1)
+    cons_1_pref, r_1_pref, u_1_pref = L1(A, b)
+    A, b = FormalisationMatrix(P_list, J_list, w, 1, False)
+    cons_1_act, r_1_act, u_1_act = L1(A, b)
+    cons_1 = np.concatenate((cons_1_pref, cons_1_act))
+    u = np.array([u_1_pref, u_1_act])
+
+
     A, b = FormalisationMatrix(P_list, J_list, w, np.inf, True)
-    cons_l, _, _, = Linf(A, b)
-    print(cons_l)
-    cons_l = cons_l[1:3]
-    print(cons_l)
+    cons_l_pref, _, _ = Linf(A, b)
+    A, b = FormalisationMatrix(P_list, J_list, w, np.inf, False)
+    cons_l_act, _, _ = Linf(A, b)
+    cons_l = np.concatenate((cons_l_pref, cons_l_act))
+
     dist_1p = np.linalg.norm(cons_1 - cons_1, 1)
     dist_pl = np.linalg.norm(cons_l - cons_1, np.inf)
     p = 1
     # print('{:.2f} \t \t {:.4f}'.format(p, ua))
     incr = 0.1
     p_list = [1.0]
-    u_list = [ua]
+    u_list = [u]
     cons_list = [cons_1]
     dist_1p_list = [dist_1p]
     dist_pl_list = [dist_pl]
@@ -259,10 +258,14 @@ def aggregate_all_p(P_list, J_list, w, step_size, incr):
     while p < 10:
         p += incr
         A, b = FormalisationMatrix(P_list, J_list, w, p, True)
-        cons, _, ub = Lp(A, b, p)
-        cons = cons[1:3]
+        cons_pref, _, u_pref = Lp(A, b, p)
+        A, b = FormalisationMatrix(P_list, J_list, w, p, False)
+        cons_act, _, u_act = Lp(A, b, p)
+        cons = np.concatenate((cons_pref, cons_act))
+        u = np.array([u_pref, u_act])
+
         p_list.append(p)
-        u_list.append(ub)
+        u_list.append(u)
         cons_list.append(cons)
         dist_1p = np.linalg.norm(cons_1 - cons, p)
         dist_pl = np.linalg.norm(cons_l - cons, p)
@@ -271,6 +274,37 @@ def aggregate_all_p(P_list, J_list, w, step_size, incr):
         # print('{:.2f} \t \t {:.4f}'.format(p, ub))
     return p_list, u_list, cons_list, dist_1p_list, dist_pl_list, cons_1, cons_l
 
+def aggregate_prefs_only(P_list, J_list, w, p, v):
+    """This function is used by the HCVA to aggregate over all principle preferences in main.py"""
+    A, b = FormalisationMatrix(P_list, J_list, w, 1, True)
+    cons_1_pref, r_1_pref, u_1_pref = L1(A, b)
+    A, b = FormalisationMatrix(P_list, J_list, w, np.inf, True)
+    cons_l_pref, _, _ = Linf(A, b)
+
+    dist_1p = np.linalg.norm(cons_1_pref - cons_1_pref, 1)
+    dist_pl = np.linalg.norm(cons_l_pref - cons_1_pref, np.inf)
+    p = 1
+    # print('{:.2f} \t \t {:.4f}'.format(p, ua))
+    incr = 0.1
+    p_list = [1.0]
+    u_list = [u_1_pref]
+    cons_list = [cons_1_pref]
+    dist_1p_list = [dist_1p]
+    dist_pl_list = [dist_pl]
+
+    while p < 10:
+        p += incr
+        A, b = FormalisationMatrix(P_list, J_list, w, p, True)
+        cons_pref, _, u_pref = Lp(A, b, p)
+        p_list.append(p)
+        u_list.append(u_pref)
+        cons_list.append(cons_pref)
+        dist_1p = np.linalg.norm(cons_1_pref - cons_pref, p)
+        dist_pl = np.linalg.norm(cons_l_pref - cons_pref, p)
+        dist_1p_list.append(dist_1p)
+        dist_pl_list.append(dist_pl)
+        # print('{:.2f} \t \t {:.4f}'.format(p, ub))
+    return p_list, u_list, cons_list, dist_1p_list, dist_pl_list, cons_1_pref, cons_l_pref
 def aggregate_slm(P_list, J_list, w, list_of_ps, v):
     p_list = []
     u_list = []

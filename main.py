@@ -4,7 +4,7 @@ import csv
 import copy
 from datetime import datetime as dt
 from lp_regression.matrices import FormalisationObjects, FormalisationMatrix
-from lp_regression.solve import L1, L2, Linf, Lp, mLp, transition_point, aggregate, aggregate_all_p, aggregate_slm, aggregate_inf, aggregate_one
+from lp_regression.solve import L1, L2, Linf, Lp, mLp, transition_point, aggregate, aggregate_all_p, aggregate_prefs_only, aggregate_slm, aggregate_inf, aggregate_one
 from files import limit_output, save_metadata, output_single
 import pandas as pd
 import juliapkg
@@ -115,7 +115,7 @@ if __name__ == '__main__':
         Pri_P_list, Pri_J_list, Pri_w, Pri_Country_dict = FormalisationObjects(
             filename=args.pf, delimiter=',', weights=args.w)
         # 2. Aggregate over all principle preferences
-        p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_all_p(Pri_P_list, Pri_J_list, Pri_w)
+        p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_prefs_only(Pri_P_list, Pri_J_list, Pri_w)
         # 3. Find a cutoff point given $\epsilon$
         cut_point = 10
         incr = 0.1
@@ -178,5 +178,7 @@ if __name__ == '__main__':
             save_metadata(filename_metadata, args, _, p, _)
     elif args.range:
         """Aggregate everything between 1-10 + infty with a step size defined as -step_size"""
-        p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_all_p(P_list, J_list, w, args.step_size, True)
+        p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_all_p(P_list, J_list, w, args.range_step, True)
+        # Save to a file
+        # output_file
         

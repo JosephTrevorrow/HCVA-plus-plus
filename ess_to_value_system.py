@@ -302,8 +302,6 @@ if __name__ == '__main__':
     1 Remain
     0 Leave
     all other values Refusal
-    """
-    """
     "imbgeco" 	Immigration bad or good for country's economy
     0	Bad for the economy
     1	1
