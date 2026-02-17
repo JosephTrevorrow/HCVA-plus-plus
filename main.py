@@ -5,7 +5,7 @@ import copy
 from datetime import datetime as dt
 from lp_regression.matrices import FormalisationObjects, FormalisationMatrix
 from lp_regression.solve import L1, L2, Linf, Lp, mLp, transition_point, aggregate, aggregate_all_p, aggregate_prefs_only, aggregate_slm, aggregate_inf, aggregate_one
-from files import limit_output, save_metadata, output_single
+from files import limit_output, save_metadata, output_single, output_file
 import pandas as pd
 import juliapkg
 juliapkg.require_julia("=1.10.3")
@@ -178,7 +178,10 @@ if __name__ == '__main__':
             save_metadata(filename_metadata, args, _, p, _)
     elif args.range:
         """Aggregate everything between 1-10 + infty with a step size defined as -step_size"""
-        p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_all_p(P_list, J_list, w, args.range_step, True)
+        p_list, u_list, cons_list, dist1p_list, distpl_list, cons_1, cons_l = aggregate_all_p(P_list, J_list, w, args.range_step, True)
         # Save to a file
-        # output_file
-        
+        now = dt.now().isoformat()
+        filename = str("COMPLETE_PERSONALS_" + now + ".csv")
+        filename_metadata = str("COMPLETE_METADATA_" + now + ".csv")
+        output_file(p_list, u_list, cons_list, dist1p_list, distpl_list, cons_1, cons_l, filename, values_list, actions_list)
+        save_metadata(filename_metadata, args, _, p_list, _)

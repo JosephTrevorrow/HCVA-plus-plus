@@ -31,7 +31,7 @@ def output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, 
     csvfile.close()
     return None
 
-def output_file(p, U, cons, dist_1, dist_l, v, name, values_dict, actions_dict):
+def output_file(p_list, U_list, cons_list, dist_1p_list, dist_lp_list, cons_1, cons_l, filename,values_list, actions_list):
     """
     This function writes the results of solving the lp-regression for different p's.
     INPUT: p -- int, U -- list (Up distance function values), cons -- list of list
@@ -43,34 +43,20 @@ def output_file(p, U, cons, dist_1, dist_l, v, name, values_dict, actions_dict):
            name -- str (name of the file)
     """
     csv_rows = []
-    if v:
-        # header for the value preference aggregation
-        header = [
-            "p", "Up", "Dist1", "Distl", "Rel-Rel",
-            "Rel-Nonrel", "Nonrel-Rel", "Nonrel-Nonrel"
-        ]
-        # TODO: change headers to match values/actions_dicts
-    else:
-        # header for the aggregation of moral values
-        header = [
-            "p", "Up", "Dist1", "Distl", "Rel_adp_p",
-            "Rel_div_p", "Nonrel_adp_p", "Nonrel_div_p",
-            "Rel_adp_n", "Rel_div_n", "Nonrel_adp_n", "Nonrel_div_n"
-        ]
+    header = ['p', 'U_pref', 'u_act', 'dist_1', 'dist_l'] + values_list + actions_list
     csv_rows.append(header)
-    for i in range(len(p)):
-        el = [p[i], U[i], dist_1[i], dist_l[i]]
-        for j in range(len(cons[i])):
+    for i in range(len(p_list)):
+        el = [p_list[i], U_list[i], dist_1p_list[i], dist_lp_list[i]]
+        for j in range(len(cons_list[i])):
             # writing consensus
-            el.append(cons[i][j])
+            el.append(cons_list[i][j])
         csv_rows.append(el)
-    with open(name, 'w', newline='') as csvfile:
+    with open(filename, 'w', newline='') as csvfile:
         # writing file
         writer = csv.writer(csvfile)
         writer.writerows(csv_rows)
     csvfile.close()
     return None
-
 
 def simple_output_file(p, y, name):
     """
