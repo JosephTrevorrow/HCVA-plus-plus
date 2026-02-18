@@ -21,8 +21,8 @@ if __name__ == '__main__':
     parser.add_argument('-e', type=float, default=1e-4, help='Epsilon cut-point for T')
     parser.add_argument('-w', type=int, default=0, help='Weights')
     ## FILE ARGS
-    parser.add_argument('-f', type=str, default="value_systems/ESS_ABSTRACTED_value_system.csv", help='CSV file with personal values value_systems')
-    parser.add_argument('-pf', type=str, default="value_systems/ESS_3Q_principles.csv", help='CSV file with principle value_systems')
+    parser.add_argument('-f', type=str, default="value_systems/PVS_abstracted.csv", help='CSV file with personal values value_systems')
+    parser.add_argument('-pf', type=str, default="value_systems/PriP_3q.csv", help='CSV file with principle value_systems')
     parser.add_argument('-slmf', type=str, default="input_data/sml_principles/placeolder_sml.csv", help='CSV file with principles for Salas-Molina method SML')
     ## COMPUTE ARGS
     parser.add_argument('-hcva', default=False, help='Compute HCVA', action='store_true')
