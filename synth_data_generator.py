@@ -14,8 +14,14 @@ def nonlinspace(start, stop, num):
     return curve
 
 def generate_prips(agent_groups, curve_groups, n_principles):
-
-    return
+    """Generates one preference for egaliarianism, and returns as a dict of agents/prips"""
+    prips = {}
+    for curve_group in curve_groups:
+        curve_values = curve_groups[curve_group][0]
+        for agent in agent_groups:
+            random_index = random.randint(0, len(curve_values)-1)
+            prips[agent] = curve_values[random_index]
+    return prips
 
 def generate_ps(agent_groups, curve_groups, n_values):
     """Generates value preferences for n_values different values for a given number of agents"""
@@ -29,20 +35,27 @@ def generate_ps(agent_groups, curve_groups, n_values):
     for curve_group, agents in agent_groups.items():
         prefs = {}
         curve_values = curve_groups[curve_group][0]
+        # For every agent
         for agent in agents:
             agent_prefs = []
             for val_count in range(n_comparisons):
                 random_index = random.randint(0, len(curve_values)-1)
+                # TODO: Change something here? Do we want it to just be a list? or do we want to split it by pref/comparison?
+                # I think we actually want value STRENGTH! We want to have strong positions for these values
                 agent_prefs.append(curve_values[random_index])
             prefs[agent] = agent_prefs
-            # Now, manipulate the preferences such that the opposing preferences are filled in.
+
+            ## Then here, we find the preferences having been given the strengths!
+            #TODO: Now, manipulate the preferences such that the opposing preferences/ 0.5 prefs are filled in -> IN THE CORRECT ORDER
             print("VALUE_PREFS [1]", prefs[1])
             value_preferences[agent] =
 
     return value_preferences
 
 def generate_vas(agent_groups, curve_groups, n_values):
-
+    """Generates action judgements for certain actions and preferences, returns as a dict of agents/vas"""
+    action_judgements = {}
+    # Should be fairly similar to principles?
     return action_judgements
 
 def save_to_file(value_preferences, action_judgements, principle_prefs, agents_ids, n_values):
