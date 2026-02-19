@@ -63,7 +63,7 @@ def Weights(df, n_countries, weights=0):
         w.append(1)
     return np.array(w)
 
-def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0):
+def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0, n_values=4, n_actions=3):
     """
     This function computes the matrices P, J+ and J-, and the weight vector of the formalisation.
     INPUT: filename -- str ; delimiter -- str ;
@@ -86,7 +86,7 @@ def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0)
         j_row = df[list_of_actions].iloc[i]
         P = PMatrix(p_row)
         # J_n is only used in the creation of a BVector.
-        J_p, J_n = JMatrixs(j_row)
+        J_p, J_n = JMatrixs(j_row, n_values, n_actions)
         J_list.append((J_p, J_n))
         P_list.append(P)
 
@@ -166,6 +166,9 @@ def FormalisationMatrix(P_list, J_list, w, p=2, v=True):
            over moral values, when v = False, we solve the aggregation of moral values)
     RETURN: A,b
     """
+    print("N_VAL P LIST: ",P_list[0][0].shape[0])
+    print("N_VAL J LIST: ", J_list[0][0].shape[0])
+    print("N_ACTIONS: ", J_list[0][0].shape[1])
     if v:
         A = CMatrix(w, n_val=P_list[0][0].shape[0], p=p)
         b = CVector(P_list, w, p=p)

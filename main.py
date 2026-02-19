@@ -16,14 +16,14 @@ np.set_printoptions(edgeitems=1000, linewidth=1000, suppress=True, precision=4)
 if __name__ == '__main__':
     parser = ap.ArgumentParser()
     ## PARAMETER ARGS
-    parser.add_argument('-n', type=int, default=7, help='n')
-    parser.add_argument('-m', type=int, default=2, help='m')
     parser.add_argument('-e', type=float, default=1e-4, help='Epsilon cut-point for T')
     parser.add_argument('-w', type=int, default=0, help='Weights')
     ## FILE ARGS
     parser.add_argument('-f', type=str, default="value_systems/PVS_abstracted.csv", help='CSV file with personal values value_systems')
     parser.add_argument('-pf', type=str, default="value_systems/PriP_3q.csv", help='CSV file with principle value_systems')
     parser.add_argument('-slmf', type=str, default="input_data/sml_principles/placeolder_sml.csv", help='CSV file with principles for Salas-Molina method SML')
+    parser.add_argument("-n_values", type=int, default=4, help='Number of values')
+    parser.add_argument("-n_actions", type=int, default=3, help='Number of actions')
     ## COMPUTE ARGS
     parser.add_argument('-hcva', default=False, help='Compute HCVA', action='store_true')
     parser.add_argument('-hcva2', default=False, action='store_true', help='Compute HCVA++')
@@ -34,10 +34,13 @@ if __name__ == '__main__':
     parser.add_argument('-range_step', type=float, default=0.1, help='Step size for args.range (aggregate everything)')
     # Initialise args and params
     args = parser.parse_args()
-    n = args.n
-    m = args.m
+
     # P_list, J_list, country_dict are the matrices created from the personal values
-    P_list, J_list, w, country_dict = FormalisationObjects(filename=args.f, delimiter=',', weights=args.w)
+    # TODO: automatically compute number of actions and values from cols.
+    n_values = args.n_values
+    n_actions = args.n_actions
+
+    P_list, J_list, w, country_dict = FormalisationObjects(filename=args.f, delimiter=',', weights=args.w, n_values=n_values, n_actions=n_actions)
     df = pd.read_csv(args.f)
     values_list = list([col for col in df.columns if 'P__' in col])
     actions_list = list([col for col in df.columns if 'VA__' in col])
