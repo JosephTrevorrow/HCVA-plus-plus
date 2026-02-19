@@ -29,9 +29,6 @@ def generate_prips(agent_groups, curve_groups, n_principles):
 def generate_ps(agent_groups, curve_groups, n_values):
     """Generates value preferences for n_values different values for a given number of agents"""
     value_preferences = {}
-    """array([[ [uni, uni], [uni, ben], [uni, tra]],
-            [ [ben, uni], [ben, ben], [ben, tra]],
-            [ [tra, uni],  [tra,ben],  [tra, tra]]])"""
     # Get the first round of strengths
     for curve_group, agents in agent_groups.items():
         opposing_curve_group_index = len(curve_groups) - (1+list(curve_groups.keys()).index(curve_group))
@@ -54,10 +51,41 @@ def generate_ps(agent_groups, curve_groups, n_values):
             value_preferences[agent] = copy.copy(diff_norm)
     return value_preferences
 
-def generate_vas(agent_groups, curve_groups, n_values):
+def generate_vas(agent_groups, curve_groups, value_preferences, n_values):
     """Generates action judgements for certain actions and preferences, returns as a dict of agents/vas"""
     action_judgements = {}
-    # Should be fairly similar to principles?
+    # Get the strengths
+    for curve_group, agents in agent_groups.items():
+        opposing_curve_group_index = len(curve_groups) - (1 + list(curve_groups.keys()).index(curve_group))
+        opposing_curve_group = list(curve_groups.keys())[opposing_curve_group_index]
+        curve_values = curve_groups[curve_group][0]
+        opposing_curve_values = curve_groups[opposing_curve_group][0]
+        # For every agent
+        for agent in agents:
+            agent_strengths = []
+            # Find the strength for half of values.
+            agent_strengths = random.choices(curve_values, k=int(n_values / 2))
+            # Find the opposing strengths for the other half
+            agent_strengths = agent_strengths + (random.choices(opposing_curve_values, k=int(n_values / 2)))
+            agent_strengths = np.array(agent_strengths)
+
+            # Convert to action judgments considering value preferences
+            x = value_preferences[agent].shape[0]
+            # Convert the preferences to range [-1,1], where shifted_prefs[x,y] >0 means x preferred to y
+            shifted_prefs = 2.0 * (value_preferences[agent] - 0.5)
+            # Convert the shifted prefs to a symmetric matrix, and
+            #   then show preference relative to every other value. as a 1D array
+            np.fill_diagonal(shifted_prefs, 0.0)
+            # The clipping below should protect against divide by 0 cases, if any arise.
+            strengths_of_prefs = shifted_prefs.sum(axis=1) / float(x - 1)
+            strengths_of_prefs = np.clip(strengths_of_prefs, -1.0, 1.0)
+            # Get the centred actions computed above and clip for sanity
+            centred_actions = agent_strengths
+            centred_actions = np.clip(centred_actions, -1.0, 1.0)
+            ## Finally, convert the centred actions to judgements by multiplying by the strength
+            judgements = np.outer(strengths_of_prefs, centred_actions)
+            judgements = np.clip(judgements, -1.0, 1.0)
+            action_judgements[agent] = copy.copy(judgements)
     return action_judgements
 
 def save_to_file(value_preferences, action_judgements, principle_prefs, agents_ids, n_values):
@@ -136,7 +164,7 @@ if __name__ == "__main__":
     # Get PVSs and PriPs
     # These return Dicts in format {agent: [prefs]}
     value_preferences = generate_ps(agent_groups, curve_groups, n_values)
-    action_judgements = generate_vas(agent_groups, curve_groups)
+    action_judgements = generate_vas(agent_groups, curve_groups, value_preferences, n_acts)
     principle_prefs = generate_prips(agent_groups, curve_groups)
     # Save to a csv
     save_to_file(value_preferences, action_judgements, principle_prefs, agent_ids, n_values)
