@@ -2,6 +2,7 @@ import numpy as np
 from datetime import datetime as dt
 import csv
 import random
+import copy
 
 def nonlinspace(start, stop, num):
     linear = np.linspace(0, 1, num)
@@ -11,10 +12,12 @@ def nonlinspace(start, stop, num):
     curve = curve/np.max(curve)
     #curve = curve*(stop - start-1) + start # don't minus 1 cause everything is between 0-1 for our use case.
     curve = curve * (stop - start) + start
+    # Convert the curve from np to floats
+    curve = [float(i) for i in curve]
     return curve
 
 def generate_prips(agent_groups, curve_groups, n_principles):
-    """Generates one preference for egaliarianism, and returns as a dict of agents/prips"""
+    """Generates one preference for egalitarianism and returns as a dict of agents/prips"""
     prips = {}
     for curve_group in curve_groups:
         curve_values = curve_groups[curve_group][0]
@@ -29,27 +32,26 @@ def generate_ps(agent_groups, curve_groups, n_values):
     """array([[ [uni, uni], [uni, ben], [uni, tra]],
             [ [ben, uni], [ben, ben], [ben, tra]],
             [ [tra, uni],  [tra,ben],  [tra, tra]]])"""
-    # Number of true comparisons
-    n_comparisons = n_values*(n_values-1)/2
-    # Get the first round of preferences
+    # Get the first round of strengths
     for curve_group, agents in agent_groups.items():
-        prefs = {}
+        opposing_curve_group_index = len(curve_groups) - (1+list(curve_groups.keys()).index(curve_group))
+        opposing_curve_group = list(curve_groups.keys())[opposing_curve_group_index]
         curve_values = curve_groups[curve_group][0]
+        opposing_curve_values = curve_groups[opposing_curve_group][0]
         # For every agent
         for agent in agents:
-            agent_prefs = []
-            for val_count in range(n_comparisons):
-                random_index = random.randint(0, len(curve_values)-1)
-                # TODO: Change something here? Do we want it to just be a list? or do we want to split it by pref/comparison?
-                # I think we actually want value STRENGTH! We want to have strong positions for these values
-                agent_prefs.append(curve_values[random_index])
-            prefs[agent] = agent_prefs
-
-            ## Then here, we find the preferences having been given the strengths!
-            #TODO: Now, manipulate the preferences such that the opposing preferences/ 0.5 prefs are filled in -> IN THE CORRECT ORDER
-            print("VALUE_PREFS [1]", prefs[1])
-            value_preferences[agent] =
-
+            agent_strengths = []
+            # Find the strength for half of values.
+            agent_strengths = random.choices(curve_values, k=int(n_values/2))
+            # Find the opposing strengths for the other half
+            agent_strengths = agent_strengths + (random.choices(opposing_curve_values, k=int(n_values/2)))
+            agent_strengths = np.array(agent_strengths)
+            # Find agent preferences from the strength of preference for each value
+            # For every value in the values list, compare it to every other value
+            diff = agent_strengths[:, np.newaxis] - agent_strengths
+            # Diff norm normalises the value preferences between 0 and 1
+            diff_norm = (diff - np.min(diff)) / (np.max(diff) - np.min(diff))
+            value_preferences[agent] = copy.copy(diff_norm)
     return value_preferences
 
 def generate_vas(agent_groups, curve_groups, n_values):
@@ -127,7 +129,7 @@ if __name__ == "__main__":
     print(curve_groups.items())
 
     # 1. Majority/Minority case with highly opposing views:
-    # agent_groups splits the agents into aligned groups.
+    # agent_groups splits the agents into aligned groups. These strengths will be for the first 50% of values.
     agent_groups = {"ex_low": agent_ids[:20], "ex_high": agent_ids[20:]}
     print(agent_groups.items())
 
