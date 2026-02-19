@@ -16,14 +16,16 @@ def nonlinspace(start, stop, num):
     curve = [float(i) for i in curve]
     return curve
 
-def generate_prips(agent_groups, curve_groups, n_principles):
-    """Generates one preference for egalitarianism and returns as a dict of agents/prips"""
+def generate_prips(agent_groups, curve_groups):
+    """Generates one preference for egalitarianism and returns as a dict of agents/prips.
+    Note that there is no alignment here with PVSs, so this should be considered manually."""
     prips = {}
-    for curve_group in curve_groups:
+    for curve_group, agents in agent_groups.items():
         curve_values = curve_groups[curve_group][0]
-        for agent in agent_groups:
+        for agent in agents:
             random_index = random.randint(0, len(curve_values)-1)
             prips[agent] = curve_values[random_index]
+    print(prips)
     return prips
 
 def generate_ps(agent_groups, curve_groups, n_values):
@@ -88,7 +90,7 @@ def generate_vas(agent_groups, curve_groups, value_preferences, n_values):
             action_judgements[agent] = copy.copy(judgements)
     return action_judgements
 
-def save_to_file(value_preferences, action_judgements, principle_prefs, agents_ids, n_values):
+def save_to_file(value_preferences, action_judgements, principle_prefs, agents_ids, n_values, n_acts):
     now = dt.now().isoformat()
     principles_fn = now+"_PriP.csv"
     # Principles:
@@ -99,7 +101,7 @@ def save_to_file(value_preferences, action_judgements, principle_prefs, agents_i
         writer.writerow(header)
         # Rows
         for country in agents_ids:
-            PriP = np.array(principle_prefs[country], dtype=float)
+            PriP = principle_prefs[country]
             row = [country, PriP]
             writer.writerow(row)
 
@@ -110,27 +112,26 @@ def save_to_file(value_preferences, action_judgements, principle_prefs, agents_i
         # Header
         header = ["country"]
         # P__vi__vj columns
-        # TODO: Make this n_values automatically generate headers
-        for vi in value_names:
-            for vj in value_names:
+        for vi in range(n_values):
+            for vj in range(n_values):
                 header.append(f"P__{vi}__{vj}")
         # VA__v__a columns
-        for v in value_names:
-            for a in action_names:
+        for v in range(n_values):
+            for a in range(n_acts):
                 header.append(f"VA__{v}__{a}")
         writer.writerow(header)
         # Rows
-        for country in df[country_col_name].unique():
-            P = np.array(value_preferences[country], dtype=float)
-            VA = np.array(action_judgements[country], dtype=float)
+        for agent in agents_ids:
+            P = np.array(value_preferences[agent], dtype=float)
+            VA = np.array(action_judgements[agent], dtype=float)
 
-            row = [country]
-            for i in range(len(value_names)):
-                for j in range(len(value_names)):
+            row = [agent]
+            for i in range(n_values):
+                for j in range(n_values):
                     row.append(float(P[i, j]))
 
-            for i in range(len(value_names)):
-                for k in range(len(action_names)):
+            for i in range(n_values):
+                for k in range(n_acts):
                     row.append(float(VA[i, k]))
 
             writer.writerow(row)
@@ -144,17 +145,10 @@ if __name__ == "__main__":
     n_agents = 30
     agent_ids = list(range(n_agents))
 
-    # Each agent is going to randomly receive the following vals:
-    #   One for principle preferences.
-    #   16, one for every possible combination of value preferences (so 4 values will need 16 preferences).
-    #   Two for action judgements (one per action)
-    # However, we want to ensure there are clusters of agents. e.g. Agents who prefer A and B/C and D also prefer action 1/2.
-
     # Split the curve into different groups (extreme low, low, indifference, high, extreme high) (curve between 0/1)
     curve_groups = {"ex_low": [nonlinspace(0, 0.2, 10)], "low": [nonlinspace(0.2, 0.4, 10)],
                     "med": [nonlinspace(0.4,0.6, 10)], "high": [nonlinspace(0.6, 0.8, 10)],
                     "ex_high": [nonlinspace(0.8, 1, 10)]}
-    print(curve_groups.items())
 
     # 1. Majority/Minority case with highly opposing views:
     # agent_groups splits the agents into aligned groups. These strengths will be for the first 50% of values.
@@ -165,6 +159,8 @@ if __name__ == "__main__":
     # These return Dicts in format {agent: [prefs]}
     value_preferences = generate_ps(agent_groups, curve_groups, n_values)
     action_judgements = generate_vas(agent_groups, curve_groups, value_preferences, n_acts)
+    # TODO: Move principle prefs to a completely separate thing? Can be generated entirely independently.
     principle_prefs = generate_prips(agent_groups, curve_groups)
     # Save to a csv
-    save_to_file(value_preferences, action_judgements, principle_prefs, agent_ids, n_values)
+    save_to_file(value_preferences, action_judgements, principle_prefs, agent_ids, n_values, n_acts)
+
