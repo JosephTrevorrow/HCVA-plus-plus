@@ -19,7 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('-e', type=float, default=1e-4, help='Epsilon cut-point for T')
     parser.add_argument('-w', type=int, default=0, help='Weights')
     ## FILE ARGS
-    parser.add_argument('-f', type=str, default="value_systems/PVS_abstracted.csv", help='CSV file with personal values value_systems')
+    parser.add_argument('-f', type=str, default="value_systems/Synthetic/CASE1_PVS.csv", help='CSV file with personal values value_systems')
     parser.add_argument('-pf', type=str, default="value_systems/PriP_3q.csv", help='CSV file with principle value_systems')
     parser.add_argument('-slmf', type=str, default="input_data/sml_principles/placeolder_sml.csv", help='CSV file with principles for Salas-Molina method SML')
     parser.add_argument("-n_values", type=int, default=4, help='Number of values')
@@ -65,7 +65,7 @@ if __name__ == '__main__':
         _, u_act, cons_act = aggregate(P_list, J_list, w, t_point, False)
         output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
         save_metadata(filename_metadata, args, t_point, _, _)
-    elif args.hcva2:
+    if args.hcva2:
         """ Compute HCVA++ (mean/JAIR) """
         print("Computing HCVA++")
         # 1. Find the consensus principle $p$
@@ -86,6 +86,8 @@ if __name__ == '__main__':
         # 1.3 Given the transition point (best_p), find the consensus p by finding the
         # p the relative distance away from the transition point.
         consensus_p = pow(transition_p, (2*consensus_preference))
+        # Round to 2 d.p. for fairness
+        consensus_p = round(consensus_p,2)
         print("Consensus p is: ", consensus_p)
         # 2. Aggregate all the preference values and action judgements submitted by agents
         # using the average rule as described in the paper. Do this twice, once for vals, other for action judgements
@@ -96,7 +98,7 @@ if __name__ == '__main__':
         _, u_act, cons_act = aggregate(P_list, J_list, w, consensus_p, False)
         output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
         save_metadata(filename_metadata, args, transition_p, consensus_p, consensus_preference)
-    elif args.slm:
+    if args.slm:
         """ Compute aggregation with Salas-Molina et al. baseline (Many P's) """
         print("Computing SLM")
         # 1. Read in the principles file. Each column contains a set of principles to use.
@@ -111,7 +113,7 @@ if __name__ == '__main__':
             _, u_act, cons_act = aggregate_slm(P_list, J_list, w, series, False)
             output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
             save_metadata(filename_metadata, args, _, series, _)
-    elif args.hcva:
+    if args.hcva:
         """ Compute HCVA (closest P/VALE) """
         print("Computing HCVA")
         # 1. Formalise the principle preferences as matrices
@@ -121,7 +123,7 @@ if __name__ == '__main__':
         p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_prefs_only(Pri_P_list, Pri_J_list, Pri_w)
         # 3. Find a cutoff point given $\epsilon$
         cut_point = 10
-        incr = 0.1
+        incr = 0.01
         j = 0
         epsilon = 0.05
         for i in np.arange(1 + incr, 10, incr):
@@ -158,7 +160,7 @@ if __name__ == '__main__':
         _, u_act, cons_act = aggregate(P_list, J_list, w, con_p, False)
         output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
         save_metadata(filename_metadata, args, _, con_p, _)
-    elif args.b:
+    if args.b:
         """ Compute aggregation for all other baselines (Util, Egal) """
         baseline_ps = [1, np.inf()]
         now = dt.now().isoformat()
@@ -179,12 +181,14 @@ if __name__ == '__main__':
                 _, u_act, cons_act = aggregate(P_list, J_list, w, p, False)
             output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
             save_metadata(filename_metadata, args, _, p, _)
-    elif args.range:
+    if args.range:
         """Aggregate everything between 1-10 + infty with a step size defined as -step_size"""
-        p_list, u_list, cons_list, dist1p_list, distpl_list, cons_1, cons_l = aggregate_all_p(P_list, J_list, w, args.range_step, True)
+        p_list, u_list, cons_list, dist1p_list, distpl_list, cons_1, cons_l = aggregate_all_p(P_list, J_list, w, args.range_step)
         # Save to a file
         now = dt.now().isoformat()
         filename = str("COMPLETE_PERSONALS_" + now + ".csv")
         filename_metadata = str("COMPLETE_METADATA_" + now + ".csv")
+        _ = None
         output_file(p_list, u_list, cons_list, dist1p_list, distpl_list, cons_1, cons_l, filename, values_list, actions_list)
         save_metadata(filename_metadata, args, _, p_list, _)
+

@@ -1,7 +1,8 @@
 import csv
 
-def save_metadata(filename, args, transition_p, consensus_p, consensus_preference):
+def save_metadata(filename, args, transition_p=None, consensus_p=None, consensus_preference=None):
     # TODO: deal with inputs not given
+    # Save this properly
     csv_rows = [{"args":args, "transition_p":transition_p, "consensus_p":consensus_p, "consensus_preference":consensus_preference}]
     with open(filename, 'w', newline='') as csvfile:
         # writing file
@@ -46,10 +47,8 @@ def output_file(p_list, U_list, cons_list, dist_1p_list, dist_lp_list, cons_1, c
     header = ['p', 'U_pref', 'u_act', 'dist_1', 'dist_l'] + values_list + actions_list
     csv_rows.append(header)
     for i in range(len(p_list)):
-        el = [p_list[i], U_list[i], dist_1p_list[i], dist_lp_list[i]]
-        for j in range(len(cons_list[i])):
-            # writing consensus
-            el.append(cons_list[i][j])
+        el = [p_list[i], U_list[i][0], U_list[i][1], dist_1p_list[i], dist_lp_list[i]]
+        #el.extend(cons_list[i])
         csv_rows.append(el)
     with open(filename, 'w', newline='') as csvfile:
         # writing file

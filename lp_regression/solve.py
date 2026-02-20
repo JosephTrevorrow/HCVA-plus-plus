@@ -169,16 +169,20 @@ def transition_point(P_list, J_list, w, e):
     cons_1_pref, r_1_pref, u_1_pref = L1(A, b)
     A, b = FormalisationMatrix(P_list, J_list, w, 1, False)
     cons_1_act, r_1_act, u_1_act = L1(A, b)
+    # Cut the actions in half, as it produces two sets of consensuses -> J_p and J_n
+    cons_1_act = cons_1_act[:len(cons_1_act)//2]
     cons_1 = np.concatenate((cons_1_pref, cons_1_act))
 
     A, b = FormalisationMatrix(P_list, J_list, w, np.inf, True)
     cons_l_pref, r_l_pref, u_l_pref = Linf(A, b)
     A, b = FormalisationMatrix(P_list, J_list, w, np.inf, False)
     cons_l_act, r_l_act, u_l_act = Linf(A, b)
+    cons_l_act = cons_l_act[:len(cons_l_act)//2]
+
     cons_l = np.concatenate((cons_l_pref, cons_l_act))
 
     diff = np.inf
-    incr = 0.1
+    incr = 0.01
     p_list = []
     dist_p_list = []
     dist_inf_list = []
@@ -188,9 +192,11 @@ def transition_point(P_list, J_list, w, e):
     best_p = 0 # base val
     for i in np.arange(1 + incr, p, incr):
         A, b = FormalisationMatrix(P_list, J_list, w, i, True)
-        cons_pref, r, u = Lp(A, b, i)
+        cons_pref, _, u_pref = Lp(A, b, i)
         A, b = FormalisationMatrix(P_list, J_list, w, i, False)
-        cons_act, r_act, u_act = Lp(A, b, i)
+        cons_act, _, u_act = Lp(A, b, i)
+        cons_act = cons_act[:len(cons_act) // 2]
+
         cons = np.concatenate((cons_pref, cons_act))
         print('p: {:.2f}, cons: '.format(i), cons)
 
@@ -228,7 +234,7 @@ def aggregate(P_list, J_list, w, p, v):
     print('p: {:.2f}, cons: '.format(p), cons)
     return p, u, cons
 
-def aggregate_all_p(P_list, J_list, w, step_size, incr):
+def aggregate_all_p(P_list, J_list, w, incr):
     """This function aggregates over all P between 1-10, given a step size"""
     A, b = FormalisationMatrix(P_list, J_list, w, 1, True)
     cons_1_pref, r_1_pref, u_1_pref = L1(A, b)
@@ -248,7 +254,6 @@ def aggregate_all_p(P_list, J_list, w, step_size, incr):
     dist_pl = np.linalg.norm(cons_l - cons_1, np.inf)
     p = 1
     # print('{:.2f} \t \t {:.4f}'.format(p, ua))
-    incr = 0.1
     p_list = [1.0]
     u_list = [u]
     cons_list = [cons_1]
