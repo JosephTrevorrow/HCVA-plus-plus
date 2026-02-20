@@ -162,23 +162,21 @@ def transition_point(P_list, J_list, w, e):
     Find the transition point given personal values
     """
     # Cons values are a flattened consensus matrix for either preferences or actions.
-
     # Join the two consensus lists of preferences and action judgements
     #   to get a single consensus list for p=1 and p=\infty
     A, b = FormalisationMatrix(P_list, J_list, w, 1, True)
-    cons_1_pref, r_1_pref, u_1_pref = L1(A, b)
+    cons_1_pref, _, _ = L1(A, b)
     A, b = FormalisationMatrix(P_list, J_list, w, 1, False)
-    cons_1_act, r_1_act, u_1_act = L1(A, b)
+    cons_1_act, _, _ = L1(A, b)
     # Cut the actions in half, as it produces two sets of consensuses -> J_p and J_n
     cons_1_act = cons_1_act[:len(cons_1_act)//2]
     cons_1 = np.concatenate((cons_1_pref, cons_1_act))
 
     A, b = FormalisationMatrix(P_list, J_list, w, np.inf, True)
-    cons_l_pref, r_l_pref, u_l_pref = Linf(A, b)
+    cons_l_pref, _, _ = Linf(A, b)
     A, b = FormalisationMatrix(P_list, J_list, w, np.inf, False)
-    cons_l_act, r_l_act, u_l_act = Linf(A, b)
+    cons_l_act, _, _ = Linf(A, b)
     cons_l_act = cons_l_act[:len(cons_l_act)//2]
-
     cons_l = np.concatenate((cons_l_pref, cons_l_act))
 
     diff = np.inf
@@ -240,6 +238,7 @@ def aggregate_all_p(P_list, J_list, w, incr):
     cons_1_pref, r_1_pref, u_1_pref = L1(A, b)
     A, b = FormalisationMatrix(P_list, J_list, w, 1, False)
     cons_1_act, r_1_act, u_1_act = L1(A, b)
+    cons_1_act = cons_1_act[:len(cons_1_act) // 2]
     cons_1 = np.concatenate((cons_1_pref, cons_1_act))
     u = np.array([u_1_pref, u_1_act])
 
@@ -248,6 +247,7 @@ def aggregate_all_p(P_list, J_list, w, incr):
     cons_l_pref, _, _ = Linf(A, b)
     A, b = FormalisationMatrix(P_list, J_list, w, np.inf, False)
     cons_l_act, _, _ = Linf(A, b)
+    cons_l_act = cons_l_act[:len(cons_l_act) // 2]
     cons_l = np.concatenate((cons_l_pref, cons_l_act))
 
     dist_1p = np.linalg.norm(cons_1 - cons_1, 1)
@@ -266,6 +266,7 @@ def aggregate_all_p(P_list, J_list, w, incr):
         cons_pref, _, u_pref = Lp(A, b, p)
         A, b = FormalisationMatrix(P_list, J_list, w, p, False)
         cons_act, _, u_act = Lp(A, b, p)
+        cons_act = cons_act[:len(cons_act) // 2]
         cons = np.concatenate((cons_pref, cons_act))
         u = np.array([u_pref, u_act])
 
@@ -282,7 +283,7 @@ def aggregate_all_p(P_list, J_list, w, incr):
 def aggregate_prefs_only(P_list, J_list, w, p, v):
     """This function is used by the HCVA to aggregate over all principle preferences in main.py"""
     A, b = FormalisationMatrix(P_list, J_list, w, 1, True)
-    cons_1_pref, r_1_pref, u_1_pref = L1(A, b)
+    cons_1_pref, _, u_1_pref = L1(A, b)
     A, b = FormalisationMatrix(P_list, J_list, w, np.inf, True)
     cons_l_pref, _, _ = Linf(A, b)
 
@@ -310,6 +311,7 @@ def aggregate_prefs_only(P_list, J_list, w, p, v):
         dist_pl_list.append(dist_pl)
         # print('{:.2f} \t \t {:.4f}'.format(p, ub))
     return p_list, u_list, cons_list, dist_1p_list, dist_pl_list, cons_1_pref, cons_l_pref
+
 def aggregate_slm(P_list, J_list, w, list_of_ps, v):
     p_list = []
     u_list = []

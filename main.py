@@ -172,13 +172,16 @@ if __name__ == '__main__':
             if p == np.inf:
                 _, u_pref, cons_pref = aggregate_inf(P_list, J_list, w, p, True)
                 _, u_act, cons_act = aggregate_inf(P_list, J_list, w, p, False)
+                cons_act = cons_act[:len(cons_act) // 2]
             elif p == 1:
                 _, u_pref, cons_pref = aggregate_one(P_list, J_list, w, p, True)
                 _, u_act, cons_act = aggregate_one(P_list, J_list, w, p, False)
+                cons_act = cons_act[:len(cons_act) // 2]
             else:
                 # Some other singular p
                 _, u_pref, cons_pref = aggregate(P_list, J_list, w, p, True)
                 _, u_act, cons_act = aggregate(P_list, J_list, w, p, False)
+                cons_act = cons_act[:len(cons_act) // 2]
             output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
             save_metadata(filename_metadata, args, _, p, _)
     if args.range:

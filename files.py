@@ -48,7 +48,7 @@ def output_file(p_list, U_list, cons_list, dist_1p_list, dist_lp_list, cons_1, c
     csv_rows.append(header)
     for i in range(len(p_list)):
         el = [p_list[i], U_list[i][0], U_list[i][1], dist_1p_list[i], dist_lp_list[i]]
-        #el.extend(cons_list[i])
+        el.extend(cons_list[i])
         csv_rows.append(el)
     with open(filename, 'w', newline='') as csvfile:
         # writing file

@@ -20,7 +20,7 @@ def plot_data(data: pd.DataFrame, title: str):
     plt.plot(data["p"], data["Dist_inf"], label="$||P^{(\infty)}_S-P^{(P)}_S||_p$")
 
     # Scale the x-axis
-    plt.xlim(1, 10)
+    plt.xlim(1, 3)
     plt.fill_between(data["p"], data["Dist_p"], data["Dist_inf"],
                      where=(data["p"] >= 1.1) & (data["p"] <= 2.3),
                      color='green', alpha=0.3)
