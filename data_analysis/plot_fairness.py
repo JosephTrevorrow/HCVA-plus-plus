@@ -34,19 +34,23 @@ def plot_residuals(cons_df, agents_df, list_of_params, title):
     for cons in cons_df.iterrows():
         for agent in agents_df.iterrows():
             # For every col, match these two dfs and plot the residuals
-            print("CONS IS: ", cons[0])
-            print("CONS 1 IS: ", cons[1])
-            print("AGENT IS: ", agent)
-            temp_residual = cons[list_of_params] - agent[list_of_params]
+            temp_residual = cons[1][list_of_params] - agent[1][list_of_params]
+            temp_residual = abs(temp_residual.sum())
             points.append(copy.copy(temp_residual))
 
-    points = pd.DataFrame(points, columns=['cons', 'residual'])
-    points.plot.bar(x='cons', y='residual', figsize=(10, 5), title=title)
+
+    plt.boxplot(points, patch_artist=True, boxprops=dict(facecolor="#b7e4c7"))
+    plt.title(title, fontsize=14)
+    plt.ylabel("Value", fontsize=11)
+    plt.tick_params(axis="x", rotation=90)
+    plt.ylim(0, 1)
+    plt.grid(alpha=0.25)
+    plt.show()
 
 if __name__ == "__main__":
     # Load in dataframe
-    cons_df = pd.read_csv("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/placeholder_results/T_2302_PVS_Abstracted.csv")
-    agents_df = pd.read_csv("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/ESS/PVS_abstracted.csv")
+    cons_df = pd.read_csv("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/placeholder_results/CASE1_T_PVS.csv")
+    agents_df = pd.read_csv("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/CASE1_PVS.csv")
 
     list_of_params = ["P", "VA"]
     title = "Pretty cold for a placehold"

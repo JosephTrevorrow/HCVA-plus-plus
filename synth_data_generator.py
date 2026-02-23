@@ -130,13 +130,8 @@ def save_to_file(value_preferences, action_judgements, principle_prefs, agents_i
                 for j in range(n_values):
                     row.append(float(P[i, j]))
 
-            print("Num values: ", n_values, "Num actions: ", n_acts, "\n"
-                  "P: ", P, "\n"
-                  "VA: ", VA, "\n"
-                  "Row: ", row, "\n")
             for i in range(n_values):
                 for k in range(n_acts):
-                    print(f"VA__{i}__{k}: {VA[i, k]}")
                     row.append(float(VA[i, k]))
 
             writer.writerow(row)
@@ -145,9 +140,9 @@ def save_to_file(value_preferences, action_judgements, principle_prefs, agents_i
 if __name__ == "__main__":
     random.seed(10)
     # Define your curve of popularity for each input type.
-    n_values = 2
+    n_values = 4
     n_acts = 2
-    n_agents = 5
+    n_agents = 30
     agent_ids = list(range(n_agents))
 
     # Split the curve into different groups (extreme low, low, indifference, high, extreme high) (curve between 0/1)
@@ -157,7 +152,7 @@ if __name__ == "__main__":
 
     # 1. Majority/Minority case with highly opposing views:
     # agent_groups splits the agents into aligned groups. These strengths will be for the first 50% of values.
-    agent_groups = {"ex_low": agent_ids[:1], "ex_high": agent_ids[1:]}
+    agent_groups = {"ex_low": agent_ids[:20], "ex_high": agent_ids[20:]}
     print(agent_groups.items())
 
     # Get PVSs and PriPs

@@ -181,6 +181,7 @@ def transition_point(P_list, J_list, w, e):
 
     diff = np.inf
     incr = 0.01
+    incr = 0.1
     p_list = []
     dist_p_list = []
     dist_inf_list = []
@@ -228,6 +229,9 @@ def aggregate(P_list, J_list, w, p, v):
     """Compute one aggregation using the P specified"""
     A, b = FormalisationMatrix(P_list, J_list, w, p, v)
     cons, _, u = Lp(A, b, p)
+    print('Aggregate: p: {:.2f}, cons: '.format(p), cons)
+    if not v:
+        cons = cons[:len(cons) // 2]
     #print('{:.2f} \t \t {:.4f}'.format(p, ub))
     print('p: {:.2f}, cons: '.format(p), cons)
     return p, u, cons
