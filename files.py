@@ -17,14 +17,13 @@ def output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, 
     This function writes the results of solving the lp-regression for a single p
     This is usually the output of a single experiment.
     """
-    header = ['p', 'U_pref', 'u_act', 'dist_1', 'dist_l'] + values_list + actions_list
-    csv_rows = [header]
-    # Baselines # TODO: dist_l and dist_1 are placeholders
-    row = [p, u_pref, u_act, 0, 0]
-    # Write cons
-    row = row + list(cons_pref) + list(cons_act)
-    # Write to a file
-    csv_rows.append(row)
+    csv_rows = []
+    header = ['p', 'U_pref', 'u_act'] + values_list + actions_list
+    csv_rows.append(header)
+    el = [p,u_pref, u_act]
+    el.extend(cons_pref)
+    el.extend(cons_act)
+    csv_rows.append(el)
     with open(filename, 'w', newline='') as csvfile:
         # writing file
         writer = csv.writer(csvfile)
