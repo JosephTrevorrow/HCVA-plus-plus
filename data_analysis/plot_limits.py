@@ -1,10 +1,5 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import scienceplots
-import numpy as np
-import seaborn as sns
-import os
-
 
 def plot_data(data: pd.DataFrame, title: str):
     """
