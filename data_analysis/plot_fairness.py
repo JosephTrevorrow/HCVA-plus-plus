@@ -54,7 +54,7 @@ def calc_envy_freeness(cons_df, agents_df, list_of_params):
             temp_residual = cons[1][list_of_params] - agent[1][list_of_params]
             temp_residual = abs(temp_residual.sum())
             temp_residuals = np.append(temp_residuals, [temp_residual])
-        print("Temp residuals are: ", temp_residuals)
+        print("Temp residuals are: ", temp_residuals, " Cons is: ", cons[0], ".")
         residuals[cons[0]] = temp_residuals
     # Because all the residuals are in order, how many agents have a better (lower) residual on any other given consensus?
     envy_count = {}

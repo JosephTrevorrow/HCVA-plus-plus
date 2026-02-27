@@ -3,9 +3,9 @@
 
 import pandas as pd
 import copy
-from data_analysis.plot_fairness import gini_coefficient, calc_envy_freeness, check_maximin_fairness, plot_residuals
-from data_analysis.plot_utility import plot_pareto_efficiency, plot_nash_social_welfare
-from data_analysis.plot_limits import plot_data
+from plot_fairness import gini_coefficient, calc_envy_freeness, check_maximin_fairness, plot_residuals
+from plot_utility import plot_pareto_efficiency, plot_total_utility
+#from plot_limits import plot_data
 #from data_analysis.plot_principles import *
 
 if __name__ == "__main__":
@@ -62,4 +62,10 @@ if __name__ == "__main__":
     calc_envy_freeness(cons_df, agents_df, list_of_params)
 
     ## UTILITY
+    plot_pareto_efficiency(cons_df, agents_df, list_of_params)
+    plot_total_utility(cons_df, agents_df, list_of_params)
 
+    ## PRINCIPLES
+
+
+    ## STABILITY
