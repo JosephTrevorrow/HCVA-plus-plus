@@ -256,9 +256,9 @@ if __name__ == '__main__':
     }
     # Principles are different than values, as instead of like me/not like me, it is agree/disagree.
     principle_dict = {
-        #"Egalitarian_3" : ["sofrdst", "sofrpr", "sofrwrk"],
+        "Egalitarian_3" : ["sofrdst", "sofrpr", "sofrwrk"],
         #"Egalitarian_2" : ["sofrdst", "sofrpr"],
-        "eq_dist": ["sofrdst"],
+        #"eq_dist": ["sofrdst"],
         #"hard_work": ["sofrwrk"],
         #"poor_care": ["sofrpr"],
     }

@@ -1,10 +1,20 @@
-def procedural_residuals(cons_df, agents_df):
+def procedural_residuals(cons_df, agents_df, principles_df):
     """ Measures the disutility of using a specific ethical principle. Metric: U_total=U_outcome+y⋅U_procedural, where y
-    is the distance the agent's principle is from the consensus principle.
+    is the distance the agent's principle is from the consensus principle -> the distance is in terms of the outcome (PVS).
     The difference between the utility of the outcome under the used rule vs. the utility of the outcome that
     would have occurred under the agent’s preferred rule. If the outcomes are the same, the residual is zero,
     implying "procedural indifference." """
 
+    for cons in cons_df.iterrows():
+        for agent in agents_df.iterrows():
+            # Find the agent's utility with the cons
+
+
+            # Find the agent's utility with their preferred cons
+            agent_principle = principles_df
+
+            cons_df.loc[cons[0], 'U_total'] = cons[1]['U_outcome'] + cons[1]['y'] * cons_principle
+            agents_df.loc[agent[0], 'U_total'] = agent[1]['U_outcome'] + agent[1]['y'] * agent_principle
 
 
     return cons_df['U_total'] - agents_df['U_total']

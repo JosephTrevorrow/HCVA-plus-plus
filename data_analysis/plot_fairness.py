@@ -43,6 +43,7 @@ def check_maximin_fairness(cons_df, agents_df, list_of_params):
         print("Worst Welfare is: ", max_dist)
         worst_offs[cons[0]] = max_dist
     return worst_offs
+
 def calc_envy_freeness(cons_df, agents_df, list_of_params):
     """Calculates if an agent is envious of another consensus? Would they
     prefer if another consensus was chosen than the cons considered?"""
@@ -54,13 +55,12 @@ def calc_envy_freeness(cons_df, agents_df, list_of_params):
             temp_residual = cons[1][list_of_params] - agent[1][list_of_params]
             temp_residual = abs(temp_residual.sum())
             temp_residuals = np.append(temp_residuals, [temp_residual])
-        print("Temp residuals are: ", temp_residuals, " Cons is: ", cons[0], ".")
         residuals[cons[0]] = temp_residuals
     # Because all the residuals are in order, how many agents have a better (lower) residual on any other given consensus?
     envy_count = {}
     for cons_i, residual_set_i in residuals.items():
-        num_envious = 0
         for cons_j, residual_set_j in residuals.items():
+            num_envious = 0
             diffs = residual_set_i - residual_set_j
             for diff in diffs:
                 if diff < 0:
@@ -70,9 +70,11 @@ def calc_envy_freeness(cons_df, agents_df, list_of_params):
     return envy_count
 
 def plot_residuals(cons_df, agents_df, list_of_params, title):
-    """Plots a residual bar chart given a list of parameters using the dataframe. Style will follow prev. work in the field.
+    """Plots a residual bar chart given a list of parameters using the dataframe. Style will follow prev. work.
     X Axis: Ps, Y Axis: Residuals"""
     # For every cons in cons_df, plot the residuals over all agents in the agents df
+
+    to_plot_df = pd.DataFrame()
     for cons in cons_df.iterrows():
         points = []
         for agent in agents_df.iterrows():
@@ -80,10 +82,12 @@ def plot_residuals(cons_df, agents_df, list_of_params, title):
             temp_residual = cons[1][list_of_params] - agent[1][list_of_params]
             temp_residual = abs(temp_residual.sum())
             points.append(copy.copy(temp_residual))
-        plt.boxplot(points, patch_artist=True, boxprops=dict(facecolor="#b7e4c7"))
+        to_plot_df[cons[0]] = points
+
+    to_plot_df.boxplot(patch_artist=True, boxprops=dict(facecolor="#b7e4c7"))
     plt.title(title, fontsize=14)
     plt.ylabel("Value", fontsize=11)
     plt.tick_params(axis="x", rotation=90)
-    plt.ylim(0, 1)
+    plt.ylim(0, 0.5)
     plt.grid(alpha=0.25)
     plt.savefig("residuals.png", bbox_inches="tight")

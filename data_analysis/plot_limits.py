@@ -24,11 +24,12 @@ def plot_data(data: pd.DataFrame, title: str):
                      color='blue', alpha=0.3)
 
     plt.xlabel("p")
+    plt.xlim(1, 10)
     plt.ylabel("Distance")
     plt.legend(loc='upper right')
     plt.savefig("plot_data.png")
 
 
-data = pd.read_csv("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/placeholder_results/CASE1_Limits.csv")
+data = pd.read_csv("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/synthetic_results/CASE2xPriP1/CASE2xPriP1_Limits.csv")
 plot_data(data, "Value Principle Preference Matrix Aggregation (limit P)")
 plt.show()

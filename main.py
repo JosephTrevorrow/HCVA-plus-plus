@@ -3,7 +3,7 @@ import numpy as np
 import csv
 import copy
 from datetime import datetime as dt
-from lp_regression.matrices import FormalisationObjects, FormalisationMatrix
+from lp_regression.matrices import FormalisationObjects, FormalisationMatrix, principle_formalisation_objs
 from lp_regression.solve import L1, L2, Linf, Lp, mLp, transition_point, aggregate, aggregate_all_p, aggregate_prefs_only, aggregate_slm, aggregate_inf, aggregate_one
 from files import limit_output, save_metadata, output_single, output_file
 import pandas as pd
@@ -19,8 +19,8 @@ if __name__ == '__main__':
     parser.add_argument('-e', type=float, default=1e-4, help='Epsilon cut-point for T')
     parser.add_argument('-w', type=int, default=0, help='Weights')
     ## FILE ARGS
-    parser.add_argument('-f', type=str, default="value_systems/Synthetic/CASE1_PVS.csv", help='CSV file with personal values value_systems')
-    parser.add_argument('-pf', type=str, default="value_systems/PriP_3q.csv", help='CSV file with principle value_systems')
+    parser.add_argument('-f', type=str, default="value_systems/ESS/PVS_abstracted.csv", help='CSV file with personal values value_systems')
+    parser.add_argument('-pf', type=str, default="value_systems/ESS/3q_PriP.csv", help='CSV file with principle value_systems')
     parser.add_argument('-slmf', type=str, default="input_data/sml_principles/placeolder_sml.csv", help='CSV file with principles for Salas-Molina method SML')
     parser.add_argument("-n_values", type=int, default=4, help='Number of values')
     parser.add_argument("-n_actions", type=int, default=3, help='Number of actions')
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     parser.add_argument('-t', default=False, help='compute the threshold p, the transition point', action='store_true')
     parser.add_argument('-b', default=False, help='Compute the baseline aggregations (p=1. p=\infty)', action='store_true')
     parser.add_argument('-range', default=False, action='store_true', help='Aggregate everything')
-    parser.add_argument('-range_step', type=float, default=0.1, help='Step size for args.range (aggregate everything)')
+    parser.add_argument('-range_step', type=float, default=0.01, help='Step size for args.range (aggregate everything)')
     # Initialise args and params
     args = parser.parse_args()
 
@@ -117,7 +117,7 @@ if __name__ == '__main__':
         """ Compute HCVA (closest P/VALE) """
         print("Computing HCVA")
         # 1. Formalise the principle preferences as matrices
-        Pri_P_list, Pri_J_list, Pri_w, Pri_Country_dict = FormalisationObjects(
+        Pri_P_list, Pri_J_list, Pri_w, Pri_Country_dict = principle_formalisation_objs(
             filename=args.pf, delimiter=',', weights=args.w)
         # 2. Aggregate over all principle preferences
         p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_prefs_only(Pri_P_list, Pri_J_list, Pri_w)

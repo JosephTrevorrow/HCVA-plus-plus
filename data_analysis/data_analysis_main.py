@@ -1,5 +1,7 @@
-"""This file runs all methods of data analysis, found in the data_analysis folder
-"""
+"""This file runs all methods of data analysis, found in the data_analysis folder"""
+
+# TODO: Fix residual boxplots
+# TODO: Fix Envy Freeness
 
 import pandas as pd
 import copy
@@ -10,8 +12,8 @@ from plot_utility import plot_pareto_efficiency, plot_total_utility
 
 if __name__ == "__main__":
     # Load in dataframe
-    cons_df = pd.read_csv("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/placeholder_results/CASE1_T_PVS.csv")
-    agents_df = pd.read_csv("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/CASE1_PVS.csv")
+    cons_df = pd.read_csv("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/synthetic_results/CASE2xPriP1/CASE2_PriP1_BASELINES_PVS.csv")
+    agents_df = pd.read_csv("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/CASE2_PVS.csv")
 
     list_of_params = ["P", "VA"]
     title = "Pretty cold for a placehold"

@@ -152,13 +152,15 @@ if __name__ == "__main__":
 
     # 1. Majority/Minority case with highly opposing views:
     # agent_groups splits the agents into aligned groups. These strengths will be for the first 50% of values.
-    agent_groups = {"ex_low": agent_ids[:20], "ex_high": agent_ids[20:]}
+    agent_groups = {"ex_low": agent_ids[:16], "ex_high": agent_ids[16:]}
     print(agent_groups.items())
 
     # Get PVSs and PriPs
     # These return Dicts in format {agent: [prefs]}
     value_preferences = generate_ps(agent_groups, curve_groups, n_values)
     action_judgements = generate_vas(agent_groups, curve_groups, value_preferences, n_acts)
+
+    """A majority will align with a more utilitarian principle, so make them higher too."""
     # TODO: Move principle prefs to a completely separate thing? Can be generated entirely independently.
     principle_prefs = generate_prips(agent_groups, curve_groups)
     # Save to a csv

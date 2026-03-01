@@ -198,7 +198,6 @@ def transition_point(P_list, J_list, w, e):
 
         cons = np.concatenate((cons_pref, cons_act))
         print('p: {:.2f}, cons: '.format(i), cons)
-
         dist_1p = np.linalg.norm(cons_1 - cons, i)
         dist_pl = np.linalg.norm(cons_l - cons, i)
         if abs(dist_1p - dist_pl) < e:

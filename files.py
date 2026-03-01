@@ -13,12 +13,7 @@ def save_metadata(filename, args, transition_p=None, consensus_p=None, consensus
     return None
 
 def output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list):
-    """
-    output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
-
-    This function writes the results of solving the lp-regression for a single p
-    This is usually the output of a single experiment.
-    """
+    """This function writes the results of solving the lp-regression for a single p"""
     csv_rows = []
     header = ['p', 'U_pref', 'u_act'] + values_list + actions_list
     csv_rows.append(header)

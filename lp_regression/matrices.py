@@ -79,6 +79,35 @@ def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0,
     w = Weights(df, n_agents, weights)
     return P_list, J_list, w, country_dict
 
+def principle_formalisation_objs(filename='value_systems.csv', delimiter=',', weights=0, n_values=4, n_actions=3):
+    """
+    This function computes the matrices P, J+ and J-, and the weight vector of the formalisation.
+    INPUT: filename -- str ; delimiter -- str ;
+           weights -- int (weights' arg is always 0).
+    RETURN: np.array with weights (array only contains 1's)
+    """
+    df = pd.read_csv(filename, delimiter=delimiter)
+    n_agents = df.shape[0]  # number of rows
+    J_list = []
+    P_list = []
+    country_dict = {}
+    list_of_prefs = [col for col in df.columns if 'P__' in col]
+    list_of_actions = [col for col in df.columns if 'VA__' in col]
+    # Note that this is a list of all matrices, not a sum of all matrices.
+    for i in range(n_agents):
+        country = df.iloc[i]['country']
+        country_dict.update({i: country})
+        # Filter such that p and j matrix are passed df's with only the relevant cols
+        p_row = df[list_of_prefs].iloc[i]
+        j_row = df[list_of_actions].iloc[i]
+        P = PMatrix(p_row, n_values)
+        # J_n is only used in the creation of a BVector.
+        J_p, J_n = JMatrixs(j_row, n_values, n_actions)
+        J_list.append((J_p, J_n))
+        P_list.append(P)
+    w = Weights(df, n_agents, weights)
+    return P_list, J_list, w, country_dict
+
 def Vectorisation(M):
     """This function vectorises any matrix.
     INPUT: M (matrix)
