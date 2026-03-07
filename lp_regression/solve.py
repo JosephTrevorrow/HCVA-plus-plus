@@ -151,7 +151,17 @@ def mLp(A, b, ps, λs, weight=True):
     x = cp.Variable(v)
     cost = cp.sum([wp * cp.pnorm(A @ x - b, p) for wp, p in zip(wps, ps)])
     prob = cp.Problem(cp.Minimize(cost))
-    prob.solve(solver="ECOS", verbose=True)
+    for solver_name in ("CLARABEL", "SCS", "ECOS"):
+        try:
+            prob.solve(solver=solver_name, verbose=True)
+            if x.value is not None and prob.status in ("optimal", "optimal_inaccurate"):
+                print(f"mLp solved with {solver_name}.")
+                break
+        except Exception as exc:
+            last_error = exc
+    else:
+        raise RuntimeError(f"All solvers failed in mLp. Last error: {last_error}")
+
     res = np.abs(A @ x.value - b)
     psi = np.var([wp * np.linalg.norm(res, p) for wp, p in zip(wps, ps)])
     return x.value, res, prob.value / sum(wps), psi
@@ -321,19 +331,28 @@ def aggregate_slm(P_list, J_list, w, list_of_ps, v):
     cons_list = []
     dist_1p_list = []
     dist_pl_list = []
-
     # Form a matrix.
     p = list_of_ps
+    print("p: ", p)
     ps = np.atleast_1d(p)
+    print("ps: ", ps)
     ps = np.where(ps == -1, np.inf, ps)
+    print("ps: ", ps)
     λs = np.ones_like(ps)
     nλs = min(len(λs), len([]))
     λs[:nλs] = [][:nλs]
-
     A, b = FormalisationMatrix(P_list, J_list, w, 1, v)
     # w will always have weights equal to 1, shape needs to be equal. We do not use weights in the paper for simplicity.
     w = np.repeat(w, A.shape[1])
     # Aggregate over all principles together using the matrix
+    print("A dtype:", np.asarray(A).dtype)
+    print("A shape:", np.asarray(A).shape)
+    print("b dtype:", np.asarray(b).dtype)
+    print("b shape:", np.asarray(b).shape)
+    print("A finite:", np.isfinite(np.asarray(A, dtype=float)).all())
+    print("b finite:", np.isfinite(np.asarray(b, dtype=float)).all())
+    print("A min/max:", np.min(np.asarray(A, dtype=float)), np.max(np.asarray(A, dtype=float)))
+    print("b min/max:", np.min(np.asarray(b, dtype=float)), np.max(np.asarray(b, dtype=float)))
     cons, res, u, psi = mLp(A, b, ps, λs, False)
     return p, u, cons
 

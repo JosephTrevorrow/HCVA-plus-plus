@@ -21,7 +21,7 @@ if __name__ == '__main__':
     ## FILE ARGS
     parser.add_argument('-f', type=str, default="value_systems/ESS/PVS_abstracted.csv", help='CSV file with personal values value_systems')
     parser.add_argument('-pf', type=str, default="value_systems/ESS/3q_PriP.csv", help='CSV file with principle value_systems')
-    parser.add_argument('-slmf', type=str, default="input_data/sml_principles/placeolder_sml.csv", help='CSV file with principles for Salas-Molina method SML')
+    parser.add_argument('-slmf', type=str, default="value_systems/ESS/3q_PriP.csv", help='CSV file with principles for Salas-Molina method SML')
     parser.add_argument("-n_values", type=int, default=4, help='Number of values')
     parser.add_argument("-n_actions", type=int, default=3, help='Number of actions')
     ## COMPUTE ARGS
@@ -104,15 +104,30 @@ if __name__ == '__main__':
         # 1. Read in the principles file. Each column contains a set of principles to use.
         file_path = args.slmf
         principles = pd.read_csv(file_path)
+        # Convert the principles (which are preferences) into numbers (need to first find transition point
+        print("Principles: ", principles)
+        #_, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
+        transition_p = 1.40
+        list_of_principles = principles["Egalitarian_3"].to_list()
+        converted_principles = []
+        for principle in list_of_principles:
+            # Find p by finding the p the relative distance away from the transition point.
+            converted_p = pow(transition_p, (2 * principle))
+            # Round to 2 d.p. for fairness
+            converted_p = round(converted_p, 2)
+            converted_principles.append(float(converted_p))
+            # TODO: more than 11 values? then it breaks. I'm gonna push this code onto isambard to see what it does
+        converted_principles = np.repeat(1.4, 11)
+        print("Converted principles: ", converted_principles)
         # 2. For each list of ps in principles, aggregate and save
-        for series_name, series in principles.items():
-            now = dt.now().isoformat()
-            filename= str("SLM_" + series_name + "_" + now + ".csv")
-            filename_metadata = str("SLM_METADATA_" + series_name + "_" + now + ".csv")
-            p, u_pref, cons_pref = aggregate_slm(P_list, J_list, w, series, True)
-            _, u_act, cons_act = aggregate_slm(P_list, J_list, w, series, False)
-            output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
-            save_metadata(filename_metadata, args, _, series, _)
+        #   there will always be one list, because we aren't testing multiple principle datasets
+        now = dt.now().isoformat()
+        filename= str("SLM" + "_" + now + ".csv")
+        filename_metadata = str("SLM_METADATA_" + now + ".csv")
+        p, u_pref, cons_pref = aggregate_slm(P_list, J_list, w, converted_principles, True)
+        _, u_act, cons_act = aggregate_slm(P_list, J_list, w, converted_principles, False)
+        output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
+        save_metadata(filename_metadata, args, _, converted_principles, _)
     if args.hcva:
         """ Compute HCVA (closest P/VALE) """
         print("Computing HCVA")
