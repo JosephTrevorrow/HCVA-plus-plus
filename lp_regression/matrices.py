@@ -9,6 +9,9 @@ def PMatrix(prefs, num_vals=4):
     , etc. etc.,]] """
     p_matrix = np.zeros((num_vals, num_vals))
     k = 0
+    print("prefs: ", prefs)
+    print("num_vals: ", num_vals)
+    print("p_matrix:", p_matrix, "\n")
     for i in range(num_vals):
         for j in range(num_vals):
             p_matrix[i][j] = prefs[k]
@@ -17,6 +20,18 @@ def PMatrix(prefs, num_vals=4):
         print("P-matrix: ", p_matrix, "\n")
         print("Shape of P-matrix: ", p_matrix.shape, "\n")
     return p_matrix
+
+def Principle_PMatrix(prefs, num_vals=1):
+    """Reconstructs the P matrix of the formalisation. The P matrix is the preference matrix."""
+    p_matrix = np.zeros((num_vals, num_vals))
+    k = 0
+    print("prefs: ", prefs)
+    print("num_vals: ", num_vals)
+    print("p_matrix:", p_matrix, "\n")
+    pref = prefs[0]
+    p = [[0, pref], [(1-pref), 0]]
+    print("p: ", p)
+    return p
 
 def JMatrixs(actions, num_values=4, num_actions=3):
     """This function reconstructs the J matrices. A J matrix is a matrix of action judgements
@@ -79,7 +94,7 @@ def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0,
     w = Weights(df, n_agents, weights)
     return P_list, J_list, w, country_dict
 
-def principle_formalisation_objs(filename='value_systems.csv', delimiter=',', weights=0, n_values=4, n_actions=3):
+def principle_formalisation_objs(filename='value_systems.csv', delimiter=',', weights=0, n_values=1, n_actions=3):
     """
     This function computes the matrices P, J+ and J-, and the weight vector of the formalisation.
     INPUT: filename -- str ; delimiter -- str ;
@@ -87,23 +102,20 @@ def principle_formalisation_objs(filename='value_systems.csv', delimiter=',', we
     RETURN: np.array with weights (array only contains 1's)
     """
     df = pd.read_csv(filename, delimiter=delimiter)
+    print(df)
     n_agents = df.shape[0]  # number of rows
     J_list = []
     P_list = []
     country_dict = {}
-    list_of_prefs = [col for col in df.columns if 'P__' in col]
-    list_of_actions = [col for col in df.columns if 'VA__' in col]
+    list_of_prefs = [col for col in df.columns if 'Egalitarian' in col]
     # Note that this is a list of all matrices, not a sum of all matrices.
     for i in range(n_agents):
         country = df.iloc[i]['country']
         country_dict.update({i: country})
         # Filter such that p and j matrix are passed df's with only the relevant cols
         p_row = df[list_of_prefs].iloc[i]
-        j_row = df[list_of_actions].iloc[i]
-        P = PMatrix(p_row, n_values)
+        P = Principle_PMatrix(p_row, n_values)
         # J_n is only used in the creation of a BVector.
-        J_p, J_n = JMatrixs(j_row, n_values, n_actions)
-        J_list.append((J_p, J_n))
         P_list.append(P)
     w = Weights(df, n_agents, weights)
     return P_list, J_list, w, country_dict

@@ -108,12 +108,10 @@ def IRLS(A, b, p, max_iter=int(1e6), e=1e-3, d=1e-4):
     return x, r, np.linalg.norm(r, p)
 
 def Lp(A, b, p):
-    """
-    OUTPUT:
+    """OUTPUT:
     cons - the consensus matrix in the same format as the P or J matrix inputted
     r - The value of the solved function ||Ax - b||
-    u - The distance between the value of the solved function ||Ax - b|| and p
-    """
+    u - The distance between the value of the solved function ||Ax - b|| and p"""
     # l = A.shape[1]
     if p >= 2 :  # pIRLS implementation (NIPS 2019) (always use this for continuity)
         jl.include(os.path.dirname(
@@ -293,7 +291,7 @@ def aggregate_all_p(P_list, J_list, w, incr):
         # print('{:.2f} \t \t {:.4f}'.format(p, ub))
     return p_list, u_list, cons_list, dist_1p_list, dist_pl_list, cons_1, cons_l
 
-def aggregate_prefs_only(P_list, J_list, w, p, v):
+def aggregate_prefs_only(P_list, J_list, w):
     """This function is used by the HCVA to aggregate over all principle preferences in main.py"""
     A, b = FormalisationMatrix(P_list, J_list, w, 1, True)
     cons_1_pref, _, u_1_pref = L1(A, b)

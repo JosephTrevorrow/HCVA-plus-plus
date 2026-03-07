@@ -132,10 +132,10 @@ if __name__ == '__main__':
         """ Compute HCVA (closest P/VALE) """
         print("Computing HCVA")
         # 1. Formalise the principle preferences as matrices
-        Pri_P_list, Pri_J_list, Pri_w, Pri_Country_dict = principle_formalisation_objs(
+        Pri_P_list, _, Pri_w, Pri_Country_dict = principle_formalisation_objs(
             filename=args.pf, delimiter=',', weights=args.w)
         # 2. Aggregate over all principle preferences
-        p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_prefs_only(Pri_P_list, Pri_J_list, Pri_w)
+        p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_prefs_only(Pri_P_list, [], Pri_w)
         # 3. Find a cutoff point given $\epsilon$
         cut_point = 10
         incr = 0.01
