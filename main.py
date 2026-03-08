@@ -108,7 +108,7 @@ if __name__ == '__main__':
         print("Principles: ", principles)
         #_, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
         transition_p = 1.40
-        list_of_principles = principles["Egalitarian_3"].to_list()
+        list_of_principles = principles["Egalitarian"].to_list()
         converted_principles = []
         for principle in list_of_principles:
             # Find p by finding the p the relative distance away from the transition point.
@@ -117,7 +117,7 @@ if __name__ == '__main__':
             converted_p = round(converted_p, 2)
             converted_principles.append(float(converted_p))
             # TODO: more than 11 values? then it breaks. I'm gonna push this code onto isambard to see what it does
-        converted_principles = np.repeat(1.4, 11)
+        #converted_principles = np.repeat(1.4, 11)
         print("Converted principles: ", converted_principles)
         # 2. For each list of ps in principles, aggregate and save
         #   there will always be one list, because we aren't testing multiple principle datasets
@@ -136,16 +136,23 @@ if __name__ == '__main__':
             filename=args.pf, delimiter=',', weights=args.w)
         # 2. Aggregate over all principle preferences
         p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_prefs_only(Pri_P_list, [], Pri_w)
+        print("Aggregated over all principle preferences!")
         # 3. Find a cutoff point given $\epsilon$
         cut_point = 10
-        incr = 0.01
+        incr = 0.1
         j = 0
+        # This version of epsilon is the same as used in original paper, defined arbitrarily in that case.
         epsilon = 0.05
         for i in np.arange(1 + incr, 10, incr):
             cons = cons_list[j]
+            print("cons: ", cons)
+            print("cons_1: ", cons_1)
+            print("cons_l: ", cons_l)
             dist_1p = np.linalg.norm(cons_1 - cons, i)
             dist_pl = np.linalg.norm(cons_l - cons, i)
             j += 1
+            print("dist_1p: ", dist_1p, " dist_pl: ", dist_pl, " i: ", i, "")
+            print("abs(dist_1p - dist_pl): ", abs(dist_1p - dist_pl), " epsilon: ", epsilon)
             if abs(dist_1p - dist_pl) < epsilon:
                 cut_point = i
                 print('Not improving anymore at cut_point = ', cut_point, '. Stopping...')

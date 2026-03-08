@@ -189,7 +189,6 @@ def transition_point(P_list, J_list, w, e):
 
     diff = np.inf
     incr = 0.01
-    incr = 0.1
     p_list = []
     dist_p_list = []
     dist_inf_list = []
@@ -335,7 +334,6 @@ def aggregate_slm(P_list, J_list, w, list_of_ps, v):
     ps = np.atleast_1d(p)
     print("ps: ", ps)
     ps = np.where(ps == -1, np.inf, ps)
-    print("ps: ", ps)
     λs = np.ones_like(ps)
     nλs = min(len(λs), len([]))
     λs[:nλs] = [][:nλs]

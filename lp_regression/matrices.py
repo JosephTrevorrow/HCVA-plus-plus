@@ -9,28 +9,16 @@ def PMatrix(prefs, num_vals=4):
     , etc. etc.,]] """
     p_matrix = np.zeros((num_vals, num_vals))
     k = 0
-    print("prefs: ", prefs)
-    print("num_vals: ", num_vals)
-    print("p_matrix:", p_matrix, "\n")
     for i in range(num_vals):
         for j in range(num_vals):
             p_matrix[i][j] = prefs[k]
             k+=1
-    if __debug__:
-        print("P-matrix: ", p_matrix, "\n")
-        print("Shape of P-matrix: ", p_matrix.shape, "\n")
     return p_matrix
 
 def Principle_PMatrix(prefs, num_vals=1):
     """Reconstructs the P matrix of the formalisation. The P matrix is the preference matrix."""
-    p_matrix = np.zeros((num_vals, num_vals))
-    k = 0
-    print("prefs: ", prefs)
-    print("num_vals: ", num_vals)
-    print("p_matrix:", p_matrix, "\n")
     pref = prefs[0]
-    p = [[0, pref], [(1-pref), 0]]
-    print("p: ", p)
+    p = np.array([[0, pref], [(1-pref), 0]])
     return p
 
 def JMatrixs(actions, num_values=4, num_actions=3):
@@ -102,7 +90,6 @@ def principle_formalisation_objs(filename='value_systems.csv', delimiter=',', we
     RETURN: np.array with weights (array only contains 1's)
     """
     df = pd.read_csv(filename, delimiter=delimiter)
-    print(df)
     n_agents = df.shape[0]  # number of rows
     J_list = []
     P_list = []

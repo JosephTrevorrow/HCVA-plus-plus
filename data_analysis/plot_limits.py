@@ -30,6 +30,6 @@ def plot_data(data: pd.DataFrame, title: str):
     plt.savefig("plot_data.png")
 
 
-data = pd.read_csv("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/synthetic_results/CASE2xPriP1/CASE2xPriP1_Limits.csv")
+data = pd.read_csv("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/2026-03-08T16:46:03.248416_limits.csv")
 plot_data(data, "Value Principle Preference Matrix Aggregation (limit P)")
 plt.show()
