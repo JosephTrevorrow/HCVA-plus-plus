@@ -73,7 +73,8 @@ def plot_residuals(cons_df, agents_df, list_of_params, title):
     """Plots a residual bar chart given a list of parameters using the dataframe. Style will follow prev. work.
     X Axis: Ps, Y Axis: Residuals"""
     # For every cons in cons_df, plot the residuals over all agents in the agents df
-
+    #begin an empty plot
+    plt.figure(figsize=(6, 3))
     to_plot_df = pd.DataFrame()
     for cons in cons_df.iterrows():
         points = []
@@ -90,4 +91,4 @@ def plot_residuals(cons_df, agents_df, list_of_params, title):
     plt.tick_params(axis="x", rotation=90)
     plt.ylim(0, 0.5)
     plt.grid(alpha=0.25)
-    plt.savefig("residuals.png", bbox_inches="tight")
+    plt.savefig(title+"residuals.png", bbox_inches="tight")

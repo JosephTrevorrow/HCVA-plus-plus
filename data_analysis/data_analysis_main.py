@@ -58,7 +58,20 @@ if __name__ == "__main__":
     # Plot and run analysis
 
     ## FAIRNESS
-    plot_residuals(cons_df, agents_df, list_of_params, title)
+
+    ### Residuals (list_of_params is all params
+    plot_residuals(cons_df, agents_df, list_of_params, "Entire PVS Residuals")
+    # Just VAs
+    plot_residuals(cons_df, agents_df, actions_list, "VAs Residuals")
+    # Just Ps
+    plot_residuals(cons_df, agents_df, values_list, "Ps Residuals")
+    # Just PriPs
+    # TODO, This isn't showing properly
+    plot_residuals(cons_df, agents_df, principles_list, "PriPs Residuals")
+    # PVSs and PriPs
+    total_list = values_list + actions_list + principles_list
+    plot_residuals(cons_df, agents_df, total_list, "PVSs and PriPs Residuals")
+
     check_maximin_fairness(cons_df, agents_df, list_of_params)
     gini_coefficient(cons_df, agents_df, list_of_params)
     calc_envy_freeness(cons_df, agents_df, list_of_params)
