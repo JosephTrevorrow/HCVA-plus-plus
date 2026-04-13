@@ -1,5 +1,5 @@
 def plot_pareto_efficiency(cons_df, agents_df, list_of_params):
-    """Is there a cons that would make at least one agent better off
+    """NOT USED IN PAPER. Is there a cons that would make at least one agent better off
     without making another agent worse off?"""
 
     # Find the utilities for all cons, for all agents.

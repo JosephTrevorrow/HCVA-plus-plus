@@ -30,7 +30,7 @@ def gini_coefficient(cons_df, agents_df, list_of_params):
     return ginis
 
 def check_maximin_fairness(cons_df, agents_df, list_of_params):
-    """Calculates the utility of the worst off agent in the society"""
+    """NOT USED IN PAPER. Calculates the utility of the worst off agent in the society"""
     worst_offs = {}
     for cons in cons_df.iterrows():
         temp_residuals = []
@@ -45,7 +45,7 @@ def check_maximin_fairness(cons_df, agents_df, list_of_params):
     return worst_offs
 
 def calc_envy_freeness(cons_df, agents_df, list_of_params):
-    """Calculates if an agent is envious of another consensus? Would they
+    """NOT USED IN PAPER. Calculates if an agent is envious of another consensus? Would they
     prefer if another consensus was chosen than the cons considered?"""
     residuals = {}
     for cons in cons_df.iterrows():

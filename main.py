@@ -21,7 +21,6 @@ if __name__ == '__main__':
     ## FILE ARGS
     parser.add_argument('-f', type=str, default="value_systems/ESS/PVS_abstracted.csv", help='CSV file with personal values value_systems')
     parser.add_argument('-pf', type=str, default="value_systems/ESS/3q_PriP.csv", help='CSV file with principle value_systems')
-    parser.add_argument('-slmf', type=str, default="value_systems/ESS/3q_PriP.csv", help='CSV file with principles for Salas-Molina method SML')
     parser.add_argument("-n_values", type=int, default=4, help='Number of values')
     parser.add_argument("-n_actions", type=int, default=3, help='Number of actions')
     ## COMPUTE ARGS
@@ -102,12 +101,11 @@ if __name__ == '__main__':
         """ Compute aggregation with Salas-Molina et al. baseline (Many P's) """
         print("Computing SLM")
         # 1. Read in the principles file. Each column contains a set of principles to use.
-        file_path = args.slmf
+        file_path = args.pf
         principles = pd.read_csv(file_path)
         # Convert the principles (which are preferences) into numbers (need to first find transition point
         print("Principles: ", principles)
-        #_, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
-        transition_p = 1.40
+        _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
         list_of_principles = principles["Egalitarian"].to_list()
         converted_principles = []
         for principle in list_of_principles:
