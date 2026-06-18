@@ -18,10 +18,3 @@ def procedural_residuals(cons_df, agents_df, principles_df):
 
 
     return cons_df['U_total'] - agents_df['U_total']
-
-def stability_under_principle_voting(cons_df, agents_df, list_of_params):
-    """ Is there another aggregation rule that a majority (or a specific coalition) of agents would prefer over the current one?
-    If so, how many? Does a consensus have institutional drift? This is where agents are likely to contest the outcome."""
-
-
-

@@ -1,3 +1,16 @@
+def plot_total_utility(cons_df, agents_df, list_of_params):
+    """Find the total utility for all agents."""
+    utilities = {}
+    for cons_i in cons_df.iterrows():
+        utility = 0
+        for agent in agents_df.iterrows():
+            temp_residual = cons_i[1][list_of_params] - agent[1][list_of_params]
+            temp_residual = abs(temp_residual.sum())
+            utility += temp_residual
+        utilities[cons_i[0]] = utility
+    print("Utilities are: ", utilities)
+    return utilities
+
 def plot_pareto_efficiency(cons_df, agents_df, list_of_params):
     """NOT USED IN PAPER. Is there a cons that would make at least one agent better off
     without making another agent worse off?"""
@@ -26,16 +39,3 @@ def plot_pareto_efficiency(cons_df, agents_df, list_of_params):
             if betterOff > 0 and worseOff == 0:
                 print("There is a cons that would make at least one agent better off without making another agent worse off.")
                 print("Compared ", cons_name_i, " and ", cons_name_j, ". ", betterOff, " agents are better off, ", worseOff, " agents are worse off.")
-
-def plot_total_utility(cons_df, agents_df, list_of_params):
-    """Find the total utility for all agents."""
-    utilities = {}
-    for cons_i in cons_df.iterrows():
-        utility = 0
-        for agent in agents_df.iterrows():
-            temp_residual = cons_i[1][list_of_params] - agent[1][list_of_params]
-            temp_residual = abs(temp_residual.sum())
-            utility += temp_residual
-        utilities[cons_i[0]] = utility
-    print("Utilities are: ", utilities)
-    return utilities

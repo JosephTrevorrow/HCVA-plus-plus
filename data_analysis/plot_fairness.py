@@ -29,6 +29,31 @@ def gini_coefficient(cons_df, agents_df, list_of_params):
         ginis[cons[0]] = g
     return ginis
 
+def plot_residuals(cons_df, agents_df, list_of_params, title):
+    """Plots a residual bar chart given a list of parameters using the dataframe. Style will follow prev. work.
+    X Axis: Ps, Y Axis: Residuals"""
+    # For every cons in cons_df, plot the residuals over all agents in the agents df
+    #begin an empty plot
+    plt.figure(figsize=(6, 3))
+    to_plot_df = pd.DataFrame()
+    for cons in cons_df.iterrows():
+        points = []
+        for agent in agents_df.iterrows():
+            # For every col, match these two dfs and plot the residuals
+            temp_residual = cons[1][list_of_params] - agent[1][list_of_params]
+            temp_residual = abs(temp_residual.sum())
+            points.append(copy.copy(temp_residual))
+        to_plot_df[cons[0]] = points
+
+    to_plot_df.boxplot(patch_artist=True, boxprops=dict(facecolor="#b7e4c7"))
+    plt.title(title, fontsize=14)
+    plt.ylabel("Value", fontsize=11)
+    plt.tick_params(axis="x", rotation=90)
+    plt.ylim(0, 0.5)
+    plt.grid(alpha=0.25)
+    plt.savefig(title+"residuals.png", bbox_inches="tight")
+
+
 def check_maximin_fairness(cons_df, agents_df, list_of_params):
     """NOT USED IN PAPER. Calculates the utility of the worst off agent in the society"""
     worst_offs = {}
@@ -68,27 +93,3 @@ def calc_envy_freeness(cons_df, agents_df, list_of_params):
         print("Number envious in ", cons_i, " is: ", num_envious, ".")
         envy_count[cons_i] = num_envious
     return envy_count
-
-def plot_residuals(cons_df, agents_df, list_of_params, title):
-    """Plots a residual bar chart given a list of parameters using the dataframe. Style will follow prev. work.
-    X Axis: Ps, Y Axis: Residuals"""
-    # For every cons in cons_df, plot the residuals over all agents in the agents df
-    #begin an empty plot
-    plt.figure(figsize=(6, 3))
-    to_plot_df = pd.DataFrame()
-    for cons in cons_df.iterrows():
-        points = []
-        for agent in agents_df.iterrows():
-            # For every col, match these two dfs and plot the residuals
-            temp_residual = cons[1][list_of_params] - agent[1][list_of_params]
-            temp_residual = abs(temp_residual.sum())
-            points.append(copy.copy(temp_residual))
-        to_plot_df[cons[0]] = points
-
-    to_plot_df.boxplot(patch_artist=True, boxprops=dict(facecolor="#b7e4c7"))
-    plt.title(title, fontsize=14)
-    plt.ylabel("Value", fontsize=11)
-    plt.tick_params(axis="x", rotation=90)
-    plt.ylim(0, 0.5)
-    plt.grid(alpha=0.25)
-    plt.savefig(title+"residuals.png", bbox_inches="tight")
