@@ -1,4 +1,7 @@
 import argparse as ap
+import copy
+import csv
+
 import numpy as np
 import os
 from lp_regression.matrices import FormalisationObjects, FormalisationMatrix
@@ -164,7 +167,77 @@ def mLp(A, b, ps, λs, weight=True):
     psi = np.var([wp * np.linalg.norm(res, p) for wp, p in zip(wps, ps)])
     return x.value, res, prob.value / sum(wps), psi
 
-## RUNNER FUNCTIONS HERE
+#### RUNNER FUNCTIONS HERE ######
+
+def find_transition_and_aggregate(P_list, J_list, w, filename_limits, args):
+    """ Compute the transition point, and find an aggregation with that transition point P """
+    # 1. Compute transition point
+    p_list, dist_p_list, dist_inf_list, diff_list, t_point = transition_point(P_list, J_list, w, args.e)
+    limit_output(
+        p_list,
+        dist_p_list,
+        dist_inf_list,
+        diff_list,
+        filename_limits)
+    # 2. Aggregate and store to a file.
+    p, u_pref, cons_pref = aggregate(P_list, J_list, w, t_point, True)
+    _, u_act, cons_act = aggregate(P_list, J_list, w, t_point, False)
+    return p, u_pref, cons_pref, u_act, cons_act, t_point
+
+def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_csv, args):
+    """ Compute the HCVA++ consensus principle, and find an aggregation with that consensus principle P """
+
+    # 1. Find the consensus principle $p$
+    # 1.1 Find the consensus principle preference
+    principle_preferences = []
+    with open(prip_csv) as csv_file:
+        reader = csv.reader(csv_file)
+        next(reader)  # get rid of the header row
+        for row in reader:
+            temp_preference = float(row[1])
+            principle_preferences.append(copy.copy(temp_preference))
+    consensus_preference = sum(principle_preferences) / len(principle_preferences)
+    consensus_preference = round(consensus_preference, 2)
+    print("HCVA++ Consensus preference is: ", consensus_preference)
+    # 1.2 Aggregate personal values/action judgements to find the transition point
+    _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
+    # 1.3 Given the transition point (best_p), find the consensus p by finding the
+    # p the relative distance away from the transition point.
+    consensus_p = pow(transition_p, (2 * consensus_preference))
+    # Round to 2 d.p. for fairness
+    consensus_p = round(consensus_p, 2)
+    print("Consensus p is: ", consensus_p)
+    # 2. Aggregate all the preference values and action judgements submitted by agents
+    # using the average rule as described in the paper. Do this twice, once for vals, other for action judgements
+    p, u_pref, cons_pref = aggregate(P_list, J_list, w, consensus_p, True)
+    _, u_act, cons_act = aggregate(P_list, J_list, w, consensus_p, False)
+    return p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference
+
+def find_slm_and_aggregate(P_list, J_list, w, prip_csv, args):
+    """ Compute aggregation with Salas-Molina et al. baseline (Many P's) """
+    # 1. Read in the principles file. Each column contains a set of principles to use.
+    file_path = prip_csv
+    principles = pd.read_csv(file_path)
+    # Convert the principles (which are preferences) into numbers (need to first find transition point
+    print("Principles: ", principles)
+    _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
+    list_of_principles = principles["Egalitarian"].to_list()
+    converted_principles = []
+    for principle in list_of_principles:
+        # Find p by finding the p the relative distance away from the transition point.
+        converted_p = pow(transition_p, (2 * principle))
+        # Round to 2 d.p. for fairness
+        converted_p = round(converted_p, 2)
+        converted_principles.append(float(converted_p))
+        # TODO: more than 11 values? then it breaks. I'm gonna push this code onto isambard to see what it does
+    # converted_principles = np.repeat(1.4, 11)
+    print("Converted principles: ", converted_principles)
+    # 2. For each list of ps in principles, aggregate and save
+    #   there will always be one list, because we aren't testing multiple principle datasets
+    p, u_pref, cons_pref = aggregate_slm(P_list, J_list, w, converted_principles, True)
+    _, u_act, cons_act = aggregate_slm(P_list, J_list, w, converted_principles, False)
+    return p, u_pref, cons_pref, u_act, cons_act, transition_p, converted_principles
+
 def transition_point(P_list, J_list, w, e):
     """
     Find the transition point given personal values
