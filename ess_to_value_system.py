@@ -27,11 +27,9 @@ def process_all_country_principles(ess_df, country_col_name, values_dict):
                 if question == "sofrwrk":
                     # Society fair when hard-working people earn *more* than others is the opposite to other two
                     # principle questions, so we say disagreement is "best" as we are measuring egalitarianism
-                    print("Not reversing sofrwrk")
                     country_df[question] = country_df[question]
                 elif question == "sofrdst" or question == "sofrpr":
                     # Society fair when wealth equally distributed/the poor are cared for regardless of what they give back
-                    print("Reversing ", question)
                     country_df[question] = 6 - country_df[question]
                 else:
                     print("Something went wrong")
@@ -46,13 +44,11 @@ def process_all_country_principles(ess_df, country_col_name, values_dict):
 
         # Find the mean of all the questions (as we only compute one principle value)
         mean_principle = np.mean(temp_values)
-        print("mean_principle: ", mean_principle)
         # Convert the mean from a scale of 1-5, to a scale of 0-1
         preference = mean_principle / -1
         preference = (((mean_principle - 1) * (1 - 0)) / (5 - 1)) + 0
         #NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
 
-        print("preference: ", preference)
         # country_values contains the preference
         country_values[country] = preference
     # Return the country_values
@@ -117,7 +113,6 @@ def process_all_country_values(ess_df, country_col_name, values_dict, higher_ord
         ## Now we have a list of centred country_values for every country, if we want to convert these to higher order values
         # then we find the mean of these.
         if abstract:
-            print("Abstracting: ", country_values[country])
             abstracted_values = np.array([])
             for h_vals_list in higher_order_values_index_list:
                 temp_sum = 0
@@ -126,12 +121,10 @@ def process_all_country_values(ess_df, country_col_name, values_dict, higher_ord
                 mean = temp_sum / len(h_vals_list)
                 abstracted_values = np.append(abstracted_values, [mean])
             country_values[country] = copy.copy(abstracted_values)
-            print("Abstracted: ", country_values[country])
 
     # We find the preferences between each value and every other value and store
     value_preferences = {}
     for country, values_list in country_values.items():
-        print("values list: ", values_list)
         # Principle case: There is only one value, so just store
         if len(values_list) == 1:
             value_preferences[country] = values_list[0]
@@ -140,6 +133,10 @@ def process_all_country_values(ess_df, country_col_name, values_dict, higher_ord
         diff = values_list[:, np.newaxis] - values_list
         # Diff norm normalises the value preferences between 0 and 1
         diff_norm = (diff- np.min(diff)) / (np.max(diff) - np.min(diff))
+        if diff_norm is None:
+            print("Error finding diff_norm: ", country)
+            print(diff_norm)
+            print(values_list)
         value_preferences[country] = copy.copy(diff_norm)
         """
         array([1, 4, 6])
@@ -156,7 +153,6 @@ def process_all_country_values(ess_df, country_col_name, values_dict, higher_ord
         array([st, st], [st, con], [st,se], [st, op],
               [con, st], ...
         """
-        print(value_preferences[country])
     return value_preferences
     
 def process_all_country_actions(ess_df, country_col_name, value_preferences, actions_dict):
@@ -290,18 +286,12 @@ if __name__ == '__main__':
     8 	Don't know*
     9 	No answer*
     """
-    # TODO: Add remain/leave for all countries?
     actions_dict = {
-        #'brexit' : ["vteumbgb"],
         'immigration': ["imbgeco"], # Immigration bad or good for the country's economy
         'lgbt_adopt' : ["hmsacld"], # Gay men and lesbians should have the same rights to adopt children as straight couples
         'lgbt_freedom' : ["freehms"], # Gay men and lesbians should be free to live life as they wish
     }
     """
-    "vteumbgb" 	Voting intention if referendum was held tomorrow
-    1 Remain
-    0 Leave
-    all other values Refusal
     "imbgeco" 	Immigration bad or good for country's economy
     0	Bad for the economy
     1	1
@@ -344,10 +334,8 @@ if __name__ == '__main__':
     for dict in dicts:
         for _, item_list in dict.items():
                 all_interested_cols.extend(item_list)
-    print(all_interested_cols)
     # Remove duplicates
     all_interested_cols = list(dict.fromkeys(all_interested_cols))
-    print(all_interested_cols)
     try:
         df = df.dropna(subset=all_interested_cols)
     except KeyError:
@@ -376,7 +364,11 @@ if __name__ == '__main__':
                 incorrect_action_responses = [33,44,55,65]
                 df = df.loc[~df[item].isin(incorrect_action_responses)]
 
-    country_col_name = 'cntry'
+    ## Want individual data? Change country_col_name to "idno"
+    ## Want country-wide data? Change country_col_name to "cntry"
+    country_col_name = 'idno'
+
+
     # NOTE: FOR UK DATA ONLY - because the UK value_systems has agents as citizens.
     #country_col_name = 'idno'
     #if country_col_name == 'idno':
@@ -391,7 +383,7 @@ if __name__ == '__main__':
     # Because principle preferences are just preferences of each principle over every other principle, use the same func.
     principle_preferences = process_all_country_principles(df, country_col_name, principle_dict)
 
-    print("principle preferences are: ", principle_preferences)
+    #print("principle preferences are: ", principle_preferences)
 
     now = dt.now().isoformat()
     principles_fn = now+"_ess_principles.csv"
