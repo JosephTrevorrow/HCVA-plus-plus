@@ -137,32 +137,38 @@ def save_to_file(value_preferences, action_judgements, principle_prefs, agents_i
             writer.writerow(row)
     return
 
-if __name__ == "__main__":
-    random.seed(10)
-    # Define your curve of popularity for each input type.
-    n_values = 4
-    n_acts = 2
-    n_agents = 30
+
+def generate(n_values=4, n_actions=2, n_agents=30, agent_ids, curve_groups, agent_groups):
     agent_ids = list(range(n_agents))
 
+    return
+if __name__ == "__main__":
+
+    random.seed(10) # Single seed used for all randomness.
+
     # Split the curve into different groups (extreme low, low, indifference, high, extreme high) (curve between 0/1)
-    curve_groups = {"ex_low": [nonlinspace(0, 0.2, 10)], "low": [nonlinspace(0.2, 0.4, 10)],
-                    "med": [nonlinspace(0.4,0.6, 10)], "high": [nonlinspace(0.6, 0.8, 10)],
-                    "ex_high": [nonlinspace(0.8, 1, 10)]}
+    #curve_groups = {"ex_low": [nonlinspace(0, 0.2, 10)], "low": [nonlinspace(0.2, 0.4, 10)],
+    #                "med": [nonlinspace(0.4,0.6, 10)], "high": [nonlinspace(0.6, 0.8, 10)],
+    #                "ex_high": [nonlinspace(0.8, 1, 10)]}
+
+    ## Instead of having different groups and then selectring from groups, we should just change the profile of the normal distribution curve, that we are going to sample from!
+
 
     # 1. Majority/Minority case with highly opposing views:
     # agent_groups splits the agents into aligned groups. These strengths will be for the first 50% of values.
     agent_groups = {"ex_low": agent_ids[:16], "ex_high": agent_ids[16:]}
     print(agent_groups.items())
+    generate(agent_ids=, curve_groups=, agent_groups=agent_groups)
+
 
     # Get PVSs and PriPs
     # These return Dicts in format {agent: [prefs]}
-    value_preferences = generate_ps(agent_groups, curve_groups, n_values)
-    action_judgements = generate_vas(agent_groups, curve_groups, value_preferences, n_acts)
+    #value_preferences = generate_ps(agent_groups, curve_groups, n_values)
+    #action_judgements = generate_vas(agent_groups, curve_groups, value_preferences, n_acts)
 
     """A majority will align with a more utilitarian principle, so make them higher too."""
     # TODO: Move principle prefs to a completely separate thing? Can be generated entirely independently.
-    principle_prefs = generate_prips(agent_groups, curve_groups)
     # Save to a csv
-    save_to_file(value_preferences, action_judgements, principle_prefs, agent_ids, n_values, n_acts)
+    #principle_prefs = generate_prips(agent_groups, curve_groups)
+    #save_to_file(value_preferences, action_judgements, principle_prefs, agent_ids, n_values, n_acts)
 
