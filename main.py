@@ -74,57 +74,16 @@ if __name__ == '__main__':
     if args.hcva:
         """ Compute HCVA (closest P/VALE) """
         print("Computing HCVA")
-        # 1. Formalise the principle preferences as matrices
-        Pri_P_list, _, Pri_w, Pri_Country_dict = principle_formalisation_objs(
-            filename=args.pf, delimiter=',', weights=args.w)
-        # 2. Aggregate over all principle preferences
-        p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_prefs_only(Pri_P_list, [], Pri_w)
-        print("Aggregated over all principle preferences!")
-        # 3. Find a cutoff point given $\epsilon$
-        cut_point = 10
-        incr = 0.1
-        j = 0
-        # This version of epsilon is the same as used in original paper, defined arbitrarily in that case.
-        epsilon = 0.05
-        for i in np.arange(1 + incr, 10, incr):
-            cons = cons_list[j]
-            print("cons: ", cons)
-            print("cons_1: ", cons_1)
-            print("cons_l: ", cons_l)
-            dist_1p = np.linalg.norm(cons_1 - cons, i)
-            dist_pl = np.linalg.norm(cons_l - cons, i)
-            j += 1
-            print("dist_1p: ", dist_1p, " dist_pl: ", dist_pl, " i: ", i, "")
-            print("abs(dist_1p - dist_pl): ", abs(dist_1p - dist_pl), " epsilon: ", epsilon)
-            if abs(dist_1p - dist_pl) < epsilon:
-                cut_point = i
-                print('Not improving anymore at cut_point = ', cut_point, '. Stopping...')
-                break
-        # 4. Cut the list of consensuses using the cut_point, find mean
-        cut_list = [cons_list[i] for i in range(len(cons_list)) if p_list[i] <= cut_point]
-        con_vals = [sum(i[0] for i in cut_list) / len(cut_list), sum(i[1] for i in cut_list) / len(cut_list)]
 
-        # 5. Find the value of p from the mean of these consensuses
-        con_p = 1.0
-        best_dist = 999
-        for j in range(len(cut_list)):
-            dist = [abs(cut_list[j][0] - con_vals[0]), abs(cut_list[j][1] - con_vals[1])]
-            dist = sum(dist)
-            if dist < best_dist:
-                best_dist = dist
-                # to convert from ordinal list num to corresponding p
-                con_p = (j / 10) + 1
-        print("Nearest P to mean con_vals is: ", con_p)
         # 6. Aggregate using that value of p
         # 7. Aggregate all preference values and action judgements submitted by agents
         # using the average rule as described in the paper. Do this twice, once for vals, other for action judgements
         now = dt.now().isoformat()
         filename = str("HCVA_" + now + ".csv")
         filename_metadata = str("HCVA_METADATA_" + now + ".csv")
-        p, u_pref, cons_pref = aggregate(P_list, J_list, w, con_p, True)
-        _, u_act, cons_act = aggregate(P_list, J_list, w, con_p, False)
+        p, u_pref, u_act, cons_pref, cons_act, con_p = find_hcva_and_aggregate(P_list, J_list, w, args)
         output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
-        save_metadata(filename_metadata, args, _, con_p, _)
+        save_metadata(filename_metadata, args, None, con_p, None)
     if args.b:
         """ Compute aggregation for all other baselines (Util, Egal) """
         baseline_ps = [1, np.inf()]
