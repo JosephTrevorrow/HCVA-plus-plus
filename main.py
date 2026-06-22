@@ -20,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('-w', type=int, default=0, help='Weights')
     ## FILE ARGS
     parser.add_argument('-f', type=str, default="value_systems/ESS/PVS_abstracted.csv", help='CSV file with personal values value_systems')
-    parser.add_argument('-pf', type=str, default="value_systems/ESS/3q_PriP.csv", help='CSV file with principle value_systems')
+    parser.add_argument('-pf', type=str, default="value_systems/ESS/PriP_abstracted.csv", help='CSV file with principle value_systems')
     parser.add_argument("-n_values", type=int, default=4, help='Number of values')
     parser.add_argument("-n_actions", type=int, default=3, help='Number of actions')
     ## COMPUTE ARGS
