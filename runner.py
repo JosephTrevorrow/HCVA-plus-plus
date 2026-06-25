@@ -13,12 +13,14 @@ if __name__ == '__main__':
     parser.add_argument('-prip_dir', type=str, help='Directory pointing to the prips csvs used in the experiment')
     ## ENV ARGS
     parser.add_argument("-n_values", nargs="*", type=int, default=[4], help='Number of values')
-    parser.add_argument("-n_actions",nargs="*", type=int, default=3, help='Number of actions')
+    parser.add_argument("-n_actions",nargs="*", type=int, default=[3], help='Number of actions')
     parser.add_argument('-e', type=float, default=1e-4, help='Epsilon cut-point for T')
+    parser.add_argument('-w', type=int, default=0, help='Weights')
     # Looking for the number of agents? This is not explicitly defined and can be found from the corresponding pvs_dir and prip_dir of each experiment.
 
     # Initialise args and params
     args = parser.parse_args()
+    # Note, these are lists
     n_values = args.n_values
     n_actions = args.n_actions
 
@@ -52,8 +54,14 @@ if __name__ == '__main__':
         if i < len(prip_sets):
             print("PriP: ", i)
             prip = prip_sets[i]
+        # Update the num_vals and num_actions if necessary
+        if i < len(n_values):
+            n_values = n_values[i]
+        if i < len(n_actions):
+            n_actions = n_actions[i]
 
         # Preprocess the csvs
+        print("My pvs set is: ", pvs_sets[i], " and my prip set is: ", prip_sets[i], "")
         ## PVS
         print("PREPROCESSING PVS...")
         P_list, J_list, w, country_dict = FormalisationObjects(filename=pvs_sets[i], delimiter=',', weights=args.w,

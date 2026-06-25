@@ -67,13 +67,16 @@ def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0,
     country_dict = {}
     list_of_prefs = [col for col in df.columns if 'P__' in col]
     list_of_actions = [col for col in df.columns if 'VA__' in col]
+
     # Note that this is a list of all matrices, not a sum of all matrices.
     for i in range(n_agents):
         country = df.iloc[i]['country']
         country_dict.update({i: country})
         # Filter such that p and j matrix are passed df's with only the relevant cols
-        p_row = df[list_of_prefs].iloc[i]
-        j_row = df[list_of_actions].iloc[i]
+        p_row_df = df[list_of_prefs].iloc[i]
+        p_row = p_row_df.values.tolist()
+        j_row_df = df[list_of_actions].iloc[i]
+        j_row = j_row_df.values.tolist()
         P = PMatrix(p_row, n_values)
         # J_n is only used in the creation of a BVector.
         J_p, J_n = JMatrixs(j_row, n_values, n_actions)

@@ -129,9 +129,7 @@ def process_all_country_values(ess_df, country_col_name, values_dict, higher_ord
         # Diff norm normalises the value preferences between 0 and 1
         # Check if the diff between max/min is 0. if so, then preferences should be neutral (0.5)
         if np.max(diff) - np.min(diff) == 0:
-            print("AAAAA")
-            diff_norm = [0.5 for _ in range(len(diff))]
-            print(diff_norm)
+            diff_norm = np.full(diff.shape, 0.5)
         else:
             diff_norm = (diff- np.min(diff)) / (np.max(diff) - np.min(diff))
 
@@ -363,7 +361,7 @@ if __name__ == '__main__':
 
     ## Want individual data? Change country_col_name to "idno"
     ## Want country-wide data? Change country_col_name to "cntry"
-    country_col_name = 'idno'
+    country_col_name = 'cntry'
 
     # NOTE: FOR UK DATA ONLY - because the UK value_systems has agents as citizens.
     #country_col_name = 'idno'

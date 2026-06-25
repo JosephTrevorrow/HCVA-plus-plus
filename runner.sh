@@ -1,7 +1,7 @@
 
 # Globals
-ess_F="value_systems/ESS/PVS_abstracted.csv"
-ess_PF="value_systems/ESS/3q_PriP.csv"
+ess_F="value_systems/ESS/Country/PVS/"
+ess_PF="value_systems/ESS/Country/PriP/"
 
 synthetic_1_f=""
 synthetic_1_pf=""
@@ -10,14 +10,11 @@ vale_f="value_systems/VALE/PVS.csv"
 vale_pf="value_systems/VALE/PriP.csv"
 vale_synth_pfs='a.txt b.txt c.txt d.txt'
 
-
 ###### ESS DATA EXP. ######
-
-## Note: ESS data experiments only require a single run. Therefore, they use the `main.py` file that produces one aggregation
-
+echo $ess_F
 # Experiment ``ESS Country-level'': Run on ESS data, at a country level abstraction (default)
 ## Data
-python main.py -f ess_F -pf ess_PF -t -range -hcva -hcva2 -n_values 4 -n_actions 2
+python runner.py -pvs_dir $ess_F -prip_dir $ess_PF -n_values 4 -n_actions 2 -e 1e-4
 ## Data Analysis
 python data_analysis/data_analysis_main.py
 
@@ -34,9 +31,9 @@ python data_analysis/data_analysis_main.py
 
 # Experiment ``Maj/min split'': Run on ESS data, at a country level abstraction (default)
 ## Data
-python main.py -f ess_F -pf ess_PF -t -range -hcva -hcva2 -n_values 4 -n_actions 2
+#python main.py -f ess_F -pf ess_PF -t -range -hcva -hcva2 -n_values 4 -n_actions 2
 ## Data Analysis
-python data_analysis/data_analysis_main.py
+#python data_analysis/data_analysis_main.py
 
 
 ###### ENVIRONMENT VARIABLES, SYNTHETIC DATA EXP. ######

@@ -8,14 +8,29 @@ from plot_fairness import gini_coefficient, calc_envy_freeness, check_maximin_fa
 from plot_utility import plot_pareto_efficiency, plot_total_utility
 #from plot_limits import plot_data
 #from data_analysis.plot_principles import *
+import argparse as ap
 
 if __name__ == "__main__":
+
+    parser = ap.ArgumentParser()
+    ## FILE ARGS
+    parser.add_argument('-cons_dir', type=str, help='Directory pointing to the pvs csvs used in the experiment')
+    parser.add_argument('-pvs_dir', type=str, help='Directory pointing to the prips csvs used in the experiment')
+    parser.add_argument('-prip_dir', type=str, help='Directory pointing to the prips csvs used in the experiment')
+
+    ## ENV ARGS
+    #parser.add_argument("-n_values", nargs="*", type=int, default=[4], help='Number of values')
+    #parser.add_argument("-n_actions",nargs="*", type=int, default=3, help='Number of actions')
+    #parser.add_argument('-e', type=float, default=1e-4, help='Epsilon cut-point for T')
+    # Looking for the number of agents? This is not explicitly defined and can be found from the corresponding pvs_dir and prip_dir of each experiment.
+    args = parser.parse_args()
+
     # Load in dataframe
-    cons_df = pd.read_csv("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/synthetic_results/CASE2xPriP1/CASE2_PriP1_BASELINES_PVS.csv")
-    agents_df = pd.read_csv("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/CASE2_PVS.csv")
+    cons_df = pd.read_csv(args.cons_dir)
+    agents_df = pd.read_csv(args.prip_dir)
 
     list_of_params = ["P", "VA"]
-    title = "Pretty cold for a placehold"
+    default_title = "Pretty cold for a placehold"
 
     # Uses cons_df to unpack the values and actions lists, but cols for both dfs should be identical
     values_list, actions_list, principles_list = [], [], []
@@ -69,17 +84,19 @@ if __name__ == "__main__":
     ### PriPs Residuals
     # TODO, This isn't showing properly
     plot_residuals(cons_df, agents_df, principles_list, "PriPs Residuals")
+
     # PVSs and PriPs
     total_list = values_list + actions_list + principles_list
     plot_residuals(cons_df, agents_df, total_list, "PVSs and PriPs Residuals")
 
     ## GINI
-
+    ### PVS
     gini_coefficient(cons_df, agents_df, list_of_params)
 
     ## UTILITY
-    plot_pareto_efficiency(cons_df, agents_df, list_of_params)
+    #plot_pareto_efficiency(cons_df, agents_df, list_of_params)
     plot_total_utility(cons_df, agents_df, list_of_params)
 
     ## PRIP SENSITIVITY
+    
 
