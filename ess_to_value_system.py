@@ -25,11 +25,13 @@ def process_all_country_principles(ess_df, country_col_name, values_dict):
                 # Invert items such that higher scores represent greater importance
                 # For principles (inverted: 1 = worst, 5 = best)
                 if question == "sofrwrk":
-                    # Society fair when hard-working people earn *more* than others is the opposite to other two
-                    # principle questions, so we say disagreement is "best" as we are measuring egalitarianism
+                    # "Society fair when hard-working people earn *more* than others" (1 = agree, 5 = disagree)
+                    # We don't flip this questionm because we want higher values to be better. So disagrement with this
+                    # question is an indication of egalitarianism.
                     country_df[question] = country_df[question]
                 elif question == "sofrdst" or question == "sofrpr":
-                    # Society fair when wealth equally distributed/the poor are cared for regardless of what they give back
+                    # "Society fair when wealth equally distributed/the poor are cared for regardless of what they give back"
+                    # (1 = agree, 5 = disagree). We flip these questions because agreement is more egalitarian, so 1 should become highest.
                     country_df[question] = 6 - country_df[question]
                 else:
                     print("Something went wrong")
@@ -45,7 +47,6 @@ def process_all_country_principles(ess_df, country_col_name, values_dict):
         # Find the mean of all the questions (as we only compute one principle value)
         mean_principle = np.mean(temp_values)
         # Convert the mean from a scale of 1-5, to a scale of 0-1
-        preference = mean_principle / -1
         preference = (((mean_principle - 1) * (1 - 0)) / (5 - 1)) + 0
         #NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
 
@@ -104,10 +105,8 @@ def process_all_country_values(ess_df, country_col_name, values_dict, higher_ord
         # For every value in the nested lists: values, subtract the mean from it, to find a
         #  centered value for that question. Then find the mean of that list
         for value_list in values:
-            # Check for principles or values with 1 question, they are already centred
-            if len(value_list) != 1:
-                for value in value_list:
-                    value_list[value_list.index(value)] = value - mean
+            for ind, value in enumerate(value_list):
+                value_list[ind] = value - mean
         temp_country_vals = np.array([np.mean(v) for v in country_values[country]])
         country_values[country] = copy.copy(temp_country_vals)
         ## Now we have a list of centred country_values for every country, if we want to convert these to higher order values
@@ -125,18 +124,17 @@ def process_all_country_values(ess_df, country_col_name, values_dict, higher_ord
     # We find the preferences between each value and every other value and store
     value_preferences = {}
     for country, values_list in country_values.items():
-        # Principle case: There is only one value, so just store
-        if len(values_list) == 1:
-            value_preferences[country] = values_list[0]
-            continue
         # For every value in the values list, compare it to every other value
         diff = values_list[:, np.newaxis] - values_list
         # Diff norm normalises the value preferences between 0 and 1
-        diff_norm = (diff- np.min(diff)) / (np.max(diff) - np.min(diff))
-        if diff_norm is None:
-            print("Error finding diff_norm: ", country)
+        # Check if the diff between max/min is 0. if so, then preferences should be neutral (0.5)
+        if np.max(diff) - np.min(diff) == 0:
+            print("AAAAA")
+            diff_norm = [0.5 for _ in range(len(diff))]
             print(diff_norm)
-            print(values_list)
+        else:
+            diff_norm = (diff- np.min(diff)) / (np.max(diff) - np.min(diff))
+
         value_preferences[country] = copy.copy(diff_norm)
         """
         array([1, 4, 6])
@@ -175,18 +173,19 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
         #   question. temp_values will be in the same order as values_dict
         # Then find the central preference by finding mean of each of these.
         for _, action_id in actions_dict.items():
-            # No need to invert immigration action, as score between 1-10, where 10 is GOOD, 1 is BAD,
-            # brexit is binary, so either 1-2. Order doesn't matter, higher will mean leave as the question marks 2 as leave.
-            if action_id == "freehms" or action_id == "hmsacld":
+            # No need to invert immigration action, as score between 1-10, where 10 is GOOD, 1 is BAD
+            # Freehms + hmsacld (1= agree strongly, 5=disagree strongly)
+            if action_id[0] == "freehms" or action_id[0] == "hmsacld":
                 country_df[action_id] = 6 - country_df[action_id]
             # Find the mean score for the action (1 action, no need to find average of a set)
             mean = country_df[action_id].mean()
             mean_score = mean.iloc[0]
             # Centre the scores between -1 and 1. action_id is always a list of size 1
-            # immigration is between 1-11, where 11 is GOOD, 1 is BAD, other actions are between 1 (good) - 5 (bad)
+            # immigration is between 1-10, where 10 is GOOD, 1 is BAD, other actions are between 1 (good) - 5 (bad)
             if action_id[0] == "imbgeco":
-                # Because immigration is scored is between 1-11
-                centred_score = (((mean_score-1) * 2)/9)
+                # Because immigration is scored is between 1-10
+                centred_score = (mean_score/5)-1
+            ## Vteumgb is not used in the paper.
             elif action_id[0] == "vteumbgb":
                 # centre between -1 and 1, for values being either 1 or 2
                 centred_score = (mean_score * 2) - 3
@@ -219,9 +218,8 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
         judgements = np.outer(strengths_of_prefs, centred_actions)
         judgements = np.clip(judgements, -1.0, 1.0)
         # Final sanity check
-        for judgement in judgements:
-            if judgement is None:
-                print("Error: judgement is None")
+        if np.isnan(judgements).any():
+            print("Error: judgement contains NaN")
         action_judgements[country] = judgements
     return action_judgements
 
@@ -356,7 +354,6 @@ if __name__ == '__main__':
             if item == "imbgeco":
                 incorrect_action_responses = [77, 88, 99]
                 df = df.loc[~df[item].isin(incorrect_action_responses)]
-                df[item] = df[item] + 1
             elif item == "freehms" or item == "hmsacld":
                 incorrect_action_responses = [7,8,9]
                 df = df.loc[~df[item].isin(incorrect_action_responses)]
@@ -368,22 +365,22 @@ if __name__ == '__main__':
     ## Want country-wide data? Change country_col_name to "cntry"
     country_col_name = 'idno'
 
-
     # NOTE: FOR UK DATA ONLY - because the UK value_systems has agents as citizens.
     #country_col_name = 'idno'
     #if country_col_name == 'idno':
     #    # remove all rows where country != UK
     #    df = df.loc[df['cntry'] == 'GB']
     #    print("verify DF, df size: ", df.shape)
-    abstract_values = False
+
+    ## NOTE: Here you can choose whether to abstract to 4 Schwartz themes (True), or keep the original 11 Schwartz values (False)
+    abstract_values = True
+
     #value_preferences = process_all_country_values(df, country_col_name, values_dict, _, False)
     value_preferences = process_all_country_values(df, country_col_name, values_dict, higher_order_values_index_list, abstract_values)
     action_judgements = process_all_country_actions(df, country_col_name, value_preferences, actions_dict)
 
     # Because principle preferences are just preferences of each principle over every other principle, use the same func.
     principle_preferences = process_all_country_principles(df, country_col_name, principle_dict)
-
-    #print("principle preferences are: ", principle_preferences)
 
     now = dt.now().isoformat()
     principles_fn = now+"_ess_principles.csv"
@@ -401,39 +398,39 @@ if __name__ == '__main__':
             row = [country, PriP]
             writer.writerow(row)
 
-        # Values + Preferences + Action Judgements
-        if abstract_values:
-            value_names = list(higher_order_values_dict.keys())
-        else:
-            value_names = list(values_dict.keys())
-        action_names = list(actions_dict.keys())
+    # Values + Preferences + Action Judgements
+    if abstract_values:
+        value_names = list(higher_order_values_dict.keys())
+    else:
+        value_names = list(values_dict.keys())
+    action_names = list(actions_dict.keys())
 
-        wide_fn = now + "_ess_value_system.csv"
-        with open(wide_fn, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            # Header
-            header = ["country"]
-            # P__vi__vj columns
-            for vi in value_names:
-                for vj in value_names:
-                    header.append(f"P__{vi}__{vj}")
-            # VA__v__a columns
-            for v in value_names:
-                for a in action_names:
-                    header.append(f"VA__{v}__{a}")
-            writer.writerow(header)
-            # Rows
-            for country in df[country_col_name].unique():
-                P = np.array(value_preferences[country], dtype=float)
-                VA = np.array(action_judgements[country], dtype=float)
+    wide_fn = now + "_ess_value_system.csv"
+    with open(wide_fn, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        # Header
+        header = ["country"]
+        # P__vi__vj columns
+        for vi in value_names:
+            for vj in value_names:
+                header.append(f"P__{vi}__{vj}")
+        # VA__v__a columns
+        for v in value_names:
+            for a in action_names:
+                header.append(f"VA__{v}__{a}")
+        writer.writerow(header)
+        # Rows
+        for country in df[country_col_name].unique():
+            P = np.array(value_preferences[country], dtype=float)
+            VA = np.array(action_judgements[country], dtype=float)
 
-                row = [country]
-                for i in range(len(value_names)):
-                    for j in range(len(value_names)):
-                        row.append(float(P[i, j]))
+            row = [country]
+            for i in range(len(value_names)):
+                for j in range(len(value_names)):
+                    row.append(float(P[i, j]))
 
-                for i in range(len(value_names)):
-                    for k in range(len(action_names)):
-                        row.append(float(VA[i, k]))
+            for i in range(len(value_names)):
+                for k in range(len(action_names)):
+                    row.append(float(VA[i, k]))
 
-                writer.writerow(row)
+            writer.writerow(row)
