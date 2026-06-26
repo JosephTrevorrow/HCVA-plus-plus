@@ -1,9 +1,15 @@
 import csv
+import os
 
 def save_metadata(filename, args, transition_p=None, consensus_p=None, consensus_preference=None, output_dir=""):
-    # TODO: deal with inputs not given
     # Save this properly
     csv_rows = [{"args":args, "transition_p":transition_p, "consensus_p":consensus_p, "consensus_preference":consensus_preference}]
+    print("The output dir is: ", output_dir, " and the filename is: ", filename, "")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print("Created directory: " + output_dir)
+    else:
+        print("Directory already exists: " + output_dir)
     with open(output_dir+filename, 'w', newline='') as csvfile:
         # writing file
         fieldnames = ["args", "transition_p", "consensus_p", "consensus_preference"]
@@ -21,6 +27,12 @@ def output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, 
     el.extend(cons_pref)
     el.extend(cons_act)
     csv_rows.append(el)
+    print("The output dir is: ", output_dir, " and the filename is: ", filename, "")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print("Created directory: " + output_dir)
+    else:
+        print("Directory already exists: " + output_dir)
     with open(output_dir+filename, 'w', newline='') as csvfile:
         # writing file
         writer = csv.writer(csvfile)
