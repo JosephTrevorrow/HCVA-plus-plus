@@ -1,10 +1,10 @@
 import csv
 
-def save_metadata(filename, args, transition_p=None, consensus_p=None, consensus_preference=None):
+def save_metadata(filename, args, transition_p=None, consensus_p=None, consensus_preference=None, output_dir=""):
     # TODO: deal with inputs not given
     # Save this properly
     csv_rows = [{"args":args, "transition_p":transition_p, "consensus_p":consensus_p, "consensus_preference":consensus_preference}]
-    with open(filename, 'w', newline='') as csvfile:
+    with open(output_dir+filename, 'w', newline='') as csvfile:
         # writing file
         fieldnames = ["args", "transition_p", "consensus_p", "consensus_preference"]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -12,7 +12,7 @@ def save_metadata(filename, args, transition_p=None, consensus_p=None, consensus
         writer.writerows(csv_rows)
     return None
 
-def output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list):
+def output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir=""):
     """This function writes the results of solving the lp-regression for a single p"""
     csv_rows = []
     header = ['p', 'U_pref', 'u_act'] + values_list + actions_list
@@ -21,7 +21,7 @@ def output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, 
     el.extend(cons_pref)
     el.extend(cons_act)
     csv_rows.append(el)
-    with open(filename, 'w', newline='') as csvfile:
+    with open(output_dir+filename, 'w', newline='') as csvfile:
         # writing file
         writer = csv.writer(csvfile)
         writer.writerows(csv_rows)

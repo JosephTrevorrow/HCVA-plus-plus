@@ -184,10 +184,10 @@ def find_transition_and_aggregate(P_list, J_list, w, filename_limits, args):
     _, u_act, cons_act = aggregate(P_list, J_list, w, t_point, False)
     return p, u_pref, cons_pref, u_act, cons_act, t_point
 
-def find_hcva_and_aggregate(P_list, J_list, w, args):
+def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args):
     # 1. Formalise the principle preferences as matrices
     Pri_P_list, _, Pri_w, Pri_Country_dict = principle_formalisation_objs(
-        filename=args.pf, delimiter=',', weights=args.w)
+        prip_df, weights=args.w)
     # 2. Aggregate over all principle preferences
     p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_prefs_only(Pri_P_list, [], Pri_w)
     print("Aggregated over all principle preferences!")
@@ -479,7 +479,7 @@ def aggregate_inf(P_list, J_list, w, p, v):
     print('p: {:.2f}, cons: '.format(p), cons)
     return p, u, cons
 
-def aggregate_one(P_list, J_list, w, p, v, filename):
+def aggregate_one(P_list, J_list, w, p, v):
     # Compute one aggregation using the P specified
     A, b = FormalisationMatrix(P_list, J_list, w, p, v)
     cons, _, u = L1(A, b)

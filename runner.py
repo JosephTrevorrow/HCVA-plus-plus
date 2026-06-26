@@ -16,6 +16,8 @@ if __name__ == '__main__':
     parser.add_argument("-n_actions",nargs="*", type=int, default=[3], help='Number of actions')
     parser.add_argument('-e', type=float, default=1e-4, help='Epsilon cut-point for T')
     parser.add_argument('-w', type=int, default=0, help='Weights')
+
+    parser.add_argument('-output_dir', type=str, default="output", help='Directory to save the output files')
     # Looking for the number of agents? This is not explicitly defined and can be found from the corresponding pvs_dir and prip_dir of each experiment.
 
     # Initialise args and params
@@ -74,30 +76,32 @@ if __name__ == '__main__':
         prip_df = pd.read_csv(prip_sets[i])
         print("-------------")
         # Run aggregations
+
         ## SLM
         print("SLM...")
         filename = str("SLM" + "_" + now + ".csv")
         filename_metadata = str("SLM_METADATA_" + now + ".csv")
         p, u_pref, cons_pref, u_act, cons_act, transition_p, converted_principles = find_slm_and_aggregate(P_list, J_list, w, prip, args)
-        output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
-        save_metadata(filename_metadata, args, _, converted_principles, None)
+        output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, args.output_dir)
+        save_metadata(filename_metadata, args, 0, converted_principles, None, args.output_dir)
         print("-------------")
         ## HCVA++
         print("HCVA++...")
         filename = str("HCVApp_" + now + ".csv")
         filename_metadata = str("HCVApp_METADATA_" + now + ".csv")
         p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference = find_hcva_pp_and_aggregate(P_list, J_list, w, prip, args)
-        output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
-        save_metadata(filename_metadata, args, transition_p, consensus_p, consensus_preference)
+        output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, args.output_dir)
+        save_metadata(filename_metadata, args, transition_p, consensus_p, consensus_preference, args.output_dir)
         print("-------------")
+        
         ## EGAL/UTIL
         print("EGAL/UTIL...")
-        baseline_ps = [1, np.inf()]
+        baseline_ps = [1, np.inf]
         now = dt.now().isoformat()
         for p in baseline_ps:
             # Generate filenames
-            filename = str(p + "_PERSONALS_" + now + ".csv")
-            filename_metadata = str(p + "_METADATA_" + now + ".csv")
+            filename = str(str(p) + "_PERSONALS_" + now + ".csv")
+            filename_metadata = str(str(p) + "_METADATA_" + now + ".csv")
             # Aggregate and store
             if p == np.inf:
                 _, u_pref, cons_pref = aggregate_inf(P_list, J_list, w, p, True)
@@ -112,8 +116,8 @@ if __name__ == '__main__':
                 _, u_pref, cons_pref = aggregate(P_list, J_list, w, p, True)
                 _, u_act, cons_act = aggregate(P_list, J_list, w, p, False)
                 cons_act = cons_act[:len(cons_act) // 2]
-            output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
-            save_metadata(filename_metadata, args, _, p, _)
+            output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, args.output_dir)
+            save_metadata(filename_metadata, args, 0, p, 0, args.output_dir)
         print("-------------")
         ## T
         print("T...")
@@ -122,17 +126,17 @@ if __name__ == '__main__':
         filename_limits = now + "_limits.csv"
         p, u_pref, cons_pref, u_act, cons_act, t_point = find_transition_and_aggregate(P_list, J_list, w,
                                                                                        filename_limits, args)
-        output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
-        save_metadata(filename_metadata, args, t_point, None, None)
+        output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, args.output_dir)
+        save_metadata(filename_metadata, args, t_point, None, None, args.output_dir)
         print("-------------")
 
         ## HCVA
         print("HCVA...")
         filename = str("HCVA_" + now + ".csv")
         filename_metadata = str("HCVA_METADATA_" + now + ".csv")
-        find_hcva_and_aggregate(P_list, J_list, w, args)
+        find_hcva_and_aggregate(P_list, J_list, w, prip_df, args)
         p, u_pref, u_act, cons_pref, cons_act, con_p = find_hcva_and_aggregate(P_list, J_list, w, args)
-        output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list)
-        save_metadata(filename_metadata, args, None, con_p, None)
+        output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, args.output_dir)
+        save_metadata(filename_metadata, args, None, con_p, None, args.output_dir)
         print("-------------")
         print("Done with iteration: {}".format(i))

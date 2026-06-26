@@ -17,7 +17,7 @@ def PMatrix(prefs, num_vals=4):
 
 def Principle_PMatrix(prefs, num_vals=1):
     """Reconstructs the P matrix of the formalisation. The P matrix is the preference matrix."""
-    pref = prefs[0]
+    pref = prefs.item()
     p = np.array([[0, pref], [(1-pref), 0]])
     return p
 
@@ -85,29 +85,31 @@ def FormalisationObjects(filename='value_systems.csv', delimiter=',', weights=0,
     w = Weights(df, n_agents, weights)
     return P_list, J_list, w, country_dict
 
-def principle_formalisation_objs(filename='value_systems.csv', delimiter=',', weights=0, n_values=1, n_actions=3):
+def principle_formalisation_objs(prip_df, weights=0, n_values=1, n_actions=3):
     """
     This function computes the matrices P, J+ and J-, and the weight vector of the formalisation.
     INPUT: filename -- str ; delimiter -- str ;
            weights -- int (weights' arg is always 0).
     RETURN: np.array with weights (array only contains 1's)
     """
-    df = pd.read_csv(filename, delimiter=delimiter)
-    n_agents = df.shape[0]  # number of rows
+    print("prip_df: ", prip_df)
+    n_agents = prip_df.shape[0]  # number of rows
     J_list = []
     P_list = []
     country_dict = {}
-    list_of_prefs = [col for col in df.columns if 'Egalitarian' in col]
+    list_of_prefs = [col for col in prip_df.columns if 'Egalitarian' in col]
     # Note that this is a list of all matrices, not a sum of all matrices.
     for i in range(n_agents):
-        country = df.iloc[i]['country']
+        country = prip_df.iloc[i]['country']
         country_dict.update({i: country})
         # Filter such that p and j matrix are passed df's with only the relevant cols
-        p_row = df[list_of_prefs].iloc[i]
+        p_row = prip_df[list_of_prefs].iloc[i]
+        print("P row is: ", p_row)
+        print("number of values are: ", n_values)
         P = Principle_PMatrix(p_row, n_values)
         # J_n is only used in the creation of a BVector.
         P_list.append(P)
-    w = Weights(df, n_agents, weights)
+    w = Weights(prip_df, n_agents, weights)
     return P_list, J_list, w, country_dict
 
 def Vectorisation(M):
