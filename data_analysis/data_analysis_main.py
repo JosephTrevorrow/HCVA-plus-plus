@@ -12,8 +12,8 @@ if __name__ == "__main__":
 
     parser = ap.ArgumentParser()
     ## FILE ARGS
-    parser.add_argument('-pvs_dir', type=str, help='Directory pointing to the prips csvs used in the experiment')
-    parser.add_argument('-prip_dir', type=str, help='Directory pointing to the prips csvs used in the experiment')
+    parser.add_argument('-cons_dir', type=str, help='Directory pointing to the consensus files used in the experiment')
+
     parser.add_argument('-agents_pvs_dir', type=str, help='Directory pointing to the agents csvs used in the experiment')
     parser.add_argument('-agents_prip_dir', type=str, help='Directory pointing to the agents csvs used in the experiment')
     ## ENV ARGS
@@ -23,33 +23,39 @@ if __name__ == "__main__":
     # Looking for the number of agents? This is not explicitly defined and can be found from the corresponding pvs_dir and prip_dir of each experiment.
     args = parser.parse_args()
 
-    # Load in dataframe
     now = dt.now().isoformat()
 
-    ## Begin by finding a list of all pvs and prips, for agents and cons
-    pvs_sets = []
-    pvs_dir = args.pvs_dir
-    for file in os.listdir(pvs_dir):
-        if file.endswith(".csv"):
-            pvs_sets.append(pvs_dir + file)
-    len_of_pvs_sets = len(pvs_sets)
-    pvs = pvs_sets[0]
+    # I want to run data analysis for 1 set of experiments. That means 1 or more agent files (PriP and PVS), and their
+    # corresponding consensus for each run.
 
-    prip_sets = []
-    prip_dir = args.prip_dir
-    for file in os.listdir(prip_dir):
-        if file.endswith(".csv"):
-            prip_sets.append(prip_dir + file)
-    len_of_prip_sets = len(prip_sets)
-    prip = prip_sets[0]
+    ## Begin by finding a list of all consensus pvs and prips, for agents and cons.
+    cons_pvs_sets = []
+    cons_dir = args.cons_dir
+    for file in os.listdir(cons_dir):
+        if file.endswith(".csv") and "PERSONAL" in file:
+            cons_pvs_sets.append(cons_dir + file)
+    len_of_pvs_sets = len(cons_pvs_sets)
+    pvs = cons_pvs_sets[0]
+    print("cons_pvs_sets: ", cons_pvs_sets, "")
+    cons_prip_sets = []
+    cons_dir = args.cons_dir
+    for file in os.listdir(cons_dir):
+        if file.endswith(".csv") and "METADATA" in file:
+            cons_prip_sets.append(cons_dir + file)
+    len_of_prip_sets = len(cons_prip_sets)
+    # Ensure this is sorted by i's
+    #cons_prip_sets.sort() CHECK IF THIS IS THE CASE
+    print("Cons_prip_sets: ", cons_prip_sets, "")
+    prip = cons_prip_sets[0]
 
-    # Len of agents_pvs will be same as agents prips, so just do one.
+    # Len of agents_pvs will be same as agents prips.
     agents_pvs_sets = []
     agents_pvs_dir = args.agents_pvs_dir
     for file in os.listdir(agents_pvs_dir):
         if file.endswith(".csv"):
             agents_pvs_sets.append(agents_pvs_dir + file)
     len_of_agents_pvs_sets = len(agents_pvs_sets)
+    print("agents_pvs_sets: ", agents_pvs_sets, "")
     agents = agents_pvs_sets[0]
 
     agents_prip_sets = []
@@ -58,18 +64,19 @@ if __name__ == "__main__":
         if file.endswith(".csv"):
             agents_prip_sets.append(agents_prip_dir + file)
     len_of_agents_prip_sets = len(agents_prip_sets)
+    print("agents_prip_sets: ", agents_prip_sets, "")
     agents = agents_prip_sets[0]
 
     ## Big for loop here running evaluation for each of the PVS sets
-    for i in range(0, max(len(pvs_sets), len(prip_sets))):
-        print("Iteration: {}".format(max(len(pvs_sets), len(prip_sets))))
+    for i in range(0, max(len(cons_pvs_sets), len(cons_prip_sets))):
+        print("Iteration:", i, "of {}".format(max(len(cons_pvs_sets), len(cons_prip_sets))))
         ## update the pvs and prip, for cons and for agents
-        if i < len(pvs_sets):
-            print("PVS: ", i)
-            pvs = pvs_sets[i]
-        if i < len(prip_sets):
-            print("PriP: ", i)
-            prip = prip_sets[i]
+        if i < len(cons_pvs_sets):
+            print("Cons PVS: ", i)
+            pvs = cons_pvs_sets[i]
+        if i < len(cons_prip_sets):
+            print("Cons PriP: ", i)
+            prip = cons_prip_sets[i]
         if i < len(agents_pvs_sets):
             print("Agents PVS: ", i)
             agents_pvs = agents_pvs_sets[i]
@@ -79,15 +86,19 @@ if __name__ == "__main__":
 
         list_of_params = ["P", "VA", "PriP"]
 
-        # Load in the dataframes
+        # Load in the dataframes and combine
         cons_df = pd.read_csv(pvs)
         prips_df = pd.read_csv(prip)
+        cons_df = pd.concat([cons_df, prips_df], axis=1, join="inner")
+
         agents_pvs_df = pd.read_csv(agents_pvs)
         agents_prip_df = pd.read_csv(agents_prip)
+        agents_df = pd.concat([agents_pvs_df, agents_prip_df], axis=1, join="inner")
 
         # Uses cons_df to unpack the values and actions lists, but cols for both dfs should be identical
         values_list, actions_list, principles_list = [], [], []
         if "P" in list_of_params:
+            # Instead of doing this, you could load it into a matrix and cut down the diagonal, then unpack?
             # Drop P from list_of_params
             list_of_params.remove("P")
             values_list = list([col for col in cons_df.columns if 'P__' in col])
@@ -107,17 +118,20 @@ if __name__ == "__main__":
             actions_list = list([col for col in cons_df.columns if 'VA__' in col])
         if "PriP" in list_of_params:
             list_of_params.remove("PriP")
-            principles_list = ['Egaliatarianism']
+            principles_list = ['Egalitarian']
 
-        # Add the unpacked lists to the list_of_params
+        # Add the unpacked lists to the list_of_params. Now we have 3 lists of the params left in our dfs
         list_of_params.extend(values_list)
         list_of_params.extend(actions_list)
+        list_of_params_without_prip = copy.copy(list_of_params)
         list_of_params.extend(principles_list)
 
         # Filter cons and agents_df considering list_of_params
+        # cons_df will have "Egalitarian" columns that are empty.
         cons_df_cols = copy.copy(list_of_params)
         cons_df_cols.append("p")
         cons_df = cons_df[cons_df_cols]
+
         agents_df_cols = copy.copy(list_of_params)
         agents_df_cols.extend(["country"])
         agents_df = agents_df[list_of_params]
@@ -128,19 +142,17 @@ if __name__ == "__main__":
         # Note: list_of_params = all parameters
 
         ### PVS Residuals
-        plot_residuals(cons_df, agents_df, list_of_params, "Entire PVS Residuals")
+        plot_residuals(cons_df, agents_df, list_of_params_without_prip, "Entire PVS Residuals")
         # Just VAs
         plot_residuals(cons_df, agents_df, actions_list, "VAs Residuals")
         # Just Ps
         plot_residuals(cons_df, agents_df, values_list, "Ps Residuals")
 
         ### PriPs Residuals
-        # TODO, This isn't showing properly
         plot_residuals(cons_df, agents_df, principles_list, "PriPs Residuals")
 
         # PVSs and PriPs
-        total_list = values_list + actions_list + principles_list
-        plot_residuals(cons_df, agents_df, total_list, "PVSs and PriPs Residuals")
+        plot_residuals(cons_df, agents_df, list_of_params, "PVSs and PriPs Residuals")
 
         ## GINI
         ### PVS
@@ -150,6 +162,6 @@ if __name__ == "__main__":
         #plot_pareto_efficiency(cons_df, agents_df, list_of_params)
         plot_total_utility(cons_df, agents_df, list_of_params)
 
-        ## PRIP SENSITIVITY
+        ## PRIP SENSITIVITY??
 
 

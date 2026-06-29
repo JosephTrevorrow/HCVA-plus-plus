@@ -3,7 +3,7 @@ import os
 
 def save_metadata(filename, args, transition_p=None, consensus_p=None, consensus_preference=None, output_dir=""):
     # Save this properly
-    csv_rows = [{"args":args, "transition_p":transition_p, "consensus_p":consensus_p, "consensus_preference":consensus_preference}]
+    csv_rows = [{"args":args, "transition_p":transition_p, "consensus_p":consensus_p, "Egalitarian":consensus_preference}]
     print("The output dir is: ", output_dir, " and the filename is: ", filename, "")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -12,7 +12,7 @@ def save_metadata(filename, args, transition_p=None, consensus_p=None, consensus
         print("Directory already exists: " + output_dir)
     with open(output_dir+filename, 'w', newline='') as csvfile:
         # writing file
-        fieldnames = ["args", "transition_p", "consensus_p", "consensus_preference"]
+        fieldnames = ["args", "transition_p", "consensus_p", "Egalitarian"]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(csv_rows)

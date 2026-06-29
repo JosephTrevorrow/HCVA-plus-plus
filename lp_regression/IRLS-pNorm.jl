@@ -229,7 +229,7 @@ function main()
     p = 5
     e = 1e-8
     x, it = pNorm(e, A, b, p, C, d)
-    println(x)
+    #println(x)
 end
 
 #main()

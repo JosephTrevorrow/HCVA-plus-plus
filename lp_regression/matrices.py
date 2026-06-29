@@ -92,7 +92,6 @@ def principle_formalisation_objs(prip_df, weights=0, n_values=1, n_actions=3):
            weights -- int (weights' arg is always 0).
     RETURN: np.array with weights (array only contains 1's)
     """
-    print("prip_df: ", prip_df)
     n_agents = prip_df.shape[0]  # number of rows
     J_list = []
     P_list = []
@@ -104,8 +103,6 @@ def principle_formalisation_objs(prip_df, weights=0, n_values=1, n_actions=3):
         country_dict.update({i: country})
         # Filter such that p and j matrix are passed df's with only the relevant cols
         p_row = prip_df[list_of_prefs].iloc[i]
-        print("P row is: ", p_row)
-        print("number of values are: ", n_values)
         P = Principle_PMatrix(p_row, n_values)
         # J_n is only used in the creation of a BVector.
         P_list.append(P)

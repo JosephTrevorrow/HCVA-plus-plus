@@ -37,7 +37,7 @@ def L1(A, b):
     cost = cp.sum(t)
     prob = cp.Problem(cp.Minimize(cost), constraints)
     # optimize model
-    prob.solve(solver='ECOS', verbose=True)
+    prob.solve(solver='ECOS', verbose=False)
     cons = list(x.value)
     cons = np.array(cons)
     obj = prob.value
@@ -154,7 +154,7 @@ def mLp(A, b, ps, λs, weight=True):
     prob = cp.Problem(cp.Minimize(cost))
     for solver_name in ("CLARABEL", "SCS", "ECOS"):
         try:
-            prob.solve(solver=solver_name, verbose=True)
+            prob.solve(solver=solver_name, verbose=False)
             if x.value is not None and prob.status in ("optimal", "optimal_inaccurate"):
                 print(f"mLp solved with {solver_name}.")
                 break
@@ -190,7 +190,6 @@ def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args):
         prip_df, weights=args.w)
     # 2. Aggregate over all principle preferences
     p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_prefs_only(Pri_P_list, [], Pri_w)
-    print("Aggregated over all principle preferences!")
     # 3. Find a cutoff point given $\epsilon$
     cut_point = 10
     incr = 0.1
@@ -199,17 +198,20 @@ def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args):
     epsilon = 0.05
     for i in np.arange(1 + incr, 10, incr):
         cons = cons_list[j]
-        print("cons: ", cons)
-        print("cons_1: ", cons_1)
-        print("cons_l: ", cons_l)
+        if __debug__:
+            print("cons: ", cons)
+            print("cons_1: ", cons_1)
+            print("cons_l: ", cons_l)
         dist_1p = np.linalg.norm(cons_1 - cons, i)
         dist_pl = np.linalg.norm(cons_l - cons, i)
         j += 1
-        print("dist_1p: ", dist_1p, " dist_pl: ", dist_pl, " i: ", i, "")
-        print("abs(dist_1p - dist_pl): ", abs(dist_1p - dist_pl), " epsilon: ", epsilon)
+        if __debug__:
+            print("dist_1p: ", dist_1p, " dist_pl: ", dist_pl, " i: ", i, "")
+            print("abs(dist_1p - dist_pl): ", abs(dist_1p - dist_pl), " epsilon: ", epsilon)
         if abs(dist_1p - dist_pl) < epsilon:
             cut_point = i
-            print('Not improving anymore at cut_point = ', cut_point, '. Stopping...')
+            if __debug__:
+                print('Not improving anymore at cut_point = ', cut_point, '. Stopping...')
             break
     # 4. Cut the list of consensuses using the cut_point, find mean
     cut_list = [cons_list[i] for i in range(len(cons_list)) if p_list[i] <= cut_point]
@@ -225,7 +227,7 @@ def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args):
             best_dist = dist
             # to convert from ordinal list num to corresponding p
             con_p = (j / 10) + 1
-    print("Nearest P to mean con_vals is: ", con_p)
+    #print("Nearest P to mean con_vals is: ", con_p)
     p, u_pref, cons_pref = aggregate(P_list, J_list, w, con_p, True)
     _, u_act, cons_act = aggregate(P_list, J_list, w, con_p, False)
     return p, u_pref, u_act, cons_pref, cons_act, con_p
@@ -244,7 +246,7 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_csv, args):
             principle_preferences.append(copy.copy(temp_preference))
     consensus_preference = sum(principle_preferences) / len(principle_preferences)
     consensus_preference = round(consensus_preference, 2)
-    print("HCVA++ Consensus preference is: ", consensus_preference)
+    #print("HCVA++ Consensus preference is: ", consensus_preference)
     # 1.2 Aggregate personal values/action judgements to find the transition point
     _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
     # 1.3 Given the transition point (best_p), find the consensus p by finding the
@@ -252,7 +254,7 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_csv, args):
     consensus_p = pow(transition_p, (2 * consensus_preference))
     # Round to 2 d.p. for fairness
     consensus_p = round(consensus_p, 2)
-    print("Consensus p is: ", consensus_p)
+    #print("Consensus p is: ", consensus_p)
     # 2. Aggregate all the preference values and action judgements submitted by agents
     # using the average rule as described in the paper. Do this twice, once for vals, other for action judgements
     p, u_pref, cons_pref = aggregate(P_list, J_list, w, consensus_p, True)
@@ -265,7 +267,7 @@ def find_slm_and_aggregate(P_list, J_list, w, prip_csv, args):
     file_path = prip_csv
     principles = pd.read_csv(file_path)
     # Convert the principles (which are preferences) into numbers (need to first find transition point
-    print("Principles: ", principles)
+    #print("Principles: ", principles)
     _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
     list_of_principles = principles["Egalitarian"].to_list()
     converted_principles = []
@@ -277,7 +279,7 @@ def find_slm_and_aggregate(P_list, J_list, w, prip_csv, args):
         converted_principles.append(float(converted_p))
         # TODO: more than 11 values? then it breaks. I'm gonna push this code onto isambard to see what it does
     # converted_principles = np.repeat(1.4, 11)
-    print("Converted principles: ", converted_principles)
+    #print("Converted principles: ", converted_principles)
     # 2. For each list of ps in principles, aggregate and save
     #   there will always be one list, because we aren't testing multiple principle datasets
     p, u_pref, cons_pref = aggregate_slm(P_list, J_list, w, converted_principles, True)
@@ -323,23 +325,25 @@ def transition_point(P_list, J_list, w, e):
         cons_act = cons_act[:len(cons_act) // 2]
 
         cons = np.concatenate((cons_pref, cons_act))
-        print('p: {:.2f}, cons: '.format(i), cons)
+        #print('p: {:.2f}, cons: '.format(i), cons)
         dist_1p = np.linalg.norm(cons_1 - cons, i)
         dist_pl = np.linalg.norm(cons_l - cons, i)
         if abs(dist_1p - dist_pl) < e:
             best_p = i
-            print('Not improving anymore, stopping!')
+            if __debug__:
+                print('Not improving anymore, stopping!')
         else:
-            print('p = {:.2f}'.format(i))
-            print('Distance L1<-->L{:.2f} = {:.4f}'.format(i, dist_1p))
-            print(
-                'Distance L{:.2f}<-->L{:.2f} = {:.4f}'.format(i, p, dist_pl))
-            print(
-                'Difference (L1<-->L{:.2f}) - (L{:.2f}<-->L{:.2f}) = {:.4f}'.format(
-                    i, i, p, abs(
-                        dist_1p - dist_pl)))
-            print(
-                'Current best difference (L1<-->L{:.2f}) - (L{:.2f}<-->L{:.2f}) = {:.4f}'.format(i, i, best_p, diff))
+            if __debug__:
+                print('p = {:.2f}'.format(i))
+                print('Distance L1<-->L{:.2f} = {:.4f}'.format(i, dist_1p))
+                print(
+                    'Distance L{:.2f}<-->L{:.2f} = {:.4f}'.format(i, p, dist_pl))
+                print(
+                    'Difference (L1<-->L{:.2f}) - (L{:.2f}<-->L{:.2f}) = {:.4f}'.format(
+                        i, i, p, abs(
+                            dist_1p - dist_pl)))
+                print(
+                    'Current best difference (L1<-->L{:.2f}) - (L{:.2f}<-->L{:.2f}) = {:.4f}'.format(i, i, best_p, diff))
             if abs(dist_1p - dist_pl) < diff:
                 diff = abs(dist_1p - dist_pl)
                 best_p = i
@@ -347,18 +351,19 @@ def transition_point(P_list, J_list, w, e):
             dist_p_list.append(dist_1p)
             dist_inf_list.append(dist_pl)
             diff_list.append(abs(dist_1p - dist_pl))  
-        print('Transition point: {:.2f}'.format(best_p))
+        #print('Transition point: {:.2f}'.format(best_p))
     return p_list, dist_p_list, dist_inf_list, diff_list, best_p
 
 def aggregate(P_list, J_list, w, p, v):
     """Compute one aggregation using the P specified"""
     A, b = FormalisationMatrix(P_list, J_list, w, p, v)
     cons, _, u = Lp(A, b, p)
-    print('Aggregate: p: {:.2f}, cons: '.format(p), cons)
+    if __debug__:
+        print('Aggregate: p: {:.2f}, cons: '.format(p), cons)
     if not v:
         cons = cons[:len(cons) // 2]
     #print('{:.2f} \t \t {:.4f}'.format(p, ub))
-    print('p: {:.2f}, cons: '.format(p), cons)
+    #print('p: {:.2f}, cons: '.format(p), cons)
     return p, u, cons
 
 def aggregate_all_p(P_list, J_list, w, incr):
@@ -449,9 +454,7 @@ def aggregate_slm(P_list, J_list, w, list_of_ps, v):
     dist_pl_list = []
     # Form a matrix.
     p = list_of_ps
-    print("p: ", p)
     ps = np.atleast_1d(p)
-    print("ps: ", ps)
     ps = np.where(ps == -1, np.inf, ps)
     λs = np.ones_like(ps)
     nλs = min(len(λs), len([]))
@@ -459,15 +462,16 @@ def aggregate_slm(P_list, J_list, w, list_of_ps, v):
     A, b = FormalisationMatrix(P_list, J_list, w, 1, v)
     # w will always have weights equal to 1, shape needs to be equal. We do not use weights in the paper for simplicity.
     w = np.repeat(w, A.shape[1])
+    if __debug__:
+        print("A dtype:", np.asarray(A).dtype)
+        print("A shape:", np.asarray(A).shape)
+        print("b dtype:", np.asarray(b).dtype)
+        print("b shape:", np.asarray(b).shape)
+        print("A finite:", np.isfinite(np.asarray(A, dtype=float)).all())
+        print("b finite:", np.isfinite(np.asarray(b, dtype=float)).all())
+        print("A min/max:", np.min(np.asarray(A, dtype=float)), np.max(np.asarray(A, dtype=float)))
+        print("b min/max:", np.min(np.asarray(b, dtype=float)), np.max(np.asarray(b, dtype=float)))
     # Aggregate over all principles together using the matrix
-    print("A dtype:", np.asarray(A).dtype)
-    print("A shape:", np.asarray(A).shape)
-    print("b dtype:", np.asarray(b).dtype)
-    print("b shape:", np.asarray(b).shape)
-    print("A finite:", np.isfinite(np.asarray(A, dtype=float)).all())
-    print("b finite:", np.isfinite(np.asarray(b, dtype=float)).all())
-    print("A min/max:", np.min(np.asarray(A, dtype=float)), np.max(np.asarray(A, dtype=float)))
-    print("b min/max:", np.min(np.asarray(b, dtype=float)), np.max(np.asarray(b, dtype=float)))
     cons, res, u, psi = mLp(A, b, ps, λs, False)
     return p, u, cons
 
@@ -475,14 +479,16 @@ def aggregate_inf(P_list, J_list, w, p, v):
     # Compute one aggregation using the P specified
     A, b = FormalisationMatrix(P_list, J_list, w, p, v)
     cons, _, u = Linf(A, b)
-    #print('{:.2f} \t \t {:.4f}'.format(p, ub))
-    print('p: {:.2f}, cons: '.format(p), cons)
+    if __debug__:
+        #print('{:.2f} \t \t {:.4f}'.format(p, ub))
+        print('p: {:.2f}, cons: '.format(p), cons)
     return p, u, cons
 
 def aggregate_one(P_list, J_list, w, p, v):
     # Compute one aggregation using the P specified
     A, b = FormalisationMatrix(P_list, J_list, w, p, v)
     cons, _, u = L1(A, b)
-    #print('{:.2f} \t \t {:.4f}'.format(p, ub))
-    print('p: {:.2f}, cons: '.format(p), cons)
+    if __debug__:
+        #print('{:.2f} \t \t {:.4f}'.format(p, ub))
+        print('p: {:.2f}, cons: '.format(p), cons)
     return p, u, cons

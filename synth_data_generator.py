@@ -146,14 +146,6 @@ if __name__ == "__main__":
 
     random.seed(10) # Single seed used for all randomness.
 
-    # Split the curve into different groups (extreme low, low, indifference, high, extreme high) (curve between 0/1)
-    #curve_groups = {"ex_low": [nonlinspace(0, 0.2, 10)], "low": [nonlinspace(0.2, 0.4, 10)],
-    #                "med": [nonlinspace(0.4,0.6, 10)], "high": [nonlinspace(0.6, 0.8, 10)],
-    #                "ex_high": [nonlinspace(0.8, 1, 10)]}
-
-    ## Instead of having different groups and then selectring from groups, we should just change the profile of the normal distribution curve, that we are going to sample from!
-
-
     # 1. Majority/Minority case with highly opposing views:
     # agent_groups splits the agents into aligned groups. These strengths will be for the first 50% of values.
     agent_groups = {"ex_low": agent_ids[:16], "ex_high": agent_ids[16:]}
