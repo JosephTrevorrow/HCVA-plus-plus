@@ -30,23 +30,28 @@ if __name__ == "__main__":
         # these will be nested lists where each item in the list is a filename for a cons_dir for this iteration.
         cons_sets = {}
         ## Grab all Cons PVS and all Cons PriP where "__"+i+"__ is in filename.
-        cons_pvs_sets = glob.glob(args.cons_dir + "/*_PERSONALS_"+i+"*")
-        cons_prip_sets = glob.glob(args.cons_dir + "/*_METADATA_"+i+"*")
+        cons_pvs_sets = glob.glob(args.cons_dir + "*_PERSONALS_"+str(i)+"*")
+        cons_prip_sets = glob.glob(args.cons_dir + "*_METADATA_"+str(i)+"*")
+        print("cons_pvs_sets: ", cons_pvs_sets, "cons_prip_sets: ", cons_prip_sets, "")
         # for each of these, load them into a df, and store in a dict of dfs with baseline names
-        for i in range(0, cons_pvs_sets):
-            cons_pvs = pd.read_csv(cons_pvs_sets[i])
-            cons_prip = pd.read_csv(cons_prip_sets[i])
+        for j in range(0, len(cons_pvs_sets)):
+            cons_pvs = pd.read_csv(cons_pvs_sets[j])
+            cons_prip = pd.read_csv(cons_prip_sets[j])
+            # Get the key (the text before the first _ in the filename)
+            key = os.path.splitext(os.path.basename(cons_pvs_sets[j]))[0].split("_")[0]
             # Removed prip cols other than preference
             cons_prip = cons_prip[['Egalitarian']]
             cons_df = pd.concat([cons_pvs, cons_prip], axis=1, join="inner")
             ## Add cons_df to cons_sets dict
-            cons_sets[i] = cons_df
+            cons_sets[key] = cons_df
 
         ## Grab the agents PVS and concat them
-        ag_pvs = glob.glob(args.agents_pvs_dir + "/*_PVS_"+i+"*csv")
-        ag_prip = glob.glob(args.agents_prip_dir + "/*_PriP_"+i+"*csv")
-        agents_pvs_df = pd.read_csv(ag_pvs)
-        agents_prip_df = pd.read_csv(ag_prip)
+        ag_pvs = glob.glob(args.agents_pvs_dir + "*_PVS_"+str(i)+".csv")
+        ag_prip = glob.glob(args.agents_prip_dir + "*_PriP_"+str(i)+".csv")
+        print(args.agents_pvs_dir + "*_PVS_"+str(i)+".csv")
+        print("ag_pvs: ", ag_pvs, "ag_prip: ", ag_prip, "")
+        agents_pvs_df = pd.read_csv(ag_pvs[0])
+        agents_prip_df = pd.read_csv(ag_prip[0])
         agents_df = pd.concat([agents_pvs_df, agents_prip_df], axis=1, join="inner")
 
         # Remove irrelevant cols from every df. Every df will have the same cols, so we find them for one, and copy this
@@ -86,7 +91,7 @@ if __name__ == "__main__":
         plot_residuals(cons_sets, agents_df, ['Egalitarian'], "PriPs Residuals")
 
         # PVSs and PriPs
-        plot_residuals(cons_df, agents_df, values_list+actions_list+['Egalitarian'], "PVSs and PriPs Residuals")
+        plot_residuals(cons_sets, agents_df, values_list+actions_list+['Egalitarian'], "PVSs and PriPs Residuals")
 
         ## GINI
         ### PVS

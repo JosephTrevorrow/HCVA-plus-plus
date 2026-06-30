@@ -29,29 +29,25 @@ def gini_coefficient(cons_df, agents_df, list_of_params):
         ginis[cons[0]] = g
     return ginis
 
-def plot_residuals(cons_df, agents_df, list_of_params, title):
+def plot_residuals(cons_sets, agents_df, list_of_params, title):
     """Plots a residual bar chart given a list of parameters using the dataframe. Style will follow prev. work.
     X Axis: Ps, Y Axis: Residuals
     The plot includes bars for every baseline method"""
-
-    plt.figure(figsize=(6, 3))
-    to_plot_df = pd.DataFrame()
-    for cons in cons_df.iterrows():
+    boxplots = []
+    for key, cons_df in cons_sets.items():
         points = []
         for agent in agents_df.iterrows():
             # For every col, match these two dfs and plot the residuals
-            temp_residual = cons[1][list_of_params] - agent[1][list_of_params]
+            temp_residual = cons_df[list_of_params] - agent[1][list_of_params]
             temp_residual = abs(temp_residual.sum())
             points.append(copy.copy(temp_residual))
-        to_plot_df[cons[0]] = points
-
-    to_plot_df.boxplot(patch_artist=True, boxprops=dict(facecolor="#b7e4c7"))
-    plt.title(title, fontsize=14)
-    plt.ylabel("Value", fontsize=11)
-    plt.tick_params(axis="x", rotation=90)
-    plt.ylim(0, 0.5)
-    plt.grid(alpha=0.25)
-    plt.savefig(title+"residuals.png", bbox_inches="tight")
+        print(points)
+        boxplots.append(copy.copy(points))  ## WHAT IS HAPPENING ?!?!? !!
+    fig = plt.figure(figsize=(10, 7))
+    ax = fig.add_axes([0, 0, 1, 1])
+    bp = ax.boxplot(boxplots)
+    plt.show()
+    fig.savefig("plots/"+title+"residuals.png", bbox_inches="tight")
 
 
 def check_maximin_fairness(cons_df, agents_df, list_of_params):
