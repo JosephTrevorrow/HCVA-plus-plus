@@ -31,9 +31,9 @@ def gini_coefficient(cons_df, agents_df, list_of_params):
 
 def plot_residuals(cons_df, agents_df, list_of_params, title):
     """Plots a residual bar chart given a list of parameters using the dataframe. Style will follow prev. work.
-    X Axis: Ps, Y Axis: Residuals"""
-    # For every cons in cons_df, plot the residuals over all agents in the agents df
-    #begin an empty plot
+    X Axis: Ps, Y Axis: Residuals
+    The plot includes bars for every baseline method"""
+
     plt.figure(figsize=(6, 3))
     to_plot_df = pd.DataFrame()
     for cons in cons_df.iterrows():

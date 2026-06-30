@@ -102,7 +102,7 @@ if __name__ == '__main__':
         baseline_ps = [1, np.inf]
         for p in baseline_ps:
             # Generate filenames
-            filename = str(str(p) + "_PERSONALS_" +str()+"_"+ now + ".csv")
+            filename = str(str(p) + "_PERSONALS_" +str(i)+"_"+ now + ".csv")
             filename_metadata = str(str(p) + "_METADATA_" +str(i)+"_"+ now + ".csv")
             # Aggregate and store
             if p == np.inf:
