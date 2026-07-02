@@ -263,9 +263,7 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_csv, args):
 
 def find_slm_and_aggregate(P_list, J_list, w, prip_csv, args):
     """ Compute aggregation with Salas-Molina et al. baseline (Many P's) """
-    # 1. Read in the principles file. Each column contains a set of principles to use.
-    file_path = prip_csv
-    principles = pd.read_csv(file_path)
+    principles = pd.read_csv(prip_csv)
     # Convert the principles (which are preferences) into numbers (need to first find transition point
     #print("Principles: ", principles)
     _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
@@ -278,10 +276,6 @@ def find_slm_and_aggregate(P_list, J_list, w, prip_csv, args):
         converted_p = round(converted_p, 2)
         converted_principles.append(float(converted_p))
         # TODO: more than 11 values? then it breaks. I'm gonna push this code onto isambard to see what it does
-    # converted_principles = np.repeat(1.4, 11)
-    #print("Converted principles: ", converted_principles)
-    # 2. For each list of ps in principles, aggregate and save
-    #   there will always be one list, because we aren't testing multiple principle datasets
     p, u_pref, cons_pref = aggregate_slm(P_list, J_list, w, converted_principles, True)
     _, u_act, cons_act = aggregate_slm(P_list, J_list, w, converted_principles, False)
     return p, u_pref, cons_pref, u_act, cons_act, transition_p, converted_principles
@@ -453,8 +447,7 @@ def aggregate_slm(P_list, J_list, w, list_of_ps, v):
     dist_1p_list = []
     dist_pl_list = []
     # Form a matrix.
-    p = list_of_ps
-    ps = np.atleast_1d(p)
+    ps = np.atleast_1d(list_of_ps)
     ps = np.where(ps == -1, np.inf, ps)
     λs = np.ones_like(ps)
     nλs = min(len(λs), len([]))
@@ -473,7 +466,7 @@ def aggregate_slm(P_list, J_list, w, list_of_ps, v):
         print("b min/max:", np.min(np.asarray(b, dtype=float)), np.max(np.asarray(b, dtype=float)))
     # Aggregate over all principles together using the matrix
     cons, res, u, psi = mLp(A, b, ps, λs, False)
-    return p, u, cons
+    return list_of_ps, u, cons
 
 def aggregate_inf(P_list, J_list, w, p, v):
     # Compute one aggregation using the P specified

@@ -34,20 +34,28 @@ def plot_residuals(cons_sets, agents_df, list_of_params, title):
     X Axis: Ps, Y Axis: Residuals
     The plot includes bars for every baseline method"""
     boxplots = []
+    # For every consensus, go through each agent, and find difference.
     for key, cons_df in cons_sets.items():
         points = []
         for agent in agents_df.iterrows():
             # For every col, match these two dfs and plot the residuals
             temp_residual = cons_df[list_of_params] - agent[1][list_of_params]
-            temp_residual = abs(temp_residual.sum())
+            print("type of temp_residual is: ", type(temp_residual), "")
+            # Sum up all of the params into one number
+            temp_residual = temp_residual.to_numpy()
+            temp_residual = np.abs(temp_residual).sum()
+            print("temp residual is: ", temp_residual, "")
             points.append(copy.copy(temp_residual))
-        print(points)
         boxplots.append(copy.copy(points))  ## WHAT IS HAPPENING ?!?!? !!
+
+    ## Make the boxplots
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_axes([0, 0, 1, 1])
     bp = ax.boxplot(boxplots)
-    plt.show()
     fig.savefig("plots/"+title+"residuals.png", bbox_inches="tight")
+    # Now make sure you save the boxplot data (mean/IQR/Whiskers) in a csv, with info for that run
+
+    ## Make a line graph?
 
 
 def check_maximin_fairness(cons_df, agents_df, list_of_params):

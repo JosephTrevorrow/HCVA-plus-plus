@@ -83,9 +83,11 @@ if __name__ == '__main__':
         # Run aggregations
         ## SLM
         print("SLM...")
-        filename = str("SLM_PERSONALS_RUN_"+str(i)+"_"+ now + ".csv")
+        filename = str("SLM_PERSONALS_"+str(i)+"_"+ now + ".csv")
         filename_metadata = str("SLM_METADATA_"+str(i)+"_"+ now + ".csv")
         p, u_pref, cons_pref, u_act, cons_act, transition_p, converted_principles = find_slm_and_aggregate(P_list, J_list, w, prip, args)
+        ## Chop off half of cons_act, as output format has VA_p, and then VA_n. We are not interested in N, so we disregard
+        cons_act = cons_act[:len(cons_act) // 2]
         output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
         save_metadata(filename_metadata, args, 0, converted_principles, 0, output_dir)
         print("-------------")
