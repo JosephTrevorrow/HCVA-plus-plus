@@ -2,6 +2,8 @@
 This file will plot residuals given a consensus and a set of agents PVSs and PriPs. The gini index is also plotted
 What makes up the residual can be set as an argument.
 """
+import csv
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -31,31 +33,40 @@ def gini_coefficient(cons_df, agents_df, list_of_params):
 
 def plot_residuals(cons_sets, agents_df, list_of_params, title):
     """Plots a residual bar chart given a list of parameters using the dataframe. Style will follow prev. work.
+    This function makes a boxplot chart, where each plot is a method. This is for one experiment. If you are doing an
+     experiment over time, the residuals can be plotted as a line graph, in the function below
     X Axis: Ps, Y Axis: Residuals
     The plot includes bars for every baseline method"""
-    boxplots = []
+    boxplots = {}
+    metadata = []
     # For every consensus, go through each agent, and find difference.
     for key, cons_df in cons_sets.items():
         points = []
         for agent in agents_df.iterrows():
             # For every col, match these two dfs and plot the residuals
             temp_residual = cons_df[list_of_params] - agent[1][list_of_params]
-            print("type of temp_residual is: ", type(temp_residual), "")
             # Sum up all of the params into one number
             temp_residual = temp_residual.to_numpy()
             temp_residual = np.abs(temp_residual).sum()
-            print("temp residual is: ", temp_residual, "")
             points.append(copy.copy(temp_residual))
-        boxplots.append(copy.copy(points))  ## WHAT IS HAPPENING ?!?!? !!
-
+        boxplots[key] = copy.copy(points)
+        # Get the last element of boxplots (the one we just made), find its var, std, mean, etc. and save to dict with p as title
+        metadata.append({'key': key,'mean': np.mean(points), 'std': np.std(points), 'var': np.var(points), 'min': np.min(points), 'max': np.max(points), 'points':copy.copy(points)})
     ## Make the boxplots
-    fig = plt.figure(figsize=(10, 7))
+    fig = plt.figure(figsize=(5, 3))
     ax = fig.add_axes([0, 0, 1, 1])
-    bp = ax.boxplot(boxplots)
+    bp = ax.boxplot(boxplots.values(), labels=boxplots.keys(), orientation='horizontal')
     fig.savefig("plots/"+title+"residuals.png", bbox_inches="tight")
     # Now make sure you save the boxplot data (mean/IQR/Whiskers) in a csv, with info for that run
+    with open("plots/"+title+"residuals.csv", 'w') as f:
+        header = ['key', 'mean', 'std', 'var', 'min', 'max', 'points']
+        writer = csv.DictWriter(f, fieldnames=header)
+        writer.writeheader()
+        writer.writerows(metadata)
 
+def plot_residuals_over_time():
     ## Make a line graph?
+    return
 
 
 def check_maximin_fairness(cons_df, agents_df, list_of_params):
