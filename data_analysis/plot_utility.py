@@ -1,14 +1,21 @@
-def plot_total_utility(cons_df, agents_df, list_of_params):
+import csv
+
+def plot_total_utility(cons_sets, agents_df, list_of_params, filename):
     """Find the total utility for all agents."""
     utilities = {}
-    for cons_i in cons_df.iterrows():
-        utility = 0
-        for agent in agents_df.iterrows():
-            temp_residual = cons_i[1][list_of_params] - agent[1][list_of_params]
-            temp_residual = abs(temp_residual.sum())
-            utility += temp_residual
-        utilities[cons_i[0]] = utility
-    print("Utilities are: ", utilities)
+    for key, cons_df in cons_sets.items():
+        for cons_i in cons_df.iterrows():
+            utility = 0
+            for agent in agents_df.iterrows():
+                temp_residual = cons_i[1][list_of_params] - agent[1][list_of_params]
+                temp_residual = abs(temp_residual.sum())
+                utility += temp_residual
+            utilities[key] = utility
+    ## Add to/Make a utilities csv file and save
+    with open("plots/"+filename, 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(utilities.keys())
+        writer.writerow(utilities.values())
     return utilities
 
 def plot_pareto_efficiency(cons_df, agents_df, list_of_params):

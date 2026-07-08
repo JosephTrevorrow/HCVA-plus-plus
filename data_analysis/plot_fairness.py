@@ -9,27 +9,32 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import copy
 
-def gini_coefficient(cons_df, agents_df, list_of_params):
+def gini_coefficient(cons_sets, agents_df, list_of_params, filename):
     """Calculates the Gini coefficient (Inequality of disappointment amongst agents)
     Low total utility with High Gini means cons favours majority at expense of minority (low because lower is better)"""
     ginis = {}
-    for cons in cons_df.iterrows():
-        temp_residuals = np.array([], dtype=float)
-        for agent in agents_df.iterrows():
-            # For every col, match these two dfs
-            temp_residual = cons[1][list_of_params] - agent[1][list_of_params]
-            temp_residual = abs(temp_residual.sum())
-            temp_residuals = np.append(temp_residuals, [temp_residual])
-        print("Temp residuals are: ", temp_residuals)
-        # Mean absolute difference
-        mad = np.abs(np.subtract.outer(temp_residuals, temp_residuals)).mean()
-        # Relative mean absolute difference
-        rmad = mad / np.mean(temp_residuals)
-        # Gini coefficient
-        g = 0.5 * rmad
-        print("Gini coefficient is: ", g)
-        ginis[cons[0]] = g
-    return ginis
+    for key, cons_df in cons_sets.items():
+        for cons in cons_df.iterrows():
+            temp_residuals = np.array([], dtype=float)
+            for agent in agents_df.iterrows():
+                # For every col, match these two dfs
+                temp_residual = cons[1][list_of_params] - agent[1][list_of_params]
+                temp_residual = abs(temp_residual.sum())
+                temp_residuals = np.append(temp_residuals, [temp_residual])
+            print("Temp residuals are: ", temp_residuals)
+            # Mean absolute difference
+            mad = np.abs(np.subtract.outer(temp_residuals, temp_residuals)).mean()
+            # Relative mean absolute difference
+            rmad = mad / np.mean(temp_residuals)
+            # Gini coefficient
+            g = 0.5 * rmad
+            ginis[key] = copy.copy(g)
+    ## Add to/Make a gini csv file and save ginis
+    with open("plots/"+filename, 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(ginis.keys())
+        writer.writerow(ginis.values())
+    return
 
 def plot_residuals(cons_sets, agents_df, list_of_params, title):
     """Plots a residual bar chart given a list of parameters using the dataframe. Style will follow prev. work.

@@ -95,11 +95,13 @@ if __name__ == "__main__":
 
         ## GINI
         ### PVS
-        #gini_coefficient(cons_df, agents_df, list_of_params)
+        gini_coefficient(cons_sets, agents_df, values_list+actions_list, "PVSs_and_PriPs.csv")
+
+        ## TODO: Add more here.
 
         ## UTILITY
         #plot_pareto_efficiency(cons_df, agents_df, list_of_params)
-        #plot_total_utility(cons_df, agents_df, list_of_params)
+        plot_total_utility(cons_sets, agents_df, values_list+actions_list, "Total Utility")
 
         ## PRIP SENSITIVITY??
 
