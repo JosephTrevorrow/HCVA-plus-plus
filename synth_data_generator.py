@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import halfnorm
 from datetime import datetime as dt
 import csv
 import random
@@ -10,12 +11,11 @@ from lp_regression.solve import *
 seed = 4832095623890
 rng = np.random.default_rng(seed)
 
-def generate_prips(agent_ids, ps, vas, pvs_filename, mu_p, sigma_p, n_values, n_actions):
+def generate_prips(agent_ids, ps, vas, pvs_filename, mu_prip, sigma_prip, n_values, n_actions):
     """Generates a PriP set for agents by considering the PVS and alignment."""
     P_list, J_list, w, country_dict = FormalisationObjects(filename=pvs_filename, delimiter=',', weights=0,
                                                            n_values=n_values, n_actions=n_actions)
     pvs_df = pd.read_csv(pvs_filename)
-    inf_
     values_list = list([col for col in pvs_df.columns if 'P__' in col])
     actions_list = list([col for col in pvs_df.columns if 'VA__' in col])
     ## INF
@@ -30,10 +30,15 @@ def generate_prips(agent_ids, ps, vas, pvs_filename, mu_p, sigma_p, n_values, n_
     # which values, and which values of inf promote the others.
     # So now for each agent, find their residual to inf and 1. Whichever is smaller, sample from a norm dist relevant to them
     # As the stored PriP is egalitarian, we say if inf is closer, then we centre on 1, if 1 is closer, we centre on 0.
+    prips = {}
     for agent in agent_ids:
-        
-
-
+        inf_diff = np.abs((cons_pref_inf - ps[agent].flatten()) + (cons_act_inf - vas[agent].flatten())).sum()
+        ones_diff = np.abs((cons_pref_1 - ps[agent].flatten()) + (cons_act_1 - vas[agent].flatten())).sum()
+        if inf_diff > ones_diff:
+            prip = halfnorm.rvs(scale=0.5, size=1, random_state=rng)+0.5
+        else:
+            prip = halfnorm.rvs(scale=0.5, size=1, random_state=rng)
+        prips[agent] = prip[0]
     return prips
 
 def generate_ps(agent_ids, n_values, mu, sigma):
@@ -72,9 +77,9 @@ def generate_vas(agent_ids, n_values, n_actions, mu, sigma, agent_ps):
             va = []
             for value in values_list:
                 if value in promoted_values:
-                    va.append(rng.random())
+                    va.append(rng.normal())
                 else:
-                    va.append(rng.random()-1)
+                    va.append(rng.normal()-1)
             agent_vas[agent] = np.append(agent_vas[agent], [copy.copy(va)], axis=0)
     return agent_vas
 
@@ -110,9 +115,8 @@ def save_pvs(ps, vas, agents_ids, n_values, n_acts):
             writer.writerow(row)
     return values_fn
 
-def save_to_file(ps, vas, prips, agents_ids, n_values, n_acts):
-    """
-    now = dt.now().isoformat()
+def save_prips(prips, agents_ids):
+    now = str(date.today())
     principles_fn = now+"_PriP.csv"
     # Principles:
     with open(principles_fn, 'w', newline='') as csvfile:
@@ -122,10 +126,9 @@ def save_to_file(ps, vas, prips, agents_ids, n_values, n_acts):
         writer.writerow(header)
         # Rows
         for country in agents_ids:
-            PriP = principle_prefs[country]
+            PriP = prips[country]
             row = [country, PriP]
             writer.writerow(row)
-    """
     return
 
 def generate(n_values, n_actions, n_agents, pvs_prip=0.3, va_p=0.8, mu_p=0.7, sigma_p=0.1):
@@ -149,10 +152,9 @@ def generate(n_values, n_actions, n_agents, pvs_prip=0.3, va_p=0.8, mu_p=0.7, si
     ## Step 3: For every agent's new value system, we can use the value aggregation code to find a range of aggreagtions. We find the consensus that minimises
     # the agent's residual. This consensus (when converted back to a preference) is the mean point of the normal distribution.
     prips = generate_prips(agent_ids, ps, vas, pvs_filename, mu_p, sigma_p, n_values, n_actions)
+    save_prips(prips, agent_ids)
 
     return ps, vas, prips, agent_ids
 
 if __name__ == "__main__":
     ps, vas, prips, agent_ids = generate(n_values=3, n_actions=3, n_agents=12, pvs_prip=0.3, va_p=0.8, mu_p=0, sigma_p=0.1)
-    # Save to CSV
-    save_to_file(ps, vas, prips, agent_ids, n_values=2, n_acts=2)
