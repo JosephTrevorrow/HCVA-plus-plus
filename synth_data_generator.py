@@ -4,17 +4,8 @@ import csv
 import random
 import copy
 
-def nonlinspace(start, stop, num):
-    linear = np.linspace(0, 1, num)
-    my_curvature = 1
-    curve = 1 - np.exp(-my_curvature*linear)
-    # Normalise between 0 and 1
-    curve = curve/np.max(curve)
-    #curve = curve*(stop - start-1) + start # don't minus 1 cause everything is between 0-1 for our use case.
-    curve = curve * (stop - start) + start
-    # Convert the curve from np to floats
-    curve = [float(i) for i in curve]
-    return curve
+seed = 4832095623890
+rng = np.random.default_rng(seed)
 
 def generate_prips(agent_groups, curve_groups):
     """Generates one preference for egalitarianism and returns as a dict of agents/prips.
@@ -28,70 +19,52 @@ def generate_prips(agent_groups, curve_groups):
     print(prips)
     return prips
 
-def generate_ps(agent_groups, curve_groups, n_values):
-    """Generates value preferences for n_values different values for a given number of agents"""
-    value_preferences = {}
-    # Get the first round of strengths
-    for curve_group, agents in agent_groups.items():
-        opposing_curve_group_index = len(curve_groups) - (1+list(curve_groups.keys()).index(curve_group))
-        opposing_curve_group = list(curve_groups.keys())[opposing_curve_group_index]
-        curve_values = curve_groups[curve_group][0]
-        opposing_curve_values = curve_groups[opposing_curve_group][0]
-        # For every agent
-        for agent in agents:
-            agent_strengths = []
-            # Find the strength for half of values.
-            agent_strengths = random.choices(curve_values, k=int(n_values/2))
-            # Find the opposing strengths for the other half
-            agent_strengths = agent_strengths + (random.choices(opposing_curve_values, k=int(n_values/2)))
-            agent_strengths = np.array(agent_strengths)
-            # Find agent preferences from the strength of preference for each value
-            # For every value in the values list, compare it to every other value
-            diff = agent_strengths[:, np.newaxis] - agent_strengths
-            # Diff norm normalises the value preferences between 0 and 1
-            diff_norm = (diff - np.min(diff)) / (np.max(diff) - np.min(diff))
-            value_preferences[agent] = copy.copy(diff_norm)
-    return value_preferences
+def generate_ps(agent_ids, n_values, mu, sigma):
+    agent_ps = {}
+    global rng
+    # Find strengths
+    for agent in agent_ids:
+        # Sample
+        samples = rng.normal(mu, sigma, n_values)
+        agent_ps[agent] = samples
+    # get these values to be preferences
+    for agent, agent_values in agent_ps.items():
+        #for every value in the values list, compare it to every other value
+        diff = agent_values[:, np.newaxis] - agent_values
+        if np.max(diff) - np.min(diff) == 0:
+            diff_norm = np.full(diff.shape, 0.5)
+        else:
+            diff_norm = (diff- np.min(diff)) / (np.max(diff) - np.min(diff))
+        agent_ps[agent] = copy.copy(diff_norm)
+    return agent_ps
 
-def generate_vas(agent_groups, curve_groups, value_preferences, n_values):
+def generate_vas(agent_ids, n_values, n_actions, mu, sigma, agent_ps):
     """Generates action judgements for certain actions and preferences, returns as a dict of agents/vas"""
-    action_judgements = {}
-    # Get the strengths
-    for curve_group, agents in agent_groups.items():
-        opposing_curve_group_index = len(curve_groups) - (1 + list(curve_groups.keys()).index(curve_group))
-        opposing_curve_group = list(curve_groups.keys())[opposing_curve_group_index]
-        curve_values = curve_groups[curve_group][0]
-        opposing_curve_values = curve_groups[opposing_curve_group][0]
-        # For every agent
-        for agent in agents:
-            agent_strengths = []
-            # Find the strength for half of values.
-            agent_strengths = random.choices(curve_values, k=int(n_values / 2))
-            # Find the opposing strengths for the other half
-            agent_strengths = agent_strengths + (random.choices(opposing_curve_values, k=int(n_values / 2)))
-            agent_strengths = np.array(agent_strengths)
+    # Assign actions to values
+    global rng
+    values_list = [i for i in range(n_values)]
+    actions_list = [j for j in range(n_actions)]
+    default = np.empty((0, len(values_list)))
+    agent_vas = dict.fromkeys(agent_ids, default)
+    for action in actions_list:
+        num_of_vals = rng.integers(1, len(values_list), size=1)
+        promoted_values = rng.choice(values_list, size=num_of_vals, replace=False)
+        print("I can promote ", num_of_vals, ". My promoted vals are: ", promoted_values)
+        # Now we have the values the action promotes, take those, and find action judgements for every
+        # value.
+        va = []
+        for agent in agent_ids:
+            for value in values_list:
+                if value in promoted_values:
+                    va.append(rng.random())
+                else:
+                    va.append(rng.random()-1)
+            agent_vas[agent] = np.append(agent_vas[agent], [copy.copy(va)], axis=0)
+    return agent_vas
 
-            # Convert to action judgments considering value preferences
-            x = value_preferences[agent].shape[0]
-            # Convert the preferences to range [-1,1], where shifted_prefs[x,y] >0 means x preferred to y
-            shifted_prefs = 2.0 * (value_preferences[agent] - 0.5)
-            # Convert the shifted prefs to a symmetric matrix, and
-            #   then show preference relative to every other value. as a 1D array
-            np.fill_diagonal(shifted_prefs, 0.0)
-            # The clipping below should protect against divide by 0 cases, if any arise.
-            strengths_of_prefs = shifted_prefs.sum(axis=1) / float(x - 1)
-            strengths_of_prefs = np.clip(strengths_of_prefs, -1.0, 1.0)
-            # Get the centred actions computed above and clip for sanity
-            centred_actions = agent_strengths
-            centred_actions = np.clip(centred_actions, -1.0, 1.0)
-            ## Finally, convert the centred actions to judgements by multiplying by the strength
-            judgements = np.outer(strengths_of_prefs, centred_actions)
-            judgements = np.clip(judgements, -1.0, 1.0)
-            action_judgements[agent] = copy.copy(judgements)
-    return action_judgements
-
-def save_to_file(value_preferences, action_judgements, principle_prefs, agents_ids, n_values, n_acts):
+def save_to_file(ps, vas, prips, agents_ids, n_values, n_acts):
     now = dt.now().isoformat()
+    """
     principles_fn = now+"_PriP.csv"
     # Principles:
     with open(principles_fn, 'w', newline='') as csvfile:
@@ -104,7 +77,7 @@ def save_to_file(value_preferences, action_judgements, principle_prefs, agents_i
             PriP = principle_prefs[country]
             row = [country, PriP]
             writer.writerow(row)
-
+    """
     # Values + Preferences + Action Judgements
     values_fn = now + "_PVS.csv"
     with open(values_fn, 'w', newline='') as csvfile:
@@ -122,8 +95,8 @@ def save_to_file(value_preferences, action_judgements, principle_prefs, agents_i
         writer.writerow(header)
         # Rows
         for agent in agents_ids:
-            P = np.array(value_preferences[agent], dtype=float)
-            VA = np.array(action_judgements[agent], dtype=float)
+            P = np.array(ps[agent], dtype=float)
+            VA = np.array(vas[agent], dtype=float)
 
             row = [agent]
             for i in range(n_values):
@@ -137,30 +110,28 @@ def save_to_file(value_preferences, action_judgements, principle_prefs, agents_i
             writer.writerow(row)
     return
 
-
-def generate(n_values=4, n_actions=2, n_agents=30, agent_ids, curve_groups, agent_groups):
+def generate(n_values=4, n_actions=2, n_agents=30, pvs_prip=0.3, va_p=0.8, mu_p=0.7, sigma_p=0.1):
     agent_ids = list(range(n_agents))
 
-    return
+    ## Step 1: Sample from a normal distribution to find the strength of values for every agent - Generating P strength.
+    # Then, convert these strengths to pairwise preferences
+    ps = generate_ps(agent_ids, n_values, mu_p, sigma_p)
+    print("cor blimey! some peas!")
+    print(ps[0])
+
+    ## Step 2: Given the number of actions and values, randomly assign an action 1 or more values it promotes.
+    # The remaining values are demoted. This can always be random.
+    vas = generate_vas(agent_ids, n_values, n_actions, mu_p, sigma_p, ps)
+    print("Agent VAs!")
+    print(vas[0])
+
+    ## Step 3: For every agent's new value system, we can use the value aggregation code to find a range of aggreagtions. We find the consensus that minimises
+    # the agent's residual. This consensus (when converted back to a preference) is the mean point of the normal distribution.
+    prips = None
+
+    return ps, vas, prips, agent_ids
+
 if __name__ == "__main__":
-
-    random.seed(10) # Single seed used for all randomness.
-
-    # 1. Majority/Minority case with highly opposing views:
-    # agent_groups splits the agents into aligned groups. These strengths will be for the first 50% of values.
-    agent_groups = {"ex_low": agent_ids[:16], "ex_high": agent_ids[16:]}
-    print(agent_groups.items())
-    generate(agent_ids=, curve_groups=, agent_groups=agent_groups)
-
-
-    # Get PVSs and PriPs
-    # These return Dicts in format {agent: [prefs]}
-    #value_preferences = generate_ps(agent_groups, curve_groups, n_values)
-    #action_judgements = generate_vas(agent_groups, curve_groups, value_preferences, n_acts)
-
-    """A majority will align with a more utilitarian principle, so make them higher too."""
-    # TODO: Move principle prefs to a completely separate thing? Can be generated entirely independently.
-    # Save to a csv
-    #principle_prefs = generate_prips(agent_groups, curve_groups)
-    #save_to_file(value_preferences, action_judgements, principle_prefs, agent_ids, n_values, n_acts)
-
+    ps, vas, prips, agent_ids = generate(n_values=2, n_actions=2, n_agents=1, pvs_prip=0.3, va_p=0.8, mu_p=0, sigma_p=0.1)
+    # Save to CSV
+    save_to_file(ps, vas, prips, agent_ids, n_values=2, n_acts=2)
