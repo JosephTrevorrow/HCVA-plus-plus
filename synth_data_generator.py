@@ -11,7 +11,7 @@ from lp_regression.solve import *
 seed = 4832095623890
 rng = np.random.default_rng(seed)
 
-def generate_prips(agent_ids, ps, vas, pvs_filename, mu_prip, sigma_prip, n_values, n_actions):
+def generate_prips(agent_ids, ps, vas, pvs_filename, mu_prip, sigma_prip, n_values, n_actions, sigma_noise):
     """Generates a PriP set for agents by considering the PVS and alignment."""
     P_list, J_list, w, country_dict = FormalisationObjects(filename=pvs_filename, delimiter=',', weights=0,
                                                            n_values=n_values, n_actions=n_actions)
@@ -38,6 +38,8 @@ def generate_prips(agent_ids, ps, vas, pvs_filename, mu_prip, sigma_prip, n_valu
             prip = halfnorm.rvs(scale=0.5, size=1, random_state=rng)+0.5
         else:
             prip = halfnorm.rvs(scale=0.5, size=1, random_state=rng)
+        # add some random noise:
+        prip[0] += rng.normal(0, sigma_noise, size=1)
         prips[agent] = prip[0]
     return prips
 
