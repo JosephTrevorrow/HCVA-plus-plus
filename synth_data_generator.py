@@ -1,5 +1,6 @@
 import numpy as np
-from scipy.stats import halfnorm
+from PIL.ImageOps import scale
+from scipy.stats import truncnorm
 from datetime import datetime as dt
 import csv
 import random
@@ -13,7 +14,7 @@ from collections import defaultdict
 seed = 4832095623890
 rng = np.random.default_rng(seed)
 
-def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_noise):
+def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, corr, scale_prip, sigma_noise):
     """Generates a PriP set for agents by considering the PVS and alignment."""
     P_list, J_list, w, country_dict = FormalisationObjects(filename=pvs_filename, delimiter=',', weights=0,
                                                            n_values=n_values, n_actions=n_actions)
@@ -37,12 +38,25 @@ def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_
         inf_diff = np.abs((cons_pref_inf - ps[agent].flatten()) + (cons_act_inf - vas[agent].flatten())).sum()
         ones_diff = np.abs((cons_pref_1 - ps[agent].flatten()) + (cons_act_1 - vas[agent].flatten())).sum()
         if inf_diff > ones_diff:
-            prip = halfnorm.rvs(scale=0.5, size=1, random_state=rng)+0.5
+            # if we want egal to be closer to 1
+            # loc and scale are just mean and std for normal.
+            # Halfnorm is at mu and points UP. so we start with mu = 1, scale = 0.08.
+            #   Therefore the range is between [0.5,1], with 0.5 being high prob
+            #   To truncate this, you have to normalise this. truncnorm expects the trunc points to be stds away from the mean.
+            loc = 1-corr
+            a_trunc = 0.5
+            b_trunc = 1
+            a, b = (a_trunc - loc) / scale_prip, (b_trunc - loc) / scale_prip
+            prip = truncnorm.rvs(a, b, loc=loc, scale=scale_prip, size=1, random_state=rng)
         else:
-            prip = halfnorm.rvs(scale=0.5, size=1, random_state=rng)
+            loc = 0+corr
+            a_trunc = 0
+            b_trunc = 0.5
+            a, b = (a_trunc - loc) / scale_prip, (b_trunc - loc) / scale_prip
+            prip = truncnorm.rvs(a, b, loc=loc, scale=scale_prip, size=1, random_state=rng)
         # add some random noise according to sigma_noise
         prip += rng.normal(0, sigma_noise, size=1)
-        # TODO: clip the noise
+        np.clip(prip, -1, 1, out=prip)
         prips[agent] = prip[0]
     return prips
 
@@ -57,7 +71,6 @@ def generate_ps(agent_ids, n_values, mu=0.75, group_ratio=0.5):
     group_a = rng.integers(1, len(agent_ids), size=int((len(agent_ids)*group_ratio)))
     # Find strengths for each agent, considering their group and the values that group holds.
     for agent in agent_ids:
-        print("AGENT=", agent)
         if agent in group_a:
             samples_a= rng.normal(mu, 0.08, len(strong_vals_group_a))
             samples_b = rng.normal(mu-0.5, 0.08, len(values_list)-len(strong_vals_group_a))
@@ -69,16 +82,11 @@ def generate_ps(agent_ids, n_values, mu=0.75, group_ratio=0.5):
             if k in strong_vals_group_a:
                 # pop
                 last, samples_a = samples_a[-1], samples_a[:-1]
-                print("I am changing the location of agent_ps[", agent,"][0][",k,"] from ", agent_ps[agent][0][k], " to ", last)
                 # This changes the default
                 agent_ps[agent][0][k] = copy.deepcopy(last)
             else:
                 last, samples_b = samples_b[-1], samples_b[:-1]
-                print("I am changing the location of agent_ps[", agent,"][0][",k,"] from ", agent_ps[agent][0][k], " to ", last)
                 agent_ps[agent][0][k] = copy.deepcopy(last)
-        print("AGENT PS FOR AGENT: ", agent_ps[agent])
-        print("agent_ps: ", agent_ps)
-        print("----------------------------------------")
     # get these values to be preferences
     for agent, agent_values in agent_ps.items():
         # for every value in the values list, compare it to every other value
@@ -90,10 +98,8 @@ def generate_ps(agent_ids, n_values, mu=0.75, group_ratio=0.5):
             diff_norm = np.full(diff.shape, 0.5)
         else:
             diff_norm = (diff- np.min(diff)) / (np.max(diff) - np.min(diff))
-        ## TODO: CLIPPING HERE?
-        print("Diff norm: ", diff_norm)
+        np.clip(diff_norm, 0, 1, out=diff_norm)
         agent_ps[agent] = copy.deepcopy(diff_norm)
-        print("=====================================")
     return agent_ps
 
 def generate_vas(agent_ids, n_values, n_actions, va_p):
@@ -119,8 +125,8 @@ def generate_vas(agent_ids, n_values, n_actions, va_p):
                 # Add a bit of noise and add to va
                 noise = rng.normal(0, va_p, size=1)
                 va_temp = va_temp+noise
-                ## TODO: CLIPPING HERE?
                 va = np.append(va, copy.deepcopy(va_temp))
+            np.clip(va, -1, 1, out=va)
             agent_vas[agent] = np.append(agent_vas[agent], [copy.deepcopy(va)], axis=0)
     return agent_vas
 
@@ -172,13 +178,16 @@ def save_prips(prips, agents_ids, filename):
             writer.writerow(row)
     return
 
-def generate(n_values, n_actions, n_agents, pvs_prip=0.3, va_p=0.8, mu_p=0.75, sigma_prip=0, pvs_filename="default", prip_filename="default"):
+def generate(n_values, n_actions, n_agents, pvs_prip=0.3, va_p=0.8, mu_p=0.75, corr_prip=0.5, scale_prip=0.08, pvs_filename="default", prip_filename="default"):
     """Generates a synthetic data distribution.
     - n_values: number of values
     - n_actions: number of actions
     - n_agents: number of agents
     - pvs_prip: The amount of noise to add to the PriP values.
     - va_p: The amount of noise to add to the VA_p values.
+    - mu_p: The mean of the normal dist. for p vals
+    - corr_prip: The amount of change in PriP value correlation. 0 means normal distribution is centred on 1 or 0, 0.05 means
+        distribution is centred on 0.95 or 0.05.
     - sigma_p: The std of the normal dist. for p vals
     - sigma_prip: the std of the normal dist. for PriP vals
     """
@@ -187,26 +196,26 @@ def generate(n_values, n_actions, n_agents, pvs_prip=0.3, va_p=0.8, mu_p=0.75, s
     ## Step 1: Sample from a normal distribution to find the strength of values for every agent - Generating P strength.
     # Then, convert these strengths to pairwise preferences
     ps = generate_ps(agent_ids, n_values, mu_p, group_ratio=0.5)
-    print("PS: ", ps[0])
 
     ## Step 1.2: Given the number of actions and values, randomly assign an action 1 or more values it promotes.
     # The remaining values are demoted. This can always be random.
     vas = generate_vas(agent_ids, n_values, n_actions, va_p)
-    print("VA: ", vas[0])
 
-    ## Step 1.3
+    ## Step 1.3 Given the ps and vas, save the pvs to a csv.
     pvs_dir = save_pvs(ps, vas, agent_ids, n_values, n_actions, pvs_filename)
 
-    ## Step 3: For every agent's new value system, we can use the value aggregation code to find a range of aggreagtions. We find the consensus that minimises
+    ## Step 3: For every agent's PVS, we can use the value aggregation code to find aggregations of 1 and inf. We find the consensus that minimises
     # the agent's residual. This consensus (when converted back to a preference) is the mean point of the normal distribution.
-    prips = generate_prips(agent_ids, ps, vas, pvs_dir, n_values, n_actions, pvs_prip)
+    prips = generate_prips(agent_ids, ps, vas, pvs_dir, n_values, n_actions, corr_prip, scale_prip, pvs_prip)
+    ## Step 3.1: Save prips to a csv.
     save_prips(prips, agent_ids, prip_filename)
     return ps, vas, prips, agent_ids
 
 if __name__ == "__main__":
-
+# DEFAULTS: def generate(n_values, n_actions, n_agents, pvs_prip=0.3, va_p=0.8, mu_p=0.75, mu_prip=0.5,
+# scale_prip=0, pvs_filename="default", prip_filename="default"):
     ## MAJ/MIN SPLIT
-    generate(n_values=3, n_actions=3, n_agents=12, mu_p=0.75, pvs_prip=0.3, va_p=0.8, sigma_prip=0.1)
+    generate(n_values=3, n_actions=3, n_agents=12, pvs_prip=0, va_p=0.3, mu_p=0.75, corr_prip=0, scale_prip=0.08, pvs_filename="test", prip_filename="test")
 
     ## EXTREME PVSs
 
