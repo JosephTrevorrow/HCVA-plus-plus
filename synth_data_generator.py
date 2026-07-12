@@ -7,6 +7,8 @@ import copy
 from datetime import date
 from lp_regression.solve import *
 
+from collections import defaultdict
+
 ## SEED USED IN ALL EXP.
 seed = 4832095623890
 rng = np.random.default_rng(seed)
@@ -45,8 +47,7 @@ def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_
     return prips
 
 def generate_ps(agent_ids, n_values, mu=0.75, group_ratio=0.5):
-    default = np.empty(shape=(1,n_values))
-    agent_ps = dict.fromkeys(agent_ids, default)
+    agent_ps = defaultdict(lambda: np.empty(shape=(1,n_values)))
     global rng
     # Assign values to groups
     values_list = [i for i in range(n_values)]
@@ -56,6 +57,7 @@ def generate_ps(agent_ids, n_values, mu=0.75, group_ratio=0.5):
     group_a = rng.integers(1, len(agent_ids), size=int((len(agent_ids)*group_ratio)))
     # Find strengths for each agent, considering their group and the values that group holds.
     for agent in agent_ids:
+        print("AGENT=", agent)
         if agent in group_a:
             samples_a= rng.normal(mu, 0.08, len(strong_vals_group_a))
             samples_b = rng.normal(mu-0.5, 0.08, len(values_list)-len(strong_vals_group_a))
@@ -67,20 +69,31 @@ def generate_ps(agent_ids, n_values, mu=0.75, group_ratio=0.5):
             if k in strong_vals_group_a:
                 # pop
                 last, samples_a = samples_a[-1], samples_a[:-1]
-                agent_ps[agent][0][k] = copy.copy(last)
+                print("I am changing the location of agent_ps[", agent,"][0][",k,"] from ", agent_ps[agent][0][k], " to ", last)
+                # This changes the default
+                agent_ps[agent][0][k] = copy.deepcopy(last)
             else:
                 last, samples_b = samples_b[-1], samples_b[:-1]
-                agent_ps[agent][0][k] = copy.copy(last)
+                print("I am changing the location of agent_ps[", agent,"][0][",k,"] from ", agent_ps[agent][0][k], " to ", last)
+                agent_ps[agent][0][k] = copy.deepcopy(last)
+        print("AGENT PS FOR AGENT: ", agent_ps[agent])
+        print("agent_ps: ", agent_ps)
+        print("----------------------------------------")
     # get these values to be preferences
     for agent, agent_values in agent_ps.items():
         # for every value in the values list, compare it to every other value
+        print("AGENT: ", agent)
+        print("agent_values: ", agent_values)
         diff = agent_values[0][:, np.newaxis] - agent_values
+        print("diff: ",diff)
         if np.max(diff) - np.min(diff) == 0:
             diff_norm = np.full(diff.shape, 0.5)
         else:
             diff_norm = (diff- np.min(diff)) / (np.max(diff) - np.min(diff))
         ## TODO: CLIPPING HERE?
-        agent_ps[agent] = copy.copy(diff_norm)
+        print("Diff norm: ", diff_norm)
+        agent_ps[agent] = copy.deepcopy(diff_norm)
+        print("=====================================")
     return agent_ps
 
 def generate_vas(agent_ids, n_values, n_actions, va_p):
@@ -89,8 +102,8 @@ def generate_vas(agent_ids, n_values, n_actions, va_p):
     global rng
     values_list = [i for i in range(n_values)]
     actions_list = [j for j in range(n_actions)]
-    default = np.empty((0, n_values))
-    agent_vas = dict.fromkeys(agent_ids, default)
+    agent_vas = defaultdict(lambda: np.empty(shape=(0,n_values)))
+
     for _ in actions_list:
         num_of_vals = rng.integers(1, len(values_list), size=1)
         promoted_values = rng.choice(values_list, size=num_of_vals, replace=False)
@@ -107,8 +120,8 @@ def generate_vas(agent_ids, n_values, n_actions, va_p):
                 noise = rng.normal(0, va_p, size=1)
                 va_temp = va_temp+noise
                 ## TODO: CLIPPING HERE?
-                va = np.append(va, copy.copy(va_temp))
-            agent_vas[agent] = np.append(agent_vas[agent], [copy.copy(va)], axis=0)
+                va = np.append(va, copy.deepcopy(va_temp))
+            agent_vas[agent] = np.append(agent_vas[agent], [copy.deepcopy(va)], axis=0)
     return agent_vas
 
 def save_pvs(ps, vas, agents_ids, n_values, n_acts, filename):
