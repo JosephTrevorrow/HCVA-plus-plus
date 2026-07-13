@@ -204,14 +204,13 @@ def generate(n_values, n_actions, n_agents, pvs_prip=0.3, va_p=0.3,p_group_facto
 
 if __name__ == "__main__":
     ### Initial: agents, values, actions
-    for ag in range(2, 30,2):
+    for ag in range(2, 30,1):
         generate(n_values=4, n_actions=3, n_agents=ag, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
                 mu_p=0.75, va_mu=0.75, pvs_filename="vary_agents_"+str(ag), prip_filename="vary_agents_"+str(ag))
-    values = [2, 4, 10]
-    for val in values:
+    for val in range(2,10,1):
         generate(n_values=val, n_actions=3, n_agents=30, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
                 mu_p=0.75, va_mu=0.75, pvs_filename="vary_values_"+str(val), prip_filename="vary_values_"+str(val))
-    for act in range(1, 10, 2):
+    for act in range(1, 10, 1):
         generate(n_values=4, n_actions=act, n_agents=30, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
                  mu_p=0.75, va_mu=0.75, pvs_filename="vary_actions_" + str(act), prip_filename="vary_actions_" + str(act))
 

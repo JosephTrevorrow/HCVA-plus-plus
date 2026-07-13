@@ -37,7 +37,7 @@ def L1(A, b):
     cost = cp.sum(t)
     prob = cp.Problem(cp.Minimize(cost), constraints)
     # optimize model
-    prob.solve(solver='ECOS', verbose=False)
+    prob.solve(solver='ECOS', verbose=False, solver_verbose=False)
     cons = list(x.value)
     cons = np.array(cons)
     obj = prob.value
@@ -74,7 +74,7 @@ def Linf(A, b):
     constraints = constraint1 + constraint2
     prob = cp.Problem(cp.Minimize(t), constraints)
     # optimize model
-    prob.solve(solver='ECOS', verbose=False)
+    prob.solve(solver='ECOS', verbose=False, solver_verbose=False)
     # prob.solve(solver='GLPK', verbose=True)
     cons = list(x.value)
     cons = np.array(cons)
@@ -154,7 +154,7 @@ def mLp(A, b, ps, λs, weight=True):
     prob = cp.Problem(cp.Minimize(cost))
     for solver_name in ("CLARABEL", "SCS", "ECOS"):
         try:
-            prob.solve(solver=solver_name, verbose=False)
+            prob.solve(solver=solver_name, verbose=False, solver_verbose=False)
             if x.value is not None and prob.status in ("optimal", "optimal_inaccurate"):
                 print(f"mLp solved with {solver_name}.")
                 break
@@ -169,10 +169,10 @@ def mLp(A, b, ps, λs, weight=True):
 
 #### RUNNER FUNCTIONS HERE ######
 
-def find_transition_and_aggregate(P_list, J_list, w, filename_limits, args):
+def find_transition_and_aggregate(P_list, J_list, w, filename_limits, e, args):
     """ Compute the transition point, and find an aggregation with that transition point P """
     # 1. Compute transition point
-    p_list, dist_p_list, dist_inf_list, diff_list, t_point = transition_point(P_list, J_list, w, args.e)
+    p_list, dist_p_list, dist_inf_list, diff_list, t_point = transition_point(P_list, J_list, w, e)
     limit_output(
         p_list,
         dist_p_list,
@@ -232,9 +232,8 @@ def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args):
     _, u_act, cons_act = aggregate(P_list, J_list, w, con_p, False)
     return p, u_pref, u_act, cons_pref, cons_act, con_p
 
-def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_csv, args):
+def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_csv, transition_p, args):
     """ Compute the HCVA++ consensus principle, and find an aggregation with that consensus principle P """
-
     # 1. Find the consensus principle $p$
     # 1.1 Find the consensus principle preference
     principle_preferences = []
@@ -247,8 +246,9 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_csv, args):
     consensus_preference = sum(principle_preferences) / len(principle_preferences)
     consensus_preference = round(consensus_preference, 2)
     #print("HCVA++ Consensus preference is: ", consensus_preference)
-    # 1.2 Aggregate personal values/action judgements to find the transition point
-    _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
+    # 1.2 Aggregate personal values/action judgements to find the transition point - Not needed if t_point provided
+    if transition_p is None:
+        _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
     # 1.3 Given the transition point (best_p), find the consensus p by finding the
     # p the relative distance away from the transition point.
     consensus_p = pow(transition_p, (2 * consensus_preference))
@@ -261,12 +261,13 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_csv, args):
     _, u_act, cons_act = aggregate(P_list, J_list, w, consensus_p, False)
     return p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference
 
-def find_slm_and_aggregate(P_list, J_list, w, prip_csv, args):
+def find_slm_and_aggregate(P_list, J_list, w, prip_csv, transition_p, args):
     """ Compute aggregation with Salas-Molina et al. baseline (Many P's) """
     principles = pd.read_csv(prip_csv)
     # Convert the principles (which are preferences) into numbers (need to first find transition point
     #print("Principles: ", principles)
-    _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
+    if transition_p is None:
+        _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
     list_of_principles = principles["Egalitarian"].to_list()
     converted_principles = []
     for principle in list_of_principles:
