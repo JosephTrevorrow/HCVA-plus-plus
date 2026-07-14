@@ -104,6 +104,15 @@ def plot_residuals_over_time(consensus_list, agents_list, list_of_params, title)
         ax.plot(x,y,label=key)
     ax.legend()
     fig.savefig("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/"+title+".png", bbox_inches="tight")
+    # Save list_of_points to a file
+    with open("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/"+title+"residuals.csv", 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(["key", "points"])
+        for key, points in lines.items():
+            print(key)
+            print(points)
+            row = [key] + points
+            writer.writerow(row)
     return
 
 def plot_gini_over_time(cons_sets, agents_df, list_of_params, title):

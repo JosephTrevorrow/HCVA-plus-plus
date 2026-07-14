@@ -136,8 +136,6 @@ def time_series_graphs(now, args):
         agents_df = pd.concat([agents_pvs_df, agents_prip_df], axis=1, join="inner")
         agents_list.append(copy.deepcopy(agents_df))
 
-    print("I have all your cons_list, and your agents_list. No, I'm not going to print it out in the console. Use the debugger you lazy git :p!")
-
     ## remove the irrelevant cols from every single df you've just sorted out. Create a list of params to use with residuals
     #  Every df will have the same cols, so we find them for one, and copy this
     # note, we will use values_list and actions_list to filter our data analysis plots.

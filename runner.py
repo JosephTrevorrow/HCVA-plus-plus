@@ -143,7 +143,11 @@ if __name__ == '__main__':
                 _, u_act, cons_act = aggregate(P_list, J_list, w, p, False)
                 cons_act = cons_act[:len(cons_act) // 2]
             output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
-            save_metadata(filename_metadata, args, 0, p, p, output_dir)
+            if p == np.inf:
+                save_metadata(filename_metadata, args, 0, p, 1, output_dir)
+            else:
+                save_metadata(filename_metadata, args, 0, p, p, output_dir)
+
         print("-------------")
         print("Done with iteration: {}".format(i))
 

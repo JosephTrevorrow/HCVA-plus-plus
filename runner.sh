@@ -25,13 +25,21 @@
 ## Data
 #python -O runner.py -pvs_dir "value_systems/Synthetic/vary_grp_fact/PVS/" -prip_dir "value_systems/Synthetic/vary_grp_fact/PriP/" -n_values 4 -n_actions 3 -output_dir "/results/SYNTH_vary_grp_fact/"
 ## Data Analysis
-python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_grp_fact/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PriP/" -output_dir "plots/SYNTH_vary_grp_fact/"
+#python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_grp_fact/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PriP/" -output_dir "plots/SYNTH_vary_grp_fact/"
 
+# Experiment ``vary_mup_vamu'''
+## Data
+python -O runner.py -pvs_dir "value_systems/Synthetic/vary_mup_vamu/PVS/" -prip_dir "value_systems/Synthetic/vary_mup_vamu/PriP/" -n_values 4 -n_actions 3 -output_dir "/results/SYNTH_vary_mup_vamu/"
+## Data Analysis
+python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_mup_vamu/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_mup_vamu/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_mup_vamu/PriP/" -output_dir "plots/SYNTH_vary_mup_vamu/"
+
+# Experiment ``vary_pvs_prip'''
+## Data
+python -O runner.py -pvs_dir "value_systems/Synthetic/vary_pvs_prip/PVS/" -prip_dir "value_systems/Synthetic/vary_pvs_prip/PriP/" -n_values 4 -n_actions 3 -output_dir "/results/SYNTH_vary_pvs_prip/"
+## Data Analysis
+python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_pvs_prip/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_pvs_prip/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_pvs_prip/PriP/" -output_dir "plots/SYNTH_vary_pvs_prip/"
 
 ###### ENVIRONMENT VARIABLES, SYNTHETIC DATA EXP. ######
-
-
-
 
 # Experiment 2: Run on VALE data -> Nice for loop!
 ## Data
