@@ -5,7 +5,7 @@
 ## Data
 #python -O runner.py -pvs_dir "value_systems/ESS/Country/4_val_2_act/PVS/" -prip_dir "value_systems/ESS/Country/4_val_2_act/PriP/" -n_values 4 -n_actions 2 -e 1e-4 -output_dir "/results/ESS_COUNTRY/4_val_2_acts/"
 ## Data Analysis
-python data_analysis/data_analysis_main.py -cons_dir "results/ESS_COUNTRY/4_val_2_act/" -agents_pvs_dir "value_systems/ESS/Country/4_val_2_act/PVS/" -agents_prip_dir "value_systems/ESS/Country/4_val_2_act/PriP/" -output_dir "plots/ESS_4_val_2_act/"
+#python data_analysis/data_analysis_main.py -cons_dir "results/ESS_COUNTRY/4_val_2_act/" -agents_pvs_dir "value_systems/ESS/Country/4_val_2_act/PVS/" -agents_prip_dir "value_systems/ESS/Country/4_val_2_act/PriP/" -output_dir "plots/ESS_4_val_2_act/"
 
 #python -O runner.py -pvs_dir "value_systems/ESS/Country/4_val_3_act/PVS/" -prip_dir "value_systems/ESS/Country/4_val_3_act/PriP/" -n_values 4 -n_actions 3 -e 1e-4 -output_dir "/results/ESS_COUNTRY/4_val_3_acts/"
 ## TODO: Insert data analysis
@@ -25,7 +25,7 @@ python data_analysis/data_analysis_main.py -cons_dir "results/ESS_COUNTRY/4_val_
 ## Data
 #python -O runner.py -pvs_dir "value_systems/Synthetic/vary_grp_fact/PVS/" -prip_dir "value_systems/Synthetic/vary_grp_fact/PriP/" -n_values 4 -n_actions 3 -output_dir "/results/SYNTH_vary_grp_fact/"
 ## Data Analysis
-#python data_analysis/data_analysis_main.py
+python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_grp_fact/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PriP/" -output_dir "plots/SYNTH_vary_grp_fact/"
 
 
 ###### ENVIRONMENT VARIABLES, SYNTHETIC DATA EXP. ######

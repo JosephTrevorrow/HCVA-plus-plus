@@ -3,6 +3,7 @@ This file will plot residuals given a consensus and a set of agents PVSs and Pri
 What makes up the residual can be set as an argument.
 """
 import csv
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -72,6 +73,37 @@ def plot_residuals_over_time(consensus_list, agents_list, list_of_params, title)
     """Plots a line graph showing the total residuals per method over time
     Where time=whatever parameter we varied"""
 
+    # lines is a dict {ID: [t1_{sum of residuals}, t2_ etc. ]}, one list per line, one line per method.
+    lines = {}
+    for key in consensus_list[0].keys():
+        lines[key] = []
+    ## consensus_list shape: list[{dict}] [ {t1_hcva, t1_inf, t1_slm, etc.}, {t2_hcva, t2_inf, t2_slm, etc.}, etc.
+    ## agents_list shape [t1_agents, t2_agents, etc.
+    ## Get our data for each line:
+    for cons_dict_single, agents_single in zip(consensus_list, agents_list):
+        # find the residuals for each of the cons in cons_dict_single
+        # For every consensus, go through each agent, and find difference.
+        for key, cons_df in cons_dict_single.items():
+            #points = []
+            sum_of_residuals = 0
+            for agent in agents_single.iterrows():
+                # For every col, match these two dfs and plot the residuals
+                temp_residual = cons_df[list_of_params] - agent[1][list_of_params]
+                # Sum up all of the params into one number
+                temp_residual = temp_residual.to_numpy()
+                temp_residual = np.abs(temp_residual).sum()
+                #points.append(copy.copy(temp_residual))
+                sum_of_residuals += temp_residual
+            lines[key].append(sum_of_residuals)
+    # Make the line graph
+    fig, ax = plt.subplots()
+
+    for key, list_of_points in lines.items():
+        y = list_of_points
+        x = np.arange(len(y))
+        ax.plot(x,y,label=key)
+    ax.legend()
+    fig.savefig("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/"+title+".png", bbox_inches="tight")
     return
 
 def plot_gini_over_time(cons_sets, agents_df, list_of_params, title):
@@ -79,8 +111,6 @@ def plot_gini_over_time(cons_sets, agents_df, list_of_params, title):
     Where time=whatever parameter we varied"""
 
     return
-
-
 
 def check_maximin_fairness(cons_df, agents_df, list_of_params):
     """NOT USED IN PAPER. Calculates the utility of the worst off agent in the society"""

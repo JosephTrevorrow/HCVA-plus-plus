@@ -126,13 +126,13 @@ def time_series_graphs(now, args):
     ## input every single agent, place in a list of df (form: [t1_agents, t2_agents, etc.
     agents_list = []
     ## Grab the agents PVS and concat them
-    ag_pvs = glob.glob(args.agents_pvs_dir + "*_PVS_*")
-    ag_prip = glob.glob(args.agents_prip_dir + "*_PriP_*")
+    ag_pvs = glob.glob(args.agents_pvs_dir + "*_PVS*")
+    ag_prip = glob.glob(args.agents_prip_dir + "*_PriP*")
     sorted_ag_pvs = sorted(ag_pvs)
     sorted_ag_prip = sorted(ag_prip)
     for i in range(0, count):
-        agents_pvs_df = pd.read_csv(ag_pvs[i])
-        agents_prip_df = pd.read_csv(ag_prip[i])
+        agents_pvs_df = pd.read_csv(sorted_ag_pvs[i])
+        agents_prip_df = pd.read_csv(sorted_ag_prip[i])
         agents_df = pd.concat([agents_pvs_df, agents_prip_df], axis=1, join="inner")
         agents_list.append(copy.deepcopy(agents_df))
 
@@ -141,7 +141,7 @@ def time_series_graphs(now, args):
     ## remove the irrelevant cols from every single df you've just sorted out. Create a list of params to use with residuals
     #  Every df will have the same cols, so we find them for one, and copy this
     # note, we will use values_list and actions_list to filter our data analysis plots.
-    values_list = list([col for col in consensus_list[0].columns if 'P__' in col])
+    values_list = list([col for col in consensus_list[0]["HCVA"].columns if 'P__' in col])
     # Clean list_of_params
     # Remove all cols that have the same two values (P__Universalism__Universalism, P__Benevolence__Benevolence, etc.)
     for col in values_list:
@@ -198,9 +198,11 @@ if __name__ == "__main__":
     now = str(date.today())
 
     if args.single_timestep_plots:
+        print("single timestep plots:")
         # you want single timestep plots for every method, for every iteration.
         single_timestep_graphs(now, args)
     elif args.time_series_plots:
+        print("time series plots:")
         # you want time series plots for the synthetic methods where agent data has more than one iteration
         time_series_graphs(now, args)
 
