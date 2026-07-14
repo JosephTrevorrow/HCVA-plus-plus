@@ -1,26 +1,17 @@
-
-# Globals
-ess_F="value_systems/ESS/Country/PVS/"
-ess_PF="value_systems/ESS/Country/PriP/"
-
-ess_ind_F="value_systems/ESS/Individual/PVS/"
-ess_ind_PF="value_systems/ESS/Individual/PriP/"
-
-
-synthetic_1_f=""
-synthetic_1_pf=""
-
-vale_f="value_systems/VALE/PVS.csv"
-vale_pf="value_systems/VALE/PriP.csv"
-vale_synth_pfs='a.txt b.txt c.txt d.txt'
-
 ###### ESS DATA EXP. ######
-echo $ess_F
+
 # Experiment ``ESS Country-level'': Run on ESS data, at a country level abstraction (default)
+
 ## Data
-python -O runner.py -pvs_dir $ess_F -prip_dir $ess_PF -n_values 4 -n_actions 3 -e 1e-4 -output_dir "/results/ESS_COUNTRY/"
+#python -O runner.py -pvs_dir "value_systems/ESS/Country/4_val_2_act/PVS/" -prip_dir "value_systems/ESS/Country/4_val_2_act/PriP/" -n_values 4 -n_actions 2 -e 1e-4 -output_dir "/results/ESS_COUNTRY/4_val_2_acts/"
 ## Data Analysis
-python data_analysis/data_analysis_main.py -cons_dir "results/ESS_COUNTRY/" -agents_pvs_dir "value_systems/ESS/Country/PVS/" -agents_prip_dir "value_systems/ESS/Country/PriP/"
+python data_analysis/data_analysis_main.py -cons_dir "results/ESS_COUNTRY/4_val_2_act/" -agents_pvs_dir "value_systems/ESS/Country/4_val_2_act/PVS/" -agents_prip_dir "value_systems/ESS/Country/4_val_2_act/PriP/" -output_dir "plots/ESS_4_val_2_act/"
+
+#python -O runner.py -pvs_dir "value_systems/ESS/Country/4_val_3_act/PVS/" -prip_dir "value_systems/ESS/Country/4_val_3_act/PriP/" -n_values 4 -n_actions 3 -e 1e-4 -output_dir "/results/ESS_COUNTRY/4_val_3_acts/"
+## TODO: Insert data analysis
+
+#python -O runner.py -pvs_dir "value_systems/ESS/Country/10_val_2_act/PVS/" -prip_dir "value_systems/ESS/Country/10_val_2_act/PriP/" -n_values 10 -n_actions 2 -e 1e-4 -output_dir "/results/ESS_COUNTRY/10_val_2_acts/"
+## TODO: Insert data analysis
 
 # Experiment ``ESS Individual-level'': Run on ESS data, with no abstraction (default)
 ## Data
@@ -28,14 +19,11 @@ python data_analysis/data_analysis_main.py -cons_dir "results/ESS_COUNTRY/" -age
 ## Data Analysis
 #python data_analysis/data_analysis_main.py
 
-
 ###### SYNTHETIC DATA EXP. ######
 
-## Note: Synthetic data experiments are ran over a range of different paramters, depending on the experiment. Therefore, they use the runner.py file that handles this (incl. storage)
-
-# Experiment ``Maj/min split'': Run on ESS data, at a country level abstraction (default)
+# Experiment ``vary_grp_fact'''
 ## Data
-#python main.py -f ess_F -pf ess_PF -t -range -hcva -hcva2 -n_values 4 -n_actions 2
+#python -O runner.py -pvs_dir "value_systems/Synthetic/vary_grp_fact/PVS/" -prip_dir "value_systems/Synthetic/vary_grp_fact/PriP/" -n_values 4 -n_actions 3 -output_dir "/results/SYNTH_vary_grp_fact/"
 ## Data Analysis
 #python data_analysis/data_analysis_main.py
 

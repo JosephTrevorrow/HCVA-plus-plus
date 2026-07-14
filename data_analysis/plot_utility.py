@@ -18,6 +18,9 @@ def plot_total_utility(cons_sets, agents_df, list_of_params, filename):
         writer.writerow(utilities.values())
     return utilities
 
+def plot_utility_over_time():
+    return
+
 def plot_pareto_efficiency(cons_df, agents_df, list_of_params):
     """NOT USED IN PAPER. Is there a cons that would make at least one agent better off
     without making another agent worse off?"""

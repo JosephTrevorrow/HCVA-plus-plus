@@ -21,7 +21,6 @@ def gini_coefficient(cons_sets, agents_df, list_of_params, filename):
                 temp_residual = cons[1][list_of_params] - agent[1][list_of_params]
                 temp_residual = abs(temp_residual.sum())
                 temp_residuals = np.append(temp_residuals, [temp_residual])
-            print("Temp residuals are: ", temp_residuals)
             # Mean absolute difference
             mad = np.abs(np.subtract.outer(temp_residuals, temp_residuals)).mean()
             # Relative mean absolute difference
@@ -30,7 +29,7 @@ def gini_coefficient(cons_sets, agents_df, list_of_params, filename):
             g = 0.5 * rmad
             ginis[key] = copy.copy(g)
     ## Add to/Make a gini csv file and save ginis
-    with open("plots/"+filename, 'w') as f:
+    with open("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/"+filename, 'w') as f:
         writer = csv.writer(f)
         writer.writerow(ginis.keys())
         writer.writerow(ginis.values())
@@ -61,17 +60,26 @@ def plot_residuals(cons_sets, agents_df, list_of_params, title):
     fig = plt.figure(figsize=(5, 3))
     ax = fig.add_axes([0, 0, 1, 1])
     bp = ax.boxplot(boxplots.values(), labels=boxplots.keys(), orientation='horizontal')
-    fig.savefig("plots/"+title+"residuals.png", bbox_inches="tight")
+    fig.savefig("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/"+title+".png", bbox_inches="tight")
     # Now make sure you save the boxplot data (mean/IQR/Whiskers) in a csv, with info for that run
-    with open("plots/"+title+"residuals.csv", 'w') as f:
+    with open("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/"+title+"residuals.csv", 'w') as f:
         header = ['key', 'mean', 'std', 'var', 'min', 'max', 'points']
         writer = csv.DictWriter(f, fieldnames=header)
         writer.writeheader()
         writer.writerows(metadata)
 
-def plot_residuals_over_time():
-    ## Make a line graph?
+def plot_residuals_over_time(consensus_list, agents_list, list_of_params, title):
+    """Plots a line graph showing the total residuals per method over time
+    Where time=whatever parameter we varied"""
+
     return
+
+def plot_gini_over_time(cons_sets, agents_df, list_of_params, title):
+    """Plots a line graph showing the gini coefficient over time
+    Where time=whatever parameter we varied"""
+
+    return
+
 
 
 def check_maximin_fairness(cons_df, agents_df, list_of_params):

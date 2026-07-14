@@ -111,7 +111,7 @@ if __name__ == '__main__':
         output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
         # Convert HCVA to a preference.
         con_preference = np.log(con_p) / (2*np.log(t_point))
-        save_metadata(filename_metadata, args, None, con_p, None, output_dir)
+        save_metadata(filename_metadata, args, None, con_p, con_preference, output_dir)
         print("-------------")
         ## HCVA++
         print("HCVA++...")
