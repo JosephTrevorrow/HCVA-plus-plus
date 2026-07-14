@@ -115,10 +115,56 @@ def plot_residuals_over_time(consensus_list, agents_list, list_of_params, title)
             writer.writerow(row)
     return
 
-def plot_gini_over_time(cons_sets, agents_df, list_of_params, title):
+def plot_gini_over_time(consensus_list, agents_list, list_of_params, title):
     """Plots a line graph showing the gini coefficient over time
     Where time=whatever parameter we varied"""
+    """Plots a line graph showing the total residuals per method over time
+       Where time=whatever parameter we varied"""
 
+    # lines is a dict {ID: [t1_{sum of residuals}, t2_ etc. ]}, one list per line, one line per method.
+    ginis = {}
+    for key in consensus_list[0].keys():
+        ginis[key] = []
+    ## consensus_list shape: list[{dict}] [ {t1_hcva, t1_inf, t1_slm, etc.}, {t2_hcva, t2_inf, t2_slm, etc.}, etc.
+    ## agents_list shape [t1_agents, t2_agents, etc.
+    ## Get our data for each line:
+    for cons_dict_single, agents_single in zip(consensus_list, agents_list):
+        # find the residuals for each of the cons in cons_dict_single
+        # For every consensus, go through each agent, and find difference.
+        for key, cons_df in cons_dict_single.items():
+            # points = []
+            sum_of_residuals = 0
+            temp_residuals = np.array([], dtype=float)
+            for agent in agents_single.iterrows():
+                # For every col, match these two dfs
+                temp_residual = cons_df[1][list_of_params] - agent[1][list_of_params]
+                temp_residual = abs(temp_residual.sum())
+                temp_residuals = np.append(temp_residuals, [temp_residual])
+            # Mean absolute difference
+            mad = np.abs(np.subtract.outer(temp_residuals, temp_residuals)).mean()
+            # Relative mean absolute difference
+            rmad = mad / np.mean(temp_residuals)
+            # Gini coefficient
+            g = 0.5 * rmad
+            ginis[key].append(copy.copy(g))
+    # Make the line graph
+    fig, ax = plt.subplots()
+
+    for key, list_of_points in ginis.items():
+        y = list_of_points
+        x = np.arange(len(y))
+        ax.plot(x, y, label=key)
+    ax.legend()
+    fig.savefig("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/" + title + ".png", bbox_inches="tight")
+    # Save list_of_points to a file
+    with open("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/" + title + "gini.csv", 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(["key", "points"])
+        for key, points in ginis.items():
+            print(key)
+            print(points)
+            row = [key] + points
+            writer.writerow(row)
     return
 
 def check_maximin_fairness(cons_df, agents_df, list_of_params):
