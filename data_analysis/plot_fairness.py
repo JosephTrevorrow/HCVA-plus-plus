@@ -4,7 +4,7 @@ What makes up the residual can be set as an argument.
 """
 import csv
 from collections import defaultdict
-
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -30,7 +30,13 @@ def gini_coefficient(cons_sets, agents_df, list_of_params, filename):
             g = 0.5 * rmad
             ginis[key] = copy.copy(g)
     ## Add to/Make a gini csv file and save ginis
-    with open("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/"+filename, 'w') as f:
+    output_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/" + dir
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print("Created directory: " + output_dir)
+    else:
+        print("Directory already exists: " + output_dir)
+    with open(dir+filename, 'w') as f:
         writer = csv.writer(f)
         writer.writerow(ginis.keys())
         writer.writerow(ginis.values())
@@ -61,15 +67,21 @@ def plot_residuals(cons_sets, agents_df, list_of_params, title):
     fig = plt.figure(figsize=(5, 3))
     ax = fig.add_axes([0, 0, 1, 1])
     bp = ax.boxplot(boxplots.values(), labels=boxplots.keys(), orientation='horizontal')
-    fig.savefig("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/"+title+".png", bbox_inches="tight")
+    output_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/" + dir
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print("Created directory: " + output_dir)
+    else:
+        print("Directory already exists: " + output_dir)
+    fig.savefig(dir+title+".png", bbox_inches="tight")
     # Now make sure you save the boxplot data (mean/IQR/Whiskers) in a csv, with info for that run
-    with open("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/"+title+"residuals.csv", 'w') as f:
+    with open(dir+title+"residuals.csv", 'w') as f:
         header = ['key', 'mean', 'std', 'var', 'min', 'max', 'points']
         writer = csv.DictWriter(f, fieldnames=header)
         writer.writeheader()
         writer.writerows(metadata)
 
-def plot_residuals_over_time(consensus_list, agents_list, list_of_params, title):
+def plot_residuals_over_time(consensus_list, agents_list, list_of_params, title, dir):
     """Plots a line graph showing the total residuals per method over time
     Where time=whatever parameter we varied"""
 
@@ -103,19 +115,23 @@ def plot_residuals_over_time(consensus_list, agents_list, list_of_params, title)
         x = np.arange(len(y))
         ax.plot(x,y,label=key)
     ax.legend()
-    fig.savefig("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/"+title+".png", bbox_inches="tight")
+    output_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/" + dir
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print("Created directory: " + output_dir)
+    else:
+        print("Directory already exists: " + output_dir)
+    fig.savefig(output_dir+title+".png", bbox_inches="tight")
     # Save list_of_points to a file
-    with open("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/"+title+"residuals.csv", 'w') as f:
+    with open(output_dir+title+"residuals.csv", 'w') as f:
         writer = csv.writer(f)
         writer.writerow(["key", "points"])
         for key, points in lines.items():
-            print(key)
-            print(points)
             row = [key] + points
             writer.writerow(row)
     return
 
-def plot_gini_over_time(consensus_list, agents_list, list_of_params, title):
+def plot_gini_over_time(consensus_list, agents_list, list_of_params, title, dir):
     """Plots a line graph showing the gini coefficient over time
     Where time=whatever parameter we varied"""
     """Plots a line graph showing the total residuals per method over time
@@ -137,7 +153,7 @@ def plot_gini_over_time(consensus_list, agents_list, list_of_params, title):
             temp_residuals = np.array([], dtype=float)
             for agent in agents_single.iterrows():
                 # For every col, match these two dfs
-                temp_residual = cons_df[1][list_of_params] - agent[1][list_of_params]
+                temp_residual = cons_df[list_of_params] - agent[1][list_of_params]
                 temp_residual = abs(temp_residual.sum())
                 temp_residuals = np.append(temp_residuals, [temp_residual])
             # Mean absolute difference
@@ -155,14 +171,18 @@ def plot_gini_over_time(consensus_list, agents_list, list_of_params, title):
         x = np.arange(len(y))
         ax.plot(x, y, label=key)
     ax.legend()
-    fig.savefig("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/" + title + ".png", bbox_inches="tight")
+    output_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/" + dir
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print("Created directory: " + output_dir)
+    else:
+        print("Directory already exists: " + output_dir)
+    fig.savefig(output_dir+title + ".png", bbox_inches="tight")
     # Save list_of_points to a file
-    with open("/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/" + title + "gini.csv", 'w') as f:
+    with open(output_dir+title + "gini.csv", 'w') as f:
         writer = csv.writer(f)
         writer.writerow(["key", "points"])
         for key, points in ginis.items():
-            print(key)
-            print(points)
             row = [key] + points
             writer.writerow(row)
     return

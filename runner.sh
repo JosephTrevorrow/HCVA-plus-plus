@@ -5,13 +5,13 @@
 ## Data
 #python -O runner.py -pvs_dir "value_systems/ESS/Country/4_val_2_act/PVS/" -prip_dir "value_systems/ESS/Country/4_val_2_act/PriP/" -n_values 4 -n_actions 2 -e 1e-4 -output_dir "/results/ESS_COUNTRY/4_val_2_acts/"
 ## Data Analysis
-#python data_analysis/data_analysis_main.py -cons_dir "results/ESS_COUNTRY/4_val_2_act/" -agents_pvs_dir "value_systems/ESS/Country/4_val_2_act/PVS/" -agents_prip_dir "value_systems/ESS/Country/4_val_2_act/PriP/" -output_dir "plots/ESS_4_val_2_act/"
+#python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/ESS_COUNTRY/4_val_2_act/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/ESS/Country/4_val_2_act/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/value_systems/ESS/Country/4_val_2_act/PriP/" -output_dir "/ESS_4_val_2_act/"
 
 #python -O runner.py -pvs_dir "value_systems/ESS/Country/4_val_3_act/PVS/" -prip_dir "value_systems/ESS/Country/4_val_3_act/PriP/" -n_values 4 -n_actions 3 -e 1e-4 -output_dir "/results/ESS_COUNTRY/4_val_3_acts/"
-## TODO: Insert data analysis
+#python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/ESS_COUNTRY/4_val_3_act/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/ESS/Country/4_val_3_act/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/value_systems/ESS/Country/4_val_3_act/PriP/" -output_dir "/ESS_4_val_3_act/"
 
 #python -O runner.py -pvs_dir "value_systems/ESS/Country/10_val_2_act/PVS/" -prip_dir "value_systems/ESS/Country/10_val_2_act/PriP/" -n_values 10 -n_actions 2 -e 1e-4 -output_dir "/results/ESS_COUNTRY/10_val_2_acts/"
-## TODO: Insert data analysis
+#python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/ESS_COUNTRY/10_val_2_act/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/ESS/Country/10_val_2_act/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/value_systems/ESS/Country/10_val_2_act/PriP/" -output_dir "/ESS_10_val_2_act/"
 
 # Experiment ``ESS Individual-level'': Run on ESS data, with no abstraction (default)
 ## Data
@@ -19,25 +19,33 @@
 ## Data Analysis
 #python data_analysis/data_analysis_main.py
 
+##### VALE EXPERIMENTS, VALIDATION ##########
+## Data
+#python -O runner.py -pvs_dir "value_systems/VALE/PVS/" -prip_dir "value_systems/VALE/PriP/" -n_values 2 -n_actions 1 -e 1e-4 -output_dir "/results/VALE/"
+## Data Analysis
+python data_analysis/data_analysis_main.py -single_timestep_plots True -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/VALE/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/VALE/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/VALE/PriP/" -output_dir "/VALE/"
+
+
+
 ###### SYNTHETIC DATA EXP. ######
 
 # Experiment ``vary_grp_fact'''
 ## Data
 #python -O runner.py -pvs_dir "value_systems/Synthetic/vary_grp_fact/PVS/" -prip_dir "value_systems/Synthetic/vary_grp_fact/PriP/" -n_values 4 -n_actions 3 -output_dir "/results/SYNTH_vary_grp_fact/"
 ## Data Analysis
-#python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_grp_fact/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PriP/" -output_dir "plots/SYNTH_vary_grp_fact/"
+#python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_grp_fact/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PriP/" -output_dir "/SYNTH_vary_grp_fact/"
 
 # Experiment ``vary_mup_vamu'''
 ## Data
-python -O runner.py -pvs_dir "value_systems/Synthetic/vary_mup_vamu/PVS/" -prip_dir "value_systems/Synthetic/vary_mup_vamu/PriP/" -n_values 4 -n_actions 3 -output_dir "/results/SYNTH_vary_mup_vamu/"
+#python -O runner.py -pvs_dir "value_systems/Synthetic/vary_mup_vamu/PVS/" -prip_dir "value_systems/Synthetic/vary_mup_vamu/PriP/" -n_values 4 -n_actions 3 -output_dir "/results/SYNTH_vary_mup_vamu/"
 ## Data Analysis
-python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_mup_vamu/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_mup_vamu/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_mup_vamu/PriP/" -output_dir "plots/SYNTH_vary_mup_vamu/"
+#python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_mup_vamu/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_mup_vamu/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_mup_vamu/PriP/" -output_dir "/SYNTH_vary_mup_vamu/"
 
 # Experiment ``vary_pvs_prip'''
 ## Data
-python -O runner.py -pvs_dir "value_systems/Synthetic/vary_pvs_prip/PVS/" -prip_dir "value_systems/Synthetic/vary_pvs_prip/PriP/" -n_values 4 -n_actions 3 -output_dir "/results/SYNTH_vary_pvs_prip/"
+#python -O runner.py -pvs_dir "value_systems/Synthetic/vary_pvs_prip/PVS/" -prip_dir "value_systems/Synthetic/vary_pvs_prip/PriP/" -n_values 4 -n_actions 3 -output_dir "/results/SYNTH_vary_pvs_prip/"
 ## Data Analysis
-python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_pvs_prip/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_pvs_prip/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_pvs_prip/PriP/" -output_dir "plots/SYNTH_vary_pvs_prip/"
+#python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_pvs_prip/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_pvs_prip/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_pvs_prip/PriP/" -output_dir "/SYNTH_vary_pvs_prip/"
 
 ###### ENVIRONMENT VARIABLES, SYNTHETIC DATA EXP. ######
 
@@ -48,3 +56,5 @@ python data_analysis/data_analysis_main.py -cons_dir "/Users/josephtrevorrow/Doc
 #for item in $vale_synth_pfs; do
 #  python main.py -f vale_f -pf item -slm -hcva -hcva2 -n_values 2 -n_actions 1
 #done
+
+

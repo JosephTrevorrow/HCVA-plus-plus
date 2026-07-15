@@ -63,7 +63,7 @@ if __name__ == '__main__':
             n_actions = n_actions_list[i]
 
         # Preprocess the csvs
-        print("My pvs set is: ", pvs_sets[i], " and my PriP set is: ", prip_sets[i], "")
+
         ## PVS
         print("PREPROCESSING PVS...")
         P_list, J_list, w, country_dict = FormalisationObjects(filename=pvs_sets[i], delimiter=',', weights=args.w,
