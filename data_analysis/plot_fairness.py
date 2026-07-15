@@ -10,9 +10,59 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import copy
 
-def normalise_for_fairness(sets):
-    normalised_sets = {}
+def normalise_cons(sets):
+    """Normalises the consensus data to be between 0-1. sets is of form: dict{key: df}"""
+    normalised = {}
     for key, df in sets.items():
+        for column in df.columns:
+            if 'VA__' in column:
+                min_val = -1
+                max_val = 1
+            else:
+                min_val = 0
+                max_val = 1
+            if column != 'p':
+                df[column]= (df[column] - min_val) / (max_val - min_val)
+        normalised[key] = copy.deepcopy(df)
+    return normalised
+
+def normalise_agents(df):
+    """Normalises the agent data to be between 0-1. sets is of form: df"""
+    for column in df.columns:
+        if 'VA__' in column:
+            min_val = -1
+            max_val = 1
+        else:
+            min_val = 0
+            max_val = 1
+        if column != 'p':
+            df[column]= (df[column] - min_val) / (max_val - min_val)
+    return df
+
+def normalise_cons_time_series(sets):
+    normalised = []
+    for timestep in sets:
+        normalised_sets = {}
+        for key, df in timestep.items():
+            ## This only works when you know the max and min value of EVERY SINGLE CONS!!!
+            # Normalise all data for consensus between 0-1
+            #df = df.astype(float)
+            for column in df.columns:
+                if 'VA__' in column:
+                    min_val = -1
+                    max_val = 1
+                else:
+                    min_val = 0
+                    max_val = 1
+                if column != 'p':
+                    df[column]= (df[column] - min_val) / (max_val - min_val)
+            normalised_sets[key] = copy.deepcopy(df)
+        normalised.append(copy.deepcopy(normalised_sets))
+    return normalised
+
+def normalise_agents_time_series(sets):
+    normalised = []
+    for df in sets:
         ## This only works when you know the max and min value of EVERY SINGLE CONS!!!
         # Normalise all data for consensus between 0-1
         #df = df.astype(float)
@@ -25,8 +75,9 @@ def normalise_for_fairness(sets):
                 max_val = 1
             if column != 'p':
                 df[column]= (df[column] - min_val) / (max_val - min_val)
-        normalised_sets[key] = copy.deepcopy(df)
-    return normalised_sets
+        normalised.append(copy.deepcopy(df))
+    return normalised
+
 
 def gini_coefficient(cons_sets, agents_df, list_of_params, filename, dir):
     """Calculates the Gini coefficient (Inequality of disappointment amongst agents)

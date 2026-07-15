@@ -1,6 +1,6 @@
 import pandas as pd
 import copy
-from plot_fairness import gini_coefficient, calc_envy_freeness, check_maximin_fairness, plot_residuals, plot_residuals_over_time, plot_gini_over_time, normalise_for_fairness
+from plot_fairness import *
 from plot_utility import plot_pareto_efficiency, plot_total_utility, plot_utility_over_time
 #from plot_limits import plot_data
 #from data_analysis.plot_principles import *
@@ -25,7 +25,6 @@ def single_timestep_graphs(now, args):
         # Grab the cons sets for this count
         cons_pvs_sets = glob.glob(args.cons_dir + "*_PERSONALS_"+str(i)+"*")
         cons_prip_sets = glob.glob(args.cons_dir + "*_METADATA_"+str(i)+"*")
-        # CHECK IN DEBUG, Do we need to sort?
         cons_pvs_sets = sorted(cons_pvs_sets)
         cons_prip_sets = sorted(cons_prip_sets)
 
@@ -78,9 +77,8 @@ def single_timestep_graphs(now, args):
         ## RESIDUALS
         ## For residuals, normalise all values passed to between 0-1
         # Note that cons_sets is a dict of dfs, so we need to normalise each df separately
-        normalised_cons_sets = normalise_for_fairness(cons_sets)
-        normalised_agents_df = normalise_for_fairness({"ag": agents_df})
-        normalised_agents_df = normalised_agents_df["ag"]
+        normalised_cons_sets = normalise_cons(cons_sets)
+        normalised_agents_df = normalise_agents(agents_df)
 
         ### PVS Residuals
         plot_residuals(normalised_cons_sets, normalised_agents_df, values_list+actions_list, "Entire PVS Residuals", args.output_dir)
@@ -171,9 +169,8 @@ def time_series_graphs(now, args):
         agents_list[i] = agents_list[i][agents_cols_to_keep]
         consensus_list[i] = {k: v[cons_cols_to_keep] for k, v in consensus_list[i].items()}
 
-    normalised_cons_sets = normalise_for_fairness(consensus_list)
-    normalised_agents_df = normalise_for_fairness({"ag": agents_df})
-    normalised_agents_df = normalised_agents_df["ag"]
+    normalised_cons_sets = normalise_cons_time_series(consensus_list)
+    normalised_agents_df = normalise_agents_time_series(agents_list)
     ## RESIDUALS
     ### PVS Residuals
     plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, values_list+actions_list, "Time Series PVS Residuals", dir=args.output_dir)
