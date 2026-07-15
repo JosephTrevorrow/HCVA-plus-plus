@@ -10,7 +10,19 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import copy
 
-def gini_coefficient(cons_sets, agents_df, list_of_params, filename):
+def normalise_for_fairness(sets):
+    normalised_sets = []
+    for df in sets:
+        # Normalise all data for consensus between 0-1
+        df = df.astype(float)
+        for column in df.columns:
+            min_val = df[column].min()
+            max_val = df[column].max()
+            if column != 'p':
+                df[column] = (df[column] - min_val) / (max_val - min_val)
+    return normalised_sets
+
+def gini_coefficient(cons_sets, agents_df, list_of_params, filename, dir):
     """Calculates the Gini coefficient (Inequality of disappointment amongst agents)
     Low total utility with High Gini means cons favours majority at expense of minority (low because lower is better)"""
     ginis = {}
@@ -36,13 +48,13 @@ def gini_coefficient(cons_sets, agents_df, list_of_params, filename):
         print("Created directory: " + output_dir)
     else:
         print("Directory already exists: " + output_dir)
-    with open(dir+filename, 'w') as f:
+    with open(output_dir+filename, 'w') as f:
         writer = csv.writer(f)
         writer.writerow(ginis.keys())
         writer.writerow(ginis.values())
     return
 
-def plot_residuals(cons_sets, agents_df, list_of_params, title):
+def plot_residuals(cons_sets, agents_df, list_of_params, title, dir):
     """Plots a residual bar chart given a list of parameters using the dataframe. Style will follow prev. work.
     This function makes a boxplot chart, where each plot is a method. This is for one experiment. If you are doing an
      experiment over time, the residuals can be plotted as a line graph, in the function below
@@ -54,11 +66,8 @@ def plot_residuals(cons_sets, agents_df, list_of_params, title):
     for key, cons_df in cons_sets.items():
         points = []
         for agent in agents_df.iterrows():
-            # For every col, match these two dfs and plot the residuals
-            temp_residual = cons_df[list_of_params] - agent[1][list_of_params]
-            # Sum up all of the params into one number
-            temp_residual = temp_residual.to_numpy()
-            temp_residual = np.abs(temp_residual).sum()
+            # For every col, match these two dfs and find the sum of aboslute difference between all of the vals to compare.
+            temp_residual = np.abs(agent[1][list_of_params].to_numpy() - cons_df[list_of_params].to_numpy()).sum()
             points.append(copy.copy(temp_residual))
         boxplots[key] = copy.copy(points)
         # Get the last element of boxplots (the one we just made), find its var, std, mean, etc. and save to dict with p as title
@@ -73,9 +82,9 @@ def plot_residuals(cons_sets, agents_df, list_of_params, title):
         print("Created directory: " + output_dir)
     else:
         print("Directory already exists: " + output_dir)
-    fig.savefig(dir+title+".png", bbox_inches="tight")
+    fig.savefig(output_dir+title+".png", bbox_inches="tight")
     # Now make sure you save the boxplot data (mean/IQR/Whiskers) in a csv, with info for that run
-    with open(dir+title+"residuals.csv", 'w') as f:
+    with open(output_dir+title+"residuals.csv", 'w') as f:
         header = ['key', 'mean', 'std', 'var', 'min', 'max', 'points']
         writer = csv.DictWriter(f, fieldnames=header)
         writer.writeheader()

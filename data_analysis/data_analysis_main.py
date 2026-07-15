@@ -1,6 +1,6 @@
 import pandas as pd
 import copy
-from plot_fairness import gini_coefficient, calc_envy_freeness, check_maximin_fairness, plot_residuals, plot_residuals_over_time, plot_gini_over_time
+from plot_fairness import gini_coefficient, calc_envy_freeness, check_maximin_fairness, plot_residuals, plot_residuals_over_time, plot_gini_over_time, normalise_for_fairness
 from plot_utility import plot_pareto_efficiency, plot_total_utility, plot_utility_over_time
 #from plot_limits import plot_data
 #from data_analysis.plot_principles import *
@@ -25,7 +25,6 @@ def single_timestep_graphs(now, args):
         # Grab the cons sets for this count
         cons_pvs_sets = glob.glob(args.cons_dir + "*_PERSONALS_"+str(i)+"*")
         cons_prip_sets = glob.glob(args.cons_dir + "*_METADATA_"+str(i)+"*")
-        print("cons_pvs_sets: ", cons_pvs_sets, "cons_prip_sets: ", cons_prip_sets, "")
         # CHECK IN DEBUG, Do we need to sort?
 
         # for each of the cons, load them into a df, and store in a dict of dfs with baseline names
@@ -41,8 +40,8 @@ def single_timestep_graphs(now, args):
             cons_sets[key] = copy.deepcopy(cons_df)
 
         ## Grab the agents PVS and concat them
-        ag_pvs = glob.glob(args.agents_pvs_dir + "*_PVS_*")
-        ag_prip = glob.glob(args.agents_prip_dir + "*_PriP_*")
+        ag_pvs = glob.glob(args.agents_pvs_dir + "*PVS*")
+        ag_prip = glob.glob(args.agents_prip_dir + "*PriP*")
         agents_pvs_df = pd.read_csv(ag_pvs[0])
         agents_prip_df = pd.read_csv(ag_prip[0])
         agents_df = pd.concat([agents_pvs_df, agents_prip_df], axis=1, join="inner")
@@ -54,6 +53,7 @@ def single_timestep_graphs(now, args):
         # Remove all cols that have the same two values (P__Universalism__Universalism, P__Benevolence__Benevolence, etc.)
         for col in values_list:
             col_split = col.split("__")
+            print("col_split: ", col_split)
             if len(col_split) == 3 and col_split[1] == col_split[2]:
                 values_list.remove(col)
             else:
@@ -74,27 +74,31 @@ def single_timestep_graphs(now, args):
         # Plot and run analysis
 
         ## RESIDUALS
-
+        ## For residuals, normalise all values passed to between 0-1
+        # Note that cons_sets is a dict of dfs, so we need to normalise each df separately
+        normalised_cons_sets = normalise_for_fairness(cons_sets)
+        normalised_agents_df = normalise_for_fairness([agents_df])
+        normalised_agents_df = normalised_agents_df[0]
         ### PVS Residuals
-        plot_residuals(cons_sets, agents_df, values_list+actions_list, "Entire PVS Residuals")
+        plot_residuals(cons_sets, agents_df, values_list+actions_list, "Entire PVS Residuals", args.output_dir)
         ### Just VAs
-        plot_residuals(cons_sets, agents_df, actions_list, "VAs Residuals")
+        plot_residuals(cons_sets, agents_df, actions_list, "VAs Residuals", args.output_dir)
         ### Just Ps
-        plot_residuals(cons_sets, agents_df, values_list, "Ps Residuals")
+        plot_residuals(cons_sets, agents_df, values_list, "Ps Residuals", args.output_dir)
 
         ### PriPs Residuals
-        plot_residuals(cons_sets, agents_df, ['Egalitarian'], "PriPs Residuals")
+        plot_residuals(cons_sets, agents_df, ['Egalitarian'], "PriPs Residuals", args.output_dir)
 
         # PVSs and PriPs
-        plot_residuals(cons_sets, agents_df, values_list+actions_list+['Egalitarian'], "PVSs and PriPs Residuals")
+        plot_residuals(cons_sets, agents_df, values_list+actions_list+['Egalitarian'], "PVSs and PriPs Residuals", args.output_dir)
 
         ## GINI
         ### PVS
-        gini_coefficient(cons_sets, agents_df, values_list+actions_list, "PVSs_and_PriPs.csv")
+        gini_coefficient(cons_sets, agents_df, values_list+actions_list, "PVSs_and_PriPs.csv", args.output_dir)
 
         ## UTILITY
         #plot_pareto_efficiency(cons_df, agents_df, list_of_params)
-        plot_total_utility(cons_sets, agents_df, values_list+actions_list, "Total Utility")
+        plot_total_utility(cons_sets, agents_df, values_list+actions_list, "Total Utility", args.output_dir)
         return
 
 def time_series_graphs(now, args):
@@ -109,7 +113,6 @@ def time_series_graphs(now, args):
         # Grab the cons sets for this count
         cons_pvs_sets = glob.glob(args.cons_dir + "*_PERSONALS_" + str(i) + "*")
         cons_prip_sets = glob.glob(args.cons_dir + "*_METADATA_" + str(i) + "*")
-        print("cons_pvs_sets: ", cons_pvs_sets, "cons_prip_sets: ", cons_prip_sets, "")
         # for each of the cons, load them into a df, and store in a dict of dfs with baseline names
         for j in range(0, len(cons_pvs_sets)):
             cons_pvs = pd.read_csv(cons_pvs_sets[j])
@@ -164,18 +167,18 @@ def time_series_graphs(now, args):
 
     ## RESIDUALS
     ### PVS Residuals
-    plot_residuals_over_time(consensus_list, agents_list, values_list+actions_list, "Time Series PVS Residuals")
+    plot_residuals_over_time(consensus_list, agents_list, values_list+actions_list, "Time Series PVS Residuals", dir=args.output_dir)
     ### Just VAs
-    plot_residuals_over_time(consensus_list, agents_list, actions_list, "Time Series VAs Residuals")
+    plot_residuals_over_time(consensus_list, agents_list, actions_list, "Time Series VAs Residuals", dir=args.output_dir)
     ### Just Ps
-    plot_residuals_over_time(consensus_list, agents_list, values_list, "Time Series Ps Residuals")
+    plot_residuals_over_time(consensus_list, agents_list, values_list, "Time Series Ps Residuals",dir=args.output_dir)
     ### PriPs Residuals
-    plot_residuals_over_time(consensus_list, agents_list, ['Egalitarian'], "Time Series PriPs Residuals")
+    plot_residuals_over_time(consensus_list, agents_list, ['Egalitarian'], "Time Series PriPs Residuals",dir=args.output_dir)
     # PVSs and PriPs
-    plot_residuals_over_time(consensus_list, agents_list, values_list+actions_list+['Egalitarian'], "Time Series PVSs and PriPs Residuals")
+    plot_residuals_over_time(consensus_list, agents_list, values_list+actions_list+['Egalitarian'], "Time Series PVSs and PriPs Residuals",dir=args.output_dir)
     ## GINI
     ### PVS
-    plot_gini_over_time(consensus_list, agents_list, values_list+actions_list, "Time Series Gini PVS")
+    plot_gini_over_time(consensus_list, agents_list, values_list+actions_list, "Time Series Gini PVS",dir=args.output_dir)
 
     ## UTILITY
     # plot_pareto_efficiency(cons_df, agents_df, list_of_params)
@@ -186,7 +189,7 @@ if __name__ == "__main__":
     parser = ap.ArgumentParser()
     ## FILE ARGS
     parser.add_argument('-single_timestep_plots', type=bool, default=False, help='Whether to run the single timestep plots')
-    parser.add_argument('-time_series_plots', type=bool, default=True, help='Whether to run the time series plots')
+    parser.add_argument('-time_series_plots', type=bool, default=False, help='Whether to run the time series plots')
     parser.add_argument('-cons_dir', type=str, default="/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/ESS_COUNTRY/4_val_3_act/", help='Directory pointing to the consensus files used in the experiment')
     parser.add_argument('-agents_pvs_dir', type=str, default="/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/ESS/Country/4_val_3_act/PVS/", help='Directory pointing to the agents csvs used in the experiment')
     parser.add_argument('-agents_prip_dir', type=str,default="/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/ESS/Country/4_val_3_act/PriP/", help='Directory pointing to the agents csvs used in the experiment')
