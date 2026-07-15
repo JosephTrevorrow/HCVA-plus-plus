@@ -11,15 +11,21 @@ import matplotlib.pyplot as plt
 import copy
 
 def normalise_for_fairness(sets):
-    normalised_sets = []
-    for df in sets:
+    normalised_sets = {}
+    for key, df in sets.items():
+        ## This only works when you know the max and min value of EVERY SINGLE CONS!!!
         # Normalise all data for consensus between 0-1
-        df = df.astype(float)
+        #df = df.astype(float)
         for column in df.columns:
-            min_val = df[column].min()
-            max_val = df[column].max()
+            if 'VA__' in column:
+                min_val = -1
+                max_val = 1
+            else:
+                min_val = 0
+                max_val = 1
             if column != 'p':
-                df[column] = (df[column] - min_val) / (max_val - min_val)
+                df[column]= (df[column] - min_val) / (max_val - min_val)
+        normalised_sets[key] = copy.deepcopy(df)
     return normalised_sets
 
 def gini_coefficient(cons_sets, agents_df, list_of_params, filename, dir):

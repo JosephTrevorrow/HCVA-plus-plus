@@ -145,6 +145,8 @@ if __name__ == '__main__':
             output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
             if p == np.inf:
                 save_metadata(filename_metadata, args, 0, p, 1, output_dir)
+            elif p == 1:
+                save_metadata(filename_metadata, args, 0, p, 0, output_dir)
             else:
                 save_metadata(filename_metadata, args, 0, p, p, output_dir)
 
