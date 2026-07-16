@@ -169,7 +169,7 @@ def mLp(A, b, ps, λs, weight=True):
 
 #### RUNNER FUNCTIONS HERE ######
 
-def find_transition_and_aggregate(P_list, J_list, w, filename_limits, e, args):
+def find_transition_and_aggregate(P_list, J_list, w, output_dir, filename_limits, e, args):
     """ Compute the transition point, and find an aggregation with that transition point P """
     # 1. Compute transition point
     p_list, dist_p_list, dist_inf_list, diff_list, t_point = transition_point(P_list, J_list, w, e)
@@ -178,6 +178,7 @@ def find_transition_and_aggregate(P_list, J_list, w, filename_limits, e, args):
         dist_p_list,
         dist_inf_list,
         diff_list,
+        output_dir,
         filename_limits)
     # 2. Aggregate and store to a file.
     p, u_pref, cons_pref = aggregate(P_list, J_list, w, t_point, True)
@@ -257,22 +258,21 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
     _, u_act, cons_act = aggregate(P_list, J_list, w, consensus_p, False)
     return p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference
 
-def find_slm_and_aggregate(P_list, J_list, w, prip_csv, transition_p, args):
+def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
     """ Compute aggregation with Salas-Molina et al. baseline (Many P's) """
-    principles = pd.read_csv(prip_csv)
+    principle_preferences = prip_df["Egalitarian"].astype("float").values.tolist()
     # Convert the principles (which are preferences) into numbers (need to first find transition point
     #print("Principles: ", principles)
     if transition_p is None:
         _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
-    list_of_principles = principles["Egalitarian"].to_list()
     converted_principles = []
-    for principle in list_of_principles:
+    for principle in principle_preferences:
         # Find p by finding the p the relative distance away from the transition point.
         converted_p = pow(transition_p, (2 * principle))
         # Round to 2 d.p. for fairness
         converted_p = round(converted_p, 2)
+        converted_p = max(1, converted_p)
         converted_principles.append(float(converted_p))
-        # TODO: more than 11 values? then it breaks. I'm gonna push this code onto isambard to see what it does
     p, u_pref, cons_pref = aggregate_slm(P_list, J_list, w, converted_principles, True)
     _, u_act, cons_act = aggregate_slm(P_list, J_list, w, converted_principles, False)
     return p, u_pref, cons_pref, u_act, cons_act, transition_p, converted_principles

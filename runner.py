@@ -83,24 +83,22 @@ if __name__ == '__main__':
         print("T...")
         filename = str("T_PERSONALS_" +str(i)+"_"+ now + ".csv")
         filename_metadata = str("T_METADATA_" +str(i)+"_"+ now + ".csv")
-        filename_limits = output_dir+now + "_" + str(i)+ "_limits.csv"
+        filename_limits = now + "_" + str(i)+ "_limits.csv"
         p, u_pref, cons_pref, u_act, cons_act, t_point = find_transition_and_aggregate(P_list, J_list, w,
-                                                                                       filename_limits, args.e, args)
+                                                                                       output_dir, filename_limits, args.e, args)
         output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
         save_metadata(filename_metadata, args, t_point, t_point, 0.5, output_dir)
         print("-------------")
         ## SLM
-        """
         print("SLM...")
         filename = str("SLM_PERSONALS_"+str(i)+"_"+ now + ".csv")
         filename_metadata = str("SLM_METADATA_"+str(i)+"_"+ now + ".csv")
-        p, u_pref, cons_pref, u_act, cons_act, transition_p, converted_principles = find_slm_and_aggregate(P_list, J_list, w, prip, transition_p, args)
+        p, u_pref, cons_pref, u_act, cons_act, transition_p, converted_principles = find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args)
         ## Chop off half of cons_act, as output format has VA_p, and then VA_n. We are not interested in N, so we disregard
         cons_act = cons_act[:len(cons_act) // 2]
         output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
         save_metadata(filename_metadata, args, 0, converted_principles, 0, output_dir)
         print("-------------")
-        """
         ## HCVA
         print("HCVA...")
         filename = str("HCVA_PERSONALS_"+str(i)+"_"+now + ".csv")

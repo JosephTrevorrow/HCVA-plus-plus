@@ -54,7 +54,7 @@ def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_
             prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)
         # add some random noise according to sigma_noise, and clip the noise
         prip += rng.normal(0, sigma_noise, size=1)
-        np.clip(prip, -1, 1, out=prip)
+        np.clip(prip, 0, 1, out=prip)
         prips[agent] = prip[0]
     return prips
 
@@ -124,11 +124,17 @@ def generate_vas(agent_ids, n_values, n_actions, va_p, va_mu):
             agent_vas[agent] = np.append(agent_vas[agent], [copy.deepcopy(va)], axis=0)
     return agent_vas
 
-def save_pvs(ps, vas, agents_ids, n_values, n_acts, filename):
+def save_pvs(ps, vas, agents_ids, n_values, n_acts, filename, output_dir):
     # Values + Preferences + Action Judgements
     now = str(date.today())
     values_fn = now + "_"+filename + "_PVS.csv"
-    with open(values_fn, 'w', newline='') as csvfile:
+    print("The output dir is: ", output_dir, " and the filename is: ", values_fn, "")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print("Created directory: " + output_dir)
+    else:
+        print("Directory already exists: " + output_dir)
+    with open(output_dir+values_fn, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         # Header
         header = ["country"]
@@ -154,13 +160,18 @@ def save_pvs(ps, vas, agents_ids, n_values, n_acts, filename):
                 for k in range(n_values):
                     row.append(float(VA[i, k]))
             writer.writerow(row)
-    return values_fn
+    return output_dir+values_fn
 
-def save_prips(prips, agents_ids, filename):
+def save_prips(prips, agents_ids, filename, output_dir):
     now = str(date.today())
     principles_fn = now+"_"+filename+"_PriP.csv"
-    # Principles:
-    with open(principles_fn, 'w', newline='') as csvfile:
+    print("The output dir is: ", output_dir, " and the filename is: ", filename, "")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print("Created directory: " + output_dir)
+    else:
+        print("Directory already exists: " + output_dir)
+    with open(output_dir+principles_fn, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         # Header
         header = ["country", "Egalitarian"]
@@ -173,7 +184,7 @@ def save_prips(prips, agents_ids, filename):
     return
 
 def generate(n_values, n_actions, n_agents, pvs_prip=0.3, va_p=0.3,p_group_factor=0.5,
-             mu_p=0.75, va_mu=0.75,  sigma_prip=0.08, pvs_filename="default", prip_filename="default"):
+             mu_p=0.75, va_mu=0.75,  sigma_prip=0.08, pvs_filename="default", prip_filename="default", pvs_output_dir="", prip_output_dir=""):
     """Generates a synthetic data distribution.
     - n_values: number of values
     - n_actions: number of actions
@@ -193,42 +204,44 @@ def generate(n_values, n_actions, n_agents, pvs_prip=0.3, va_p=0.3,p_group_facto
     # The remaining values are demoted. This can always be random.
     vas = generate_vas(agent_ids, n_values, n_actions, va_p, va_mu)
     ## Step 1.3 Given the ps and vas, save the pvs to a csv.
-    pvs_dir = save_pvs(ps, vas, agent_ids, n_values, n_actions, pvs_filename)
+    pvs_dir = save_pvs(ps, vas, agent_ids, n_values, n_actions, pvs_filename, pvs_output_dir)
 
     ## Step 3: For every agent's PVS, we can use the value aggregation code to find aggregations of 1 and inf. We find the consensus that minimises
     # the agent's residual. This consensus (when converted back to a preference) is the mean point of the normal distribution.
     prips = generate_prips(agent_ids, ps, vas, pvs_dir, n_values, n_actions, pvs_prip)
     ## Step 3.1: Save prips to a csv.
-    save_prips(prips, agent_ids, prip_filename)
+    save_prips(prips, agent_ids, prip_filename, prip_output_dir)
     return ps, vas, prips, agent_ids
 
 if __name__ == "__main__":
+    output_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/"
+
     ### Initial: agents, values, actions
     for ag in range(2, 30,1):
         generate(n_values=4, n_actions=3, n_agents=ag, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
-                mu_p=0.75, va_mu=0.75, pvs_filename="vary_agents_"+str(ag), prip_filename="vary_agents_"+str(ag))
+                mu_p=0.75, va_mu=0.75, pvs_filename="vary_agents_"+str(ag), prip_filename="vary_agents_"+str(ag), pvs_output_dir=output_dir+"vary_agents/PVS/", prip_output_dir=output_dir+"vary_agents/PriP/")
     for val in range(2,10,1):
         generate(n_values=val, n_actions=3, n_agents=30, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
-                mu_p=0.75, va_mu=0.75, pvs_filename="vary_values_"+str(val), prip_filename="vary_values_"+str(val))
+                mu_p=0.75, va_mu=0.75, pvs_filename="vary_values_"+str(val), prip_filename="vary_values_"+str(val), pvs_output_dir=output_dir+"vary_vals/PVS/", prip_output_dir=output_dir+"vary_vals/PriP/")
     for act in range(1, 10, 1):
         generate(n_values=4, n_actions=act, n_agents=30, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
-                 mu_p=0.75, va_mu=0.75, pvs_filename="vary_actions_" + str(act), prip_filename="vary_actions_" + str(act))
+                 mu_p=0.75, va_mu=0.75, pvs_filename="vary_actions_" + str(act), prip_filename="vary_actions_" + str(act), pvs_output_dir=output_dir+"vary_acts/PVS/", prip_output_dir=output_dir+"vary_acts/PriP/")
 
     ## MAJ/MIN SPLIT
     grp_facts = np.linspace(0.5, 1, 6)
     for grp_fact in grp_facts:
         generate(n_values=4, n_actions=3, n_agents=30, pvs_prip=0.3, va_p=0.3, p_group_factor=grp_fact,
-                 mu_p=0.75, va_mu=0.75, pvs_filename="vary_grp_fact_"+str(grp_fact), prip_filename="vary_grp_fact_"+str(grp_fact))
+                 mu_p=0.75, va_mu=0.75, pvs_filename="vary_grp_fact_"+str(grp_fact), prip_filename="vary_grp_fact_"+str(grp_fact), pvs_output_dir=output_dir+"vary_grp_fact/PVS/", prip_output_dir=output_dir+"vary_grp_fact/PriP/")
 
     ## EXTREME PVSs
     mupvamu = np.linspace(0.6, 1, 6)
     for mup_vamu in mupvamu:
         generate(n_values=4, n_actions=3, n_agents=30, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
-                 mu_p=mup_vamu, va_mu=mup_vamu, pvs_filename="vary_mup_vamu_"+str(mup_vamu), prip_filename="vary_mup_vamu_"+str(mup_vamu))
+                 mu_p=mup_vamu, va_mu=mup_vamu, pvs_filename="vary_mup_vamu_"+str(mup_vamu), prip_filename="vary_mup_vamu_"+str(mup_vamu), pvs_output_dir=output_dir+"vary_mup_vamu/PVS/", prip_output_dir=output_dir+"vary_mup_vamu/PriP/")
 
     ## PriP NOISE
     pvs_prips = np.linspace(0, 1, 11)
     for pvs_prip in pvs_prips:
         generate(n_values=4, n_actions=3, n_agents=30, pvs_prip=pvs_prip, va_p=0.3, p_group_factor=0.5,
-                 mu_p=0.75, va_mu=0.75, pvs_filename="vary_pvs_prip_"+str(pvs_prip), prip_filename="vary_pvs_prip_"+str(pvs_prip))
+                 mu_p=0.75, va_mu=0.75, pvs_filename="vary_pvs_prip_"+str(pvs_prip), prip_filename="vary_pvs_prip_"+str(pvs_prip), pvs_output_dir=output_dir+"vary_pvs_prip/PVS/", prip_output_dir=output_dir+"vary_pvs_prip/PriP/")
 
