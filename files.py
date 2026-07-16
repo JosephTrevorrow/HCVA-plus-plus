@@ -81,7 +81,7 @@ def simple_output_file(p, y, name):
     csvfile.close()
     return None
 
-def limit_output(p, dist_p_list, dist_inf_list, diff_list, name):
+def limit_output(p, dist_p_list, dist_inf_list, diff_list, output_dir, name):
     """
     This function writes the values computed finding the limit P, and transition points (-t True)
     INPUT: p -- int, y -- list (measure), name -- str (name of the file)
@@ -91,6 +91,13 @@ def limit_output(p, dist_p_list, dist_inf_list, diff_list, name):
     for i in range(len(p)):
         el = [p[i], dist_p_list[i], dist_inf_list[i], diff_list[i]]
         csv_rows.append(el)
+
+    print("The output dir is: ", output_dir, " and the filename is: ", name, "")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print("Created directory: " + output_dir)
+    else:
+        print("Directory already exists: " + output_dir)
     with open(name, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerows(csv_rows)

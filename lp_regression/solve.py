@@ -275,7 +275,7 @@ def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
         converted_principles.append(float(converted_p))
     p, u_pref, cons_pref = aggregate_slm(P_list, J_list, w, converted_principles, True)
     _, u_act, cons_act = aggregate_slm(P_list, J_list, w, converted_principles, False)
-    return p, u_pref, cons_pref, u_act, cons_act, transition_p, converted_principles
+    return p, u_pref, cons_pref, u_act, cons_act, converted_principles
 
 def transition_point(P_list, J_list, w, e):
     """
