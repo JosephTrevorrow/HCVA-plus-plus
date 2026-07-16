@@ -195,8 +195,8 @@ def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args):
     incr = 0.1
     j = 0
     # This version of epsilon is the same as used in original paper, defined arbitrarily in that case.
-    epsilon = 0.05
-    for i in np.arange(0, 10, incr):
+    epsilon = args.e
+    for i in np.arange(1, 10, incr):
         cons = cons_list[j]
         if __debug__:
             print("cons: ", cons)
@@ -232,17 +232,13 @@ def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args):
     _, u_act, cons_act = aggregate(P_list, J_list, w, con_p, False)
     return p, u_pref, u_act, cons_pref, cons_act, con_p
 
-def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_csv, transition_p, args):
+def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
     """ Compute the HCVA++ consensus principle, and find an aggregation with that consensus principle P """
     # 1. Find the consensus principle $p$
     # 1.1 Find the consensus principle preference
-    principle_preferences = []
-    with open(prip_csv) as csv_file:
-        reader = csv.reader(csv_file)
-        next(reader)  # get rid of the header row
-        for row in reader:
-            temp_preference = float(row[1])
-            principle_preferences.append(copy.copy(temp_preference))
+    principle_preferences = prip_df["Egalitarian"].astype("float").values.tolist()
+    print("Principle preferences: ", principle_preferences)
+
     consensus_preference = sum(principle_preferences) / len(principle_preferences)
     consensus_preference = round(consensus_preference, 2)
     print("HCVA++ Consensus preference is: ", consensus_preference)

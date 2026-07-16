@@ -50,8 +50,6 @@ if __name__ == '__main__':
     prip_sets.sort()
     print("PriP Sets: ", prip_sets, " and len of PriP sets: ", len_of_prip_sets,)
 
-    prip = prip_sets[0]
-
     ## Big for loop here running each aggregation and then saving
     # For the max of PriP or pvs sets,
     for i in range(0, max(len(pvs_sets), len(prip_sets))):
