@@ -117,7 +117,7 @@ if __name__ == '__main__':
         print("HCVA++...")
         filename = str("HCVApp_PERSONALS_" +str(i)+"_"+now + ".csv")
         filename_metadata = str("HCVApp_METADATA_" +str(i)+"_"+now + ".csv")
-        p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference = find_hcva_pp_and_aggregate(P_list, J_list, w, prip, t_point, args)
+        p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference = find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, t_point, args)
         output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
         save_metadata(filename_metadata, args, transition_p, consensus_p, consensus_preference, output_dir)
         print("-------------")

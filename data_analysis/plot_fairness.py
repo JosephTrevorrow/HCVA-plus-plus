@@ -165,12 +165,7 @@ def plot_residuals_over_time(consensus_list, agents_list, list_of_params, title,
             #points = []
             sum_of_residuals = 0
             for agent in agents_single.iterrows():
-                # For every col, match these two dfs and plot the residuals
-                temp_residual = cons_df[list_of_params] - agent[1][list_of_params]
-                # Sum up all of the params into one number
-                temp_residual = temp_residual.to_numpy()
-                temp_residual = np.abs(temp_residual).sum()
-                #points.append(copy.copy(temp_residual))
+                temp_residual = np.abs(agent[1][list_of_params].to_numpy() - cons_df[list_of_params].to_numpy()).sum()
                 sum_of_residuals += temp_residual
             lines[key].append(sum_of_residuals)
     # Make the line graph

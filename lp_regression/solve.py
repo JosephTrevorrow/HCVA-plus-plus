@@ -196,7 +196,7 @@ def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args):
     j = 0
     # This version of epsilon is the same as used in original paper, defined arbitrarily in that case.
     epsilon = 0.05
-    for i in np.arange(1 + incr, 10, incr):
+    for i in np.arange(0, 10, incr):
         cons = cons_list[j]
         if __debug__:
             print("cons: ", cons)
@@ -245,7 +245,7 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_csv, transition_p, args):
             principle_preferences.append(copy.copy(temp_preference))
     consensus_preference = sum(principle_preferences) / len(principle_preferences)
     consensus_preference = round(consensus_preference, 2)
-    #print("HCVA++ Consensus preference is: ", consensus_preference)
+    print("HCVA++ Consensus preference is: ", consensus_preference)
     # 1.2 Aggregate personal values/action judgements to find the transition point - Not needed if t_point provided
     if transition_p is None:
         _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
@@ -254,7 +254,7 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_csv, transition_p, args):
     consensus_p = pow(transition_p, (2 * consensus_preference))
     # Round to 2 d.p. for fairness
     consensus_p = round(consensus_p, 2)
-    #print("Consensus p is: ", consensus_p)
+    print("Consensus p is: ", consensus_p)
     # 2. Aggregate all the preference values and action judgements submitted by agents
     # using the average rule as described in the paper. Do this twice, once for vals, other for action judgements
     p, u_pref, cons_pref = aggregate(P_list, J_list, w, consensus_p, True)

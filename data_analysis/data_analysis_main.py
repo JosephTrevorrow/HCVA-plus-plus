@@ -50,21 +50,22 @@ def single_timestep_graphs(now, args):
         # Remove irrelevant cols from every df. Every df will have the same cols, so we find them for one, and copy this
         # note, we will use values_list and actions_list to filter our data analysis plots.
         values_list = list([col for col in cons_df.columns if 'P__' in col])
+        cleaned_values_list = copy.deepcopy(values_list)
         # Clean list_of_params
         # Remove all cols that have the same two values (P__Universalism__Universalism, P__Benevolence__Benevolence, etc.)
         for col in values_list:
             col_split = col.split("__")
             if len(col_split) == 3 and col_split[1] == col_split[2]:
-                values_list.remove(col)
+                cleaned_values_list.remove(col)
             else:
                 # Not dropped, so drop the symmetrical col (P__A__B == P__B__A)
                 symmetrical_col = "P__" + col_split[2] + "__" + col_split[1]
                 if col in values_list:
-                    values_list.remove(col)
+                    cleaned_values_list.remove(symmetrical_col)
         actions_list = list([col for col in cons_df.columns if 'VA__' in col])
-        #agents_cols_to_keep = values_list + actions_list + ["country"] + ["Egalitarian"]
-        agents_cols_to_keep = values_list + actions_list + ["Egalitarian"]
-        cons_cols_to_keep = values_list + actions_list + ["Egalitarian"]
+        #agents_cols_to_keep = cleaned_values_list + actions_list + ["country"] + ["Egalitarian"]
+        agents_cols_to_keep = cleaned_values_list + actions_list + ["Egalitarian"]
+        cons_cols_to_keep = cleaned_values_list + actions_list + ["Egalitarian"]
 
         # cons_sets will have "Egalitarian" columns that are empty. Will need to account for this.
         cons_sets = {k: v[cons_cols_to_keep] for k, v in cons_sets.items()}
@@ -81,26 +82,26 @@ def single_timestep_graphs(now, args):
         normalised_agents_df = normalise_agents(agents_df)
 
         ### PVS Residuals
-        plot_residuals(normalised_cons_sets, normalised_agents_df, values_list+actions_list, "Entire PVS Residuals", args.output_dir)
+        plot_residuals(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list, "Entire PVS Residuals", args.output_dir)
         ### Just VAs
         plot_residuals(normalised_cons_sets, normalised_agents_df, actions_list, "VAs Residuals", args.output_dir)
         ### Just Ps
-        plot_residuals(normalised_cons_sets, normalised_agents_df, values_list, "Ps Residuals", args.output_dir)
+        plot_residuals(normalised_cons_sets, normalised_agents_df, cleaned_values_list, "Ps Residuals", args.output_dir)
 
         ### PriPs Residuals
         plot_residuals(normalised_cons_sets, normalised_agents_df, ['Egalitarian'], "PriPs Residuals", args.output_dir)
 
         # PVSs and PriPs
-        plot_residuals(normalised_cons_sets, normalised_agents_df, values_list+actions_list+['Egalitarian'], "PVSs and PriPs Residuals", args.output_dir)
+        plot_residuals(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list+['Egalitarian'], "PVSs and PriPs Residuals", args.output_dir)
 
         ## GINI
         ### PVS
-        gini_coefficient(normalised_cons_sets, normalised_agents_df, values_list+actions_list, "PVSs_and_PriPs.csv", args.output_dir)
+        gini_coefficient(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list, "PVSs_and_PriPs.csv", args.output_dir)
 
-        ## UTILITY
+        ## UTILITY - FIX THIS!
         #plot_pareto_efficiency(cons_df, agents_df, list_of_params)
-        plot_total_utility(normalised_cons_sets, normalised_agents_df, values_list+actions_list, "Total Utility", args.output_dir)
-        return
+        plot_total_utility(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list, "Total Utility", args.output_dir)
+    return
 
 def time_series_graphs(now, args):
 
@@ -149,20 +150,22 @@ def time_series_graphs(now, args):
     #  Every df will have the same cols, so we find them for one, and copy this
     # note, we will use values_list and actions_list to filter our data analysis plots.
     values_list = list([col for col in consensus_list[0]["HCVA"].columns if 'P__' in col])
+    cleaned_values_list = copy.deepcopy(values_list)
     # Clean list_of_params
     # Remove all cols that have the same two values (P__Universalism__Universalism, P__Benevolence__Benevolence, etc.)
     for col in values_list:
         col_split = col.split("__")
         if len(col_split) == 3 and col_split[1] == col_split[2]:
-            values_list.remove(col)
+            cleaned_values_list.remove(col)
         else:
             # Not dropped, so drop the symmetrical col (P__A__B == P__B__A)
             symmetrical_col = "P__" + col_split[2] + "__" + col_split[1]
             if col in values_list:
-                values_list.remove(col)
-    actions_list = list([col for col in cons_df.columns if 'VA__' in col])
-    agents_cols_to_keep = values_list + actions_list + ["Egalitarian"]
-    cons_cols_to_keep = values_list + actions_list + ["Egalitarian"]
+                cleaned_values_list.remove(symmetrical_col)
+    ## Again, because every method will have the exact same col names, we just use HCVA here.
+    actions_list = list([col for col in consensus_list[0]["HCVA"].columns if 'VA__' in col])
+    agents_cols_to_keep = cleaned_values_list + actions_list + ["Egalitarian"]
+    cons_cols_to_keep = cleaned_values_list + actions_list + ["Egalitarian"]
 
     # Filter using cols_to_keeps (Agents list and cons list will be the same)
     for i in range(0, len(agents_list)):
@@ -173,29 +176,30 @@ def time_series_graphs(now, args):
     normalised_agents_df = normalise_agents_time_series(agents_list)
     ## RESIDUALS
     ### PVS Residuals
-    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, values_list+actions_list, "Time Series PVS Residuals", dir=args.output_dir)
+    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list, "Time Series PVS Residuals", dir=args.output_dir)
     ### Just VAs
     plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, actions_list, "Time Series VAs Residuals", dir=args.output_dir)
     ### Just Ps
-    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, values_list, "Time Series Ps Residuals",dir=args.output_dir)
+    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, cleaned_values_list, "Time Series Ps Residuals",dir=args.output_dir)
     ### PriPs Residuals
     plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, ['Egalitarian'], "Time Series PriPs Residuals",dir=args.output_dir)
     # PVSs and PriPs
-    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, values_list+actions_list+['Egalitarian'], "Time Series PVSs and PriPs Residuals",dir=args.output_dir)
+    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list+['Egalitarian'], "Time Series PVSs and PriPs Residuals",dir=args.output_dir)
     ## GINI
     ### PVS
-    plot_gini_over_time(normalised_cons_sets, normalised_agents_df, values_list+actions_list, "Time Series Gini PVS",dir=args.output_dir)
+    plot_gini_over_time(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list, "Time Series Gini PVS",dir=args.output_dir)
 
     ## UTILITY
     # plot_pareto_efficiency(cons_df, agents_df, list_of_params)
-    #plot_total_utility(cons_sets, agents_df, values_list + actions_list, "Total Utility")
+    #plot_total_utility(cons_sets, agents_df, cleaned_values_list + actions_list, "Total Utility")
+    # TODO: plot the utility over time
     return
 
 if __name__ == "__main__":
     parser = ap.ArgumentParser()
     ## FILE ARGS
-    parser.add_argument('-single_timestep_plots', type=bool, default=False, help='Whether to run the single timestep plots')
-    parser.add_argument('-time_series_plots', type=bool, default=False, help='Whether to run the time series plots')
+    parser.add_argument('-single_timestep_plots', action='store_true', help='Whether to run the single timestep plots')
+    parser.add_argument('-time_series_plots', action='store_true', help='Whether to run the time series plots')
     parser.add_argument('-cons_dir', type=str, default="/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/ESS_COUNTRY/4_val_3_act/", help='Directory pointing to the consensus files used in the experiment')
     parser.add_argument('-agents_pvs_dir', type=str, default="/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/ESS/Country/4_val_3_act/PVS/", help='Directory pointing to the agents csvs used in the experiment')
     parser.add_argument('-agents_prip_dir', type=str,default="/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/ESS/Country/4_val_3_act/PriP/", help='Directory pointing to the agents csvs used in the experiment')

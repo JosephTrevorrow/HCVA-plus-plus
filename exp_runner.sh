@@ -3,14 +3,14 @@
 # Experiment ``ESS Country-level'': Run on ESS data, at a country level abstraction (default)
 
 ## Data
-python -O runner.py -pvs_dir "value_systems/ESS/Country/4_val_2_act/PVS/" -prip_dir "value_systems/ESS/Country/4_val_2_act/PriP/" -n_values 4 -n_actions 2 -e 1e-4 -output_dir "/results/ESS_COUNTRY/4_val_2_acts/"
+#python -O runner.py -pvs_dir "value_systems/ESS/Country/4_val_2_act/PVS/" -prip_dir "value_systems/ESS/Country/4_val_2_act/PriP/" -n_values 4 -n_actions 2 -e 1e-4 -output_dir "/results/ESS_COUNTRY/4_val_2_acts/"
 
-python -O runner.py -pvs_dir "value_systems/ESS/Country/4_val_3_act/PVS/" -prip_dir "value_systems/ESS/Country/4_val_3_act/PriP/" -n_values 4 -n_actions 3 -e 1e-4 -output_dir "/results/ESS_COUNTRY/4_val_3_acts/"
+#python -O runner.py -pvs_dir "value_systems/ESS/Country/4_val_3_act/PVS/" -prip_dir "value_systems/ESS/Country/4_val_3_act/PriP/" -n_values 4 -n_actions 3 -e 1e-4 -output_dir "/results/ESS_COUNTRY/4_val_3_acts/"
 
-python -O runner.py -pvs_dir "value_systems/ESS/Country/10_val_2_act/PVS/" -prip_dir "value_systems/ESS/Country/10_val_2_act/PriP/" -n_values 10 -n_actions 2 -e 1e-4 -output_dir "/results/ESS_COUNTRY/10_val_2_acts/"
+#python -O runner.py -pvs_dir "value_systems/ESS/Country/10_val_2_act/PVS/" -prip_dir "value_systems/ESS/Country/10_val_2_act/PriP/" -n_values 10 -n_actions 2 -e 1e-4 -output_dir "/results/ESS_COUNTRY/10_val_2_acts/"
 
 ##### VALE EXPERIMENTS, VALIDATION ##########
-python -O runner.py -pvs_dir "value_systems/VALE/PVS/" -prip_dir "value_systems/VALE/PriP/" -n_values 2 -n_actions 1 -e 1e-4 -output_dir "/results/VALE/"
+#python -O runner.py -pvs_dir "value_systems/VALE/PVS/" -prip_dir "value_systems/VALE/PriP/" -n_values 2 -n_actions 1 -e 1e-4 -output_dir "/results/VALE/"
 
 ###### SYNTHETIC DATA EXP. ######
 
