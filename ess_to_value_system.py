@@ -26,8 +26,9 @@ def process_all_country_principles(ess_df, country_col_name, values_dict):
                 # For principles (inverted: 1 = worst, 5 = best)
                 if question == "sofrwrk":
                     # "Society fair when hard-working people earn *more* than others" (1 = agree, 5 = disagree)
-                    # We don't flip this questionm because we want higher values to be better. So disagrement with this
+                    # We don't flip this questionn because we want higher values to be better. So disagrement with this
                     # question is an indication of egalitarianism.
+                    # This obviously does nothing, but kept here for clarity.
                     country_df[question] = country_df[question]
                 elif question == "sofrdst" or question == "sofrpr":
                     # "Society fair when wealth equally distributed/the poor are cared for regardless of what they give back"
@@ -179,9 +180,9 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
             mean = country_df[action_id].mean()
             mean_score = mean.iloc[0]
             # Centre the scores between -1 and 1. action_id is always a list of size 1
-            # immigration is between 1-10, where 10 is GOOD, 1 is BAD, other actions are between 1 (good) - 5 (bad)
+            # immigration is between 0-10, where 10 is GOOD, 1 is BAD, other actions are between 1 (good) - 5 (bad)
             if action_id[0] == "imbgeco":
-                # Because immigration is scored is between 1-10
+                # Because immigration is scored is between 0-10
                 centred_score = (mean_score/5)-1
             ## Vteumgb is not used in the paper.
             elif action_id[0] == "vteumbgb":
@@ -248,7 +249,7 @@ if __name__ == '__main__':
     }
     # Principles are different than values, as instead of like me/not like me, it is agree/disagree.
     principle_dict = {
-        "Egalitarian_3" : ["sofrdst", "sofrpr", "sofrwrk"],
+        "Egalitarian" : ["sofrdst", "sofrpr", "sofrwrk"],
         #"Egalitarian_2" : ["sofrdst", "sofrpr"],
         #"eq_dist": ["sofrdst"],
         #"hard_work": ["sofrwrk"],
@@ -284,7 +285,7 @@ if __name__ == '__main__':
     """
     actions_dict = {
         'immigration': ["imbgeco"], # Immigration bad or good for the country's economy
-        'lgbt_adopt' : ["hmsacld"], # Gay men and lesbians should have the same rights to adopt children as straight couples
+        #'lgbt_adopt' : ["hmsacld"], # Gay men and lesbians should have the same rights to adopt children as straight couples
         'lgbt_freedom' : ["freehms"], # Gay men and lesbians should be free to live life as they wish
     }
     """
@@ -327,8 +328,8 @@ if __name__ == '__main__':
 
     dicts = [values_dict, principle_dict, actions_dict]
     all_interested_cols = []
-    for dict in dicts:
-        for _, item_list in dict.items():
+    for d in dicts:
+        for _, item_list in d.items():
                 all_interested_cols.extend(item_list)
     # Remove duplicates
     all_interested_cols = list(dict.fromkeys(all_interested_cols))
