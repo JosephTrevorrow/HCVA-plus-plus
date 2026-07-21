@@ -214,7 +214,7 @@ def generate(n_values, n_actions, n_agents, pvs_prip=0.3, va_p=0.3,p_group_facto
     return ps, vas, prips, agent_ids
 
 if __name__ == "__main__":
-    output_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/"
+    output_dir = "value_systems/Synthetic/"
     for run in range(100):
         ### Initial: agents, values, actions
         for ag in range(2, 30,1):
