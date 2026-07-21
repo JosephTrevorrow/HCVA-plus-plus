@@ -30,123 +30,129 @@ if __name__ == '__main__':
     now = str(date.today())
     print(now)
 
-    ## Begin by finding a list of all pvs and prips
-    pvs_sets = []
-    pvs_dir = args.pvs_dir
-    for file in os.listdir(pvs_dir):
-        if file.endswith(".csv"):
-            pvs_sets.append(pvs_dir + file)
-    len_of_pvs_sets = len(pvs_sets)
-    pvs_sets.sort()
-    print("PVS Sets: ", pvs_sets, " and len of pvs sets: ", len_of_pvs_sets,)
-    pvs = pvs_sets[0]
+    # Because we are going to run many experiments, we put this in a big for loop
+    # find all the dirs in pvs (will be same for prip)
+    for current_dir in os.listdir(args.pvs_dir):
+        if os.path.isdir(args.pvs_dir+current_dir):
+            print("Found dir: ", args.pvs_dir+current_dir)
 
-    prip_sets = []
-    prip_dir = args.prip_dir
-    for file in os.listdir(prip_dir):
-        if file.endswith(".csv"):
-            prip_sets.append(prip_dir + file)
-    len_of_prip_sets = len(prip_sets)
-    prip_sets.sort()
-    print("PriP Sets: ", prip_sets, " and len of PriP sets: ", len_of_prip_sets,)
+        ## Begin by finding a list of all pvs and prips
+        pvs_sets = []
+        pvs_dir = args.pvs_dir+current_dir+"/"
+        for file in os.listdir(pvs_dir):
+            if file.endswith(".csv"):
+                pvs_sets.append(pvs_dir + file)
+        len_of_pvs_sets = len(pvs_sets)
+        pvs_sets.sort()
+        print("PVS Sets: ", pvs_sets, " and len of pvs sets: ", len_of_pvs_sets,)
+        pvs = pvs_sets[0]
 
-    ## Big for loop here running each aggregation and then saving
-    # For the max of PriP or pvs sets,
-    for i in range(0, max(len(pvs_sets), len(prip_sets))):
-        print("Iteration: ",i, " of ", max(len(pvs_sets), len(prip_sets)),)
-        # Update the num_vals and num_actions if necessary
-        if i < len(n_values_list):
-            n_values = n_values_list[i]
-        if i < len(n_actions_list):
-            n_actions = n_actions_list[i]
+        prip_sets = []
+        prip_dir = args.prip_dir+current_dir+"/"
+        for file in os.listdir(prip_dir):
+            if file.endswith(".csv"):
+                prip_sets.append(prip_dir + file)
+        len_of_prip_sets = len(prip_sets)
+        prip_sets.sort()
+        print("PriP Sets: ", prip_sets, " and len of PriP sets: ", len_of_prip_sets,)
 
-        # Preprocess the csvs
+        ## Big for loop here running each aggregation and then saving
+        # For the max of PriP or pvs sets,
+        for i in range(0, max(len(pvs_sets), len(prip_sets))):
+            print("Iteration: ",i, " of ", max(len(pvs_sets), len(prip_sets)),)
+            # Update the num_vals and num_actions if necessary
+            if i < len(n_values_list):
+                n_values = n_values_list[i]
+            if i < len(n_actions_list):
+                n_actions = n_actions_list[i]
 
-        ## PVS
-        print("PREPROCESSING PVS...")
-        P_list, J_list, w, country_dict = FormalisationObjects(filename=pvs_sets[i], delimiter=',', weights=args.w,
-                                                               n_values=n_values, n_actions=n_actions)
-        pvs_df = pd.read_csv(pvs)
-        ### Below is only used for col headings when saving to a file
-        values_list = list([col for col in pvs_df.columns if 'P__' in col])
-        actions_list = list([col for col in pvs_df.columns if 'VA__' in col])
-        ## PriPs
-        prip_df = pd.read_csv(prip_sets[i])
-        print("-------------")
+            # Preprocess the csvs
 
-        # Do a full run of aggregations and then cache it, to speed up computation
+            ## PVS
+            print("PREPROCESSING PVS...")
+            P_list, J_list, w, country_dict = FormalisationObjects(filename=pvs_sets[i], delimiter=',', weights=args.w,
+                                                                   n_values=n_values, n_actions=n_actions)
+            pvs_df = pd.read_csv(pvs)
+            ### Below is only used for col headings when saving to a file
+            values_list = list([col for col in pvs_df.columns if 'P__' in col])
+            actions_list = list([col for col in pvs_df.columns if 'VA__' in col])
+            ## PriPs
+            prip_df = pd.read_csv(prip_sets[i])
+            print("-------------")
 
-        # Run aggregations
+            # Do a full run of aggregations and then cache it, to speed up computation
 
-        ## T
-        # We do T first because we will use the t_point for other methods
-        print("T...")
-        filename = str("T_PERSONALS_" +str(i)+"_"+ now + ".csv")
-        filename_metadata = str("T_METADATA_" +str(i)+"_"+ now + ".csv")
-        filename_limits = now + "_" + str(i)+ "_limits.csv"
-        p, u_pref, cons_pref, u_act, cons_act, t_point = find_transition_and_aggregate(P_list, J_list, w,
-                                                                                       output_dir, filename_limits, args.e, args)
-        output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
-        save_metadata(filename_metadata, args, t_point, t_point, 0.5, output_dir)
-        print("-------------")
-        ## SLM
-        print("SLM...")
-        filename = str("SLM_PERSONALS_"+str(i)+"_"+ now + ".csv")
-        filename_metadata = str("SLM_METADATA_"+str(i)+"_"+ now + ".csv")
-        p, u_pref, cons_pref, u_act, cons_act, converted_principles = find_slm_and_aggregate(P_list, J_list, w, prip_df, t_point, args)
-        ## Chop off half of cons_act, as output format has VA_p, and then VA_n. We are not interested in N, so we disregard
-        cons_act = cons_act[:len(cons_act) // 2]
-        output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
-        save_metadata(filename_metadata, args, 0, converted_principles, 0, output_dir)
-        print("-------------")
-        ## HCVA
-        print("HCVA...")
-        filename = str("HCVA_PERSONALS_"+str(i)+"_"+now + ".csv")
-        filename_metadata = str("HCVA_METADATA_"+str(i)+"_"+now + ".csv")
-        p, u_pref, u_act, cons_pref, cons_act, con_p = find_hcva_and_aggregate(P_list, J_list, w, prip_df, args)
-        output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
-        # Convert HCVA to a preference.
-        con_preference = np.log(con_p) / (2*np.log(t_point))
-        save_metadata(filename_metadata, args, None, con_p, con_preference, output_dir)
-        print("-------------")
-        ## HCVA++
-        print("HCVA++...")
-        filename = str("HCVApp_PERSONALS_" +str(i)+"_"+now + ".csv")
-        filename_metadata = str("HCVApp_METADATA_" +str(i)+"_"+now + ".csv")
-        p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference = find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, t_point, args)
-        output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
-        save_metadata(filename_metadata, args, transition_p, consensus_p, consensus_preference, output_dir)
-        print("-------------")
-        ## EGAL/UTIL
-        print("EGAL/UTIL...")
-        baseline_ps = [1, np.inf]
-        for p in baseline_ps:
-            # Generate filenames
-            filename = str(str(p) + "_PERSONALS_" +str(i)+"_"+ now + ".csv")
-            filename_metadata = str(str(p) + "_METADATA_" +str(i)+"_"+ now + ".csv")
-            # Aggregate and store
-            if p == np.inf:
-                _, u_pref, cons_pref = aggregate_inf(P_list, J_list, w, p, True)
-                _, u_act, cons_act = aggregate_inf(P_list, J_list, w, p, False)
-                cons_act = cons_act[:len(cons_act) // 2]
-            elif p == 1:
-                _, u_pref, cons_pref = aggregate_one(P_list, J_list, w, p, True)
-                _, u_act, cons_act = aggregate_one(P_list, J_list, w, p, False)
-                cons_act = cons_act[:len(cons_act) // 2]
-            else:
-                # Some other singular p
-                _, u_pref, cons_pref = aggregate(P_list, J_list, w, p, True)
-                _, u_act, cons_act = aggregate(P_list, J_list, w, p, False)
-                cons_act = cons_act[:len(cons_act) // 2]
+            # Run aggregations
+
+            ## T
+            # We do T first because we will use the t_point for other methods
+            print("T...")
+            filename = str("T_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
+            filename_metadata = str("T_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
+            filename_limits = "LIMITS_DIR_"+str(current_dir)+"_RUN_"+ str(i)+ "_"+now+"limits.csv"
+            p, u_pref, cons_pref, u_act, cons_act, t_point = find_transition_and_aggregate(P_list, J_list, w,
+                                                                                           output_dir, filename_limits, args.e, args)
             output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
-            if p == np.inf:
-                save_metadata(filename_metadata, args, 0, p, 1, output_dir)
-            elif p == 1:
-                save_metadata(filename_metadata, args, 0, p, 0, output_dir)
-            else:
-                save_metadata(filename_metadata, args, 0, p, p, output_dir)
+            save_metadata(filename_metadata, args, t_point, t_point, 0.5, output_dir)
+            print("-------------")
+            ## SLM
+            print("SLM...")
+            filename = str("SLM_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
+            filename_metadata = str("SLM_METADATA_DIR_"+str(current_dir)+"_RUN_"+ now + ".csv")
+            p, u_pref, cons_pref, u_act, cons_act, converted_principles = find_slm_and_aggregate(P_list, J_list, w, prip_df, t_point, args)
+            ## Chop off half of cons_act, as output format has VA_p, and then VA_n. We are not interested in N, so we disregard
+            cons_act = cons_act[:len(cons_act) // 2]
+            output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
+            save_metadata(filename_metadata, args, 0, converted_principles, 0, output_dir)
+            print("-------------")
+            ## HCVA
+            print("HCVA...")
+            filename = str("HCVA_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+now + ".csv")
+            filename_metadata = str("HCVA_METADATA_DIR_"+str(current_dir)+"_RUN_"+now + ".csv")
+            p, u_pref, u_act, cons_pref, cons_act, con_p = find_hcva_and_aggregate(P_list, J_list, w, prip_df, args)
+            output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
+            # Convert HCVA to a preference.
+            con_preference = np.log(con_p) / (2*np.log(t_point))
+            save_metadata(filename_metadata, args, None, con_p, con_preference, output_dir)
+            print("-------------")
+            ## HCVA++
+            print("HCVA++...")
+            filename = str("HCVApp_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+now + ".csv")
+            filename_metadata = str("HCVApp_METADATA_DIR_"+str(current_dir)+"_RUN_"+now + ".csv")
+            p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference = find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, t_point, args)
+            output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
+            save_metadata(filename_metadata, args, transition_p, consensus_p, consensus_preference, output_dir)
+            print("-------------")
+            ## EGAL/UTIL
+            print("EGAL/UTIL...")
+            baseline_ps = [1, np.inf]
+            for p in baseline_ps:
+                # Generate filenames
+                filename = str(str(p) + "_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+ now + ".csv")
+                filename_metadata = str(str(p) + "_METADATA_DIR_"+str(current_dir)+"_RUN_"+ now + ".csv")
+                # Aggregate and store
+                if p == np.inf:
+                    _, u_pref, cons_pref = aggregate_inf(P_list, J_list, w, p, True)
+                    _, u_act, cons_act = aggregate_inf(P_list, J_list, w, p, False)
+                    cons_act = cons_act[:len(cons_act) // 2]
+                elif p == 1:
+                    _, u_pref, cons_pref = aggregate_one(P_list, J_list, w, p, True)
+                    _, u_act, cons_act = aggregate_one(P_list, J_list, w, p, False)
+                    cons_act = cons_act[:len(cons_act) // 2]
+                else:
+                    # Some other singular p
+                    _, u_pref, cons_pref = aggregate(P_list, J_list, w, p, True)
+                    _, u_act, cons_act = aggregate(P_list, J_list, w, p, False)
+                    cons_act = cons_act[:len(cons_act) // 2]
+                output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
+                if p == np.inf:
+                    save_metadata(filename_metadata, args, 0, p, 1, output_dir)
+                elif p == 1:
+                    save_metadata(filename_metadata, args, 0, p, 0, output_dir)
+                else:
+                    save_metadata(filename_metadata, args, 0, p, p, output_dir)
 
-        print("-------------")
-        print("Done with iteration: {}".format(i))
+            print("-------------")
+            print("Done with iteration: {}".format(i))
 
 

@@ -57,11 +57,12 @@ def single_timestep_graphs(now, args):
             col_split = col.split("__")
             if len(col_split) == 3 and col_split[1] == col_split[2]:
                 cleaned_values_list.remove(col)
-            else:
+            elif col in cleaned_values_list:
                 # Not dropped, so drop the symmetrical col (P__A__B == P__B__A)
                 symmetrical_col = "P__" + col_split[2] + "__" + col_split[1]
-                if col in values_list:
+                if symmetrical_col in cleaned_values_list:
                     cleaned_values_list.remove(symmetrical_col)
+        print("cleaned values list: ", cleaned_values_list, "")
         actions_list = list([col for col in cons_df.columns if 'VA__' in col])
         #agents_cols_to_keep = cleaned_values_list + actions_list + ["country"] + ["Egalitarian"]
         agents_cols_to_keep = cleaned_values_list + actions_list + ["Egalitarian"]
@@ -157,11 +158,12 @@ def time_series_graphs(now, args):
         col_split = col.split("__")
         if len(col_split) == 3 and col_split[1] == col_split[2]:
             cleaned_values_list.remove(col)
-        else:
+        elif col in cleaned_values_list:
             # Not dropped, so drop the symmetrical col (P__A__B == P__B__A)
             symmetrical_col = "P__" + col_split[2] + "__" + col_split[1]
-            if col in values_list:
+            if symmetrical_col in cleaned_values_list:
                 cleaned_values_list.remove(symmetrical_col)
+    print("cleaned values list: ", cleaned_values_list, "")
     ## Again, because every method will have the exact same col names, we just use HCVA here.
     actions_list = list([col for col in consensus_list[0]["HCVA"].columns if 'VA__' in col])
     agents_cols_to_keep = cleaned_values_list + actions_list + ["Egalitarian"]
