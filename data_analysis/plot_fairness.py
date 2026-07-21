@@ -88,8 +88,7 @@ def gini_coefficient(cons_sets, agents_df, list_of_params, filename, dir):
             temp_residuals = np.array([], dtype=float)
             for agent in agents_df.iterrows():
                 # For every col, match these two dfs
-                temp_residual = cons[1][list_of_params] - agent[1][list_of_params]
-                temp_residual = abs(temp_residual.sum())
+                temp_residual = np.abs(agent[1][list_of_params].to_numpy() - cons_df[list_of_params].to_numpy()).sum()
                 temp_residuals = np.append(temp_residuals, [temp_residual])
             # Mean absolute difference
             mad = np.abs(np.subtract.outer(temp_residuals, temp_residuals)).mean()
@@ -214,8 +213,7 @@ def plot_gini_over_time(consensus_list, agents_list, list_of_params, title, dir)
             temp_residuals = np.array([], dtype=float)
             for agent in agents_single.iterrows():
                 # For every col, match these two dfs
-                temp_residual = cons_df[list_of_params] - agent[1][list_of_params]
-                temp_residual = abs(temp_residual.sum())
+                temp_residual = np.abs(agent[1][list_of_params].to_numpy() - cons_df[list_of_params].to_numpy()).sum()
                 temp_residuals = np.append(temp_residuals, [temp_residual])
             # Mean absolute difference
             mad = np.abs(np.subtract.outer(temp_residuals, temp_residuals)).mean()
