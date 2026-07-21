@@ -10,10 +10,20 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import cvxpy as cp
-import juliapkg
-juliapkg.require_julia("=1.10.3")
-juliapkg.resolve()
-from juliacall import Main as jl
+
+
+# Julia for local machine
+#import juliapkg
+#juliapkg.require_julia("=1.10.3")
+#juliapkg.resolve()
+#from juliacall import Main as jl
+
+
+## Julia for HPC
+from julia.api import Julia
+jl = Julia(compiled_modules=False)
+from julia import Main
+from julia import PyCall
 
 ## L_P REGRESSION FUNCTIONS HERE
 def L1(A, b):
@@ -117,9 +127,19 @@ def Lp(A, b, p):
     u - The distance between the value of the solved function ||Ax - b|| and p"""
     # l = A.shape[1]
     if p >= 2 :  # pIRLS implementation (NIPS 2019) (always use this for continuity)
-        jl.include(os.path.dirname(
-                os.path.realpath(__file__)) +
-            '/IRLS-pNorm.jl')
+
+        ## Local machine
+        #jl.include(os.path.dirname(
+        #        os.path.realpath(__file__)) +
+        #    '/IRLS-pNorm.jl')
+
+        ## HPC
+        action_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), 'IRLS-pNorm.jl')
+        )
+        jl.eval(f'include("{action_path}")')
+        jl.eval("""using Main.MyActionModule""")
+
         # constraints needed for pIRLS (empty)
         C = np.zeros_like(A)
         d = np.zeros_like(b)

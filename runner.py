@@ -26,7 +26,7 @@ if __name__ == '__main__':
     # Note, these are lists
     n_values_list = args.n_values
     n_actions_list = args.n_actions
-    output_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus" + args.output_dir
+    output_dir = args.output_dir
     now = str(date.today())
     print(now)
 
