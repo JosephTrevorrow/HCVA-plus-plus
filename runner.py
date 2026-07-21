@@ -6,6 +6,10 @@ from files import *
 import pandas as pd
 import copy as copy
 import numpy as np
+from julia.api import Julia
+jl = Julia(compiled_modules=False)
+from julia import Main
+from julia import PyCall
 
 if __name__ == '__main__':
     parser = ap.ArgumentParser()
@@ -29,6 +33,14 @@ if __name__ == '__main__':
     output_dir = args.output_dir
     now = str(date.today())
     print(now)
+
+    ## Boot up julia
+    ## HPC
+    action_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), 'lp_regression/IRLS-pNorm.jl')
+    )
+    jl.eval(f'include("{action_path}")')
+    jl.eval("""using Main.MyActionModule""")
 
     # Because we are going to run many experiments, we put this in a big for loop
     # find all the dirs in pvs (will be same for prip)

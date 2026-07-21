@@ -133,13 +133,6 @@ def Lp(A, b, p):
         #        os.path.realpath(__file__)) +
         #    '/IRLS-pNorm.jl')
 
-        ## HPC
-        action_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), 'IRLS-pNorm.jl')
-        )
-        jl.eval(f'include("{action_path}")')
-        jl.eval("""using Main.MyActionModule""")
-
         # constraints needed for pIRLS (empty)
         C = np.zeros_like(A)
         d = np.zeros_like(b)
