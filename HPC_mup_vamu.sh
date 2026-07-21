@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH --job-name=ia23938-ESS
-#SBATCH --output=ESS.out
-#SBATCH --error=ESS.err
+#SBATCH --job-name=ia23938-mup_vamu
+#SBATCH --output=mup_vamu.out
+#SBATCH --error=mup_vamu.err
 #SBATCH --time=01:00:00
 #SBATCH --mem=32G
 
@@ -41,4 +41,4 @@ julia -e 'using PythonCall; println("PythonCall OK")'
 echo Starting Python
 
 # Experiment ``vary_mup_vamu'''
-python -O runner.py -pvs_dir "value_systems/Synthetic/vary_mup_vamu/PVS/" -prip_dir "value_systems/Synthetic/vary_mup_vamu/PriP/" -n_values 4 -n_actions 3 -output_dir "/results/SYNTH_vary_mup_vamu/"
+python -O runner.py -pvs_dir "value_systems/Synthetic/vary_mup_vamu/PVS/" -prip_dir "value_systems/Synthetic/vary_mup_vamu/PriP/" -n_values 4 -n_actions 2 -output_dir "results/SYNTH_vary_mup_vamu/"

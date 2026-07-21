@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH --job-name=ia23938-ESS
-#SBATCH --output=ESS.out
-#SBATCH --error=ESS.err
+#SBATCH --job-name=ia23938-grp_fact
+#SBATCH --output=grp_fact.out
+#SBATCH --error=grp_fact.err
 #SBATCH --time=01:00:00
 #SBATCH --mem=32G
 
@@ -41,4 +41,4 @@ julia -e 'using PythonCall; println("PythonCall OK")'
 echo Starting Python
 
 # Experiment ``vary_grp_fact'''
-python -O runner.py -pvs_dir "value_systems/Synthetic/vary_grp_fact/PVS/" -prip_dir "value_systems/Synthetic/vary_grp_fact/PriP/" -n_values 4 -n_actions 3 -output_dir "/results/SYNTH_vary_grp_fact/"
+python -O runner.py -pvs_dir "value_systems/Synthetic/vary_grp_fact/PVS/" -prip_dir "value_systems/Synthetic/vary_grp_fact/PriP/" -n_values 4 -n_actions 2 -output_dir "results/SYNTH_vary_grp_fact/"
