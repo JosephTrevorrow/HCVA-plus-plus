@@ -152,12 +152,12 @@ def Lp(A, b, p):
         # x : Initial solution
         # lb : lower bound on the optimum
         # function pNorm(ϵ,A,b,p,C,d, x, lb)
-        cons, it = jl.pNorm(epsilon, A, b.reshape(-1, 1),
+        cons, it = Main.MyActionModule.pNorm(epsilon, A, b.reshape(-1, 1),
                               p, C, d.reshape(-1, 1))
         # So the cons we return is the same as
         # cons, it = IRLS.pNorm(epsilon, A, b.reshape(-1, 1), p, C, d.reshape(-1, 1))
         r = np.abs(A @ cons - b)
-        jl.collector()
+        Main.MyActionModule.collector()
         return cons, r, np.linalg.norm(r, p)
     else:  # vanilla IRLS implementation
         return IRLS(A, b, p)
