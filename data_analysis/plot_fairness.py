@@ -191,11 +191,61 @@ def plot_residuals_over_time(consensus_list, agents_list, list_of_params, title,
             writer.writerow(row)
     return
 
+def plot_mean_residuals(dir_dict, list_of_parameters, title, dir):
+    """Plots a line graph showing the total residuals per method over time
+    Where time=whatever parameter we varied
+    INPUTS:
+    - dir_dict a dict of form {x : [normalised_cons_sets, normalised_agents_df]}, x=[0,100], x+=1
+    """
+
+    # iterate over every dir in dir_dict, summing to each of the lines (put current code in a loop)
+    # after iterations, divide each num in lines by the len of dir_dict
+    # plot!
+
+    # lines is a dict {ID: [t1_{sum of residuals}, t2_ etc. ]}, one list per line, one line per method.
+    lines = {}
+    for key in consensus_list[0].keys():
+        lines[key] = []
+    ## consensus_list shape: list[{dict}] [ {t1_hcva, t1_inf, t1_slm, etc.}, {t2_hcva, t2_inf, t2_slm, etc.}, etc.
+    ## agents_list shape [t1_agents, t2_agents, etc.
+    ## Get our data for each line:
+    for cons_dict_single, agents_single in zip(consensus_list, agents_list):
+        # find the residuals for each of the cons in cons_dict_single
+        # For every consensus, go through each agent, and find difference.
+        for key, cons_df in cons_dict_single.items():
+            # points = []
+            sum_of_residuals = 0
+            for agent in agents_single.iterrows():
+                temp_residual = np.abs(agent[1][list_of_params].to_numpy() - cons_df[list_of_params].to_numpy()).sum()
+                sum_of_residuals += temp_residual
+            lines[key].append(sum_of_residuals)
+    # Make the line graph
+    fig, ax = plt.subplots()
+
+    for key, list_of_points in lines.items():
+        y = list_of_points
+        x = np.arange(len(y))
+        ax.plot(x, y, label=key)
+    ax.legend()
+    output_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/" + dir
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print("Created directory: " + output_dir)
+    else:
+        print("Directory already exists: " + output_dir)
+    fig.savefig(output_dir + title + ".png", bbox_inches="tight")
+    # Save list_of_points to a file
+    with open(output_dir + title + "residuals.csv", 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(["key", "points"])
+        for key, points in lines.items():
+            row = [key] + points
+            writer.writerow(row)
+    return
+
 def plot_gini_over_time(consensus_list, agents_list, list_of_params, title, dir):
     """Plots a line graph showing the gini coefficient over time
     Where time=whatever parameter we varied"""
-    """Plots a line graph showing the total residuals per method over time
-       Where time=whatever parameter we varied"""
 
     # lines is a dict {ID: [t1_{sum of residuals}, t2_ etc. ]}, one list per line, one line per method.
     ginis = {}
