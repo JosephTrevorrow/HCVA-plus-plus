@@ -4,7 +4,7 @@ import os, glob, copy
 def output_latex_table_of_cons(cons_dir, savename, list_of_ids, toFile, toLatex):
     df = pd.DataFrame()
     list_of_filenames = []
-    ## for each cons in the cons dir, find the personals
+    ## for each cons in the cons output_dir, find the personals
     for id in list_of_ids:
         file = glob.glob(cons_dir + id + "*_PERSONALS_*")[0]
         # Assume there is always 1 file, so just pick first
