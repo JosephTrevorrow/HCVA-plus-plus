@@ -254,6 +254,73 @@ def plot_mean_residuals(dir_dict, list_of_params, title, output_dir):
             writer.writerow(row)
     return
 
+def plot_mean_gini(dir_dict, list_of_params, title, output_dir):
+    """Plots a line graph. Each line is the mean residual of a method over time. By time, we mean the varying of a parameter (e.g. increasing mu_p and mu_va).
+            INPUTS:
+            - dir_dict a dict of form {x : [normalised_cons_sets, normalised_agents_df]}, x=[0,100], x+=1
+                - normalised_cons_sets is a list of dicts, [{hcva: cons, inf:cons}, {hcva: cons, inf: cons}, etc. ]
+                    - where each dict is all cons for a single timestep.
+            - list_of_params: list of parameters to include in the residual calculation. e.g. [pvs, pvs+prip, etc. (listed as col names)]
+            - output_dir: directory to save the plot to.
+        """
+    # Step 1: Create a dict `lines`, where we will store mean residuals for each method, for each timestep
+    lines = {}
+    # for the normalised_cons_sets, first consensus dict, and their keys
+    for key in dir_dict[0][0][0].keys():
+        # create an empty list to store the mean residuals for each timestep
+        # find the number of timesteps using the length of normalised_cons_sets
+        lines[key] = [0] * len(dir_dict[0][0])
+
+    # Step 2: Iterate over every timestep (each [normalised_cons_sets, normalised_agents_df] in dir_dict)
+    #   find the residuals for each of the cons, for each timestep, and add to lines
+    for x, data in dir_dict.items():
+        # Unpack
+        normalised_cons_sets, normalised_agents_df = data
+        # Do what we normally do with a single timestep:
+        for i, (cons_dict_single, agents_single) in enumerate(zip(normalised_cons_sets, normalised_agents_df)):
+            # find the residuals for each of the cons in cons_dict_single
+            # For every consensus, go through each agent, and find difference.
+            for key, cons_df in cons_dict_single.items():
+                temp_residuals = np.array([], dtype=float)
+                for agent in agents_single.iterrows():
+                    temp_residual = np.abs(agent[1][list_of_params].to_numpy() - cons_df[list_of_params].to_numpy()).sum()
+                    temp_residuals = np.append(temp_residuals, [temp_residual])
+                # Mean absolute difference
+                mad = np.abs(np.subtract.outer(temp_residuals, temp_residuals)).mean()
+                # Relative mean absolute difference
+                rmad = mad / np.mean(temp_residuals)
+                # Gini coefficient
+                g = 0.5 * rmad
+                lines[key][i] += g
+
+    # Step 3: Given we have a total residual for each timestep and each method, divide by the number of cons
+    for key in lines.keys():
+        lines[key] = [x / len(dir_dict) for x in lines[key]]
+
+    # Step 4: Plot the lines and save
+    fig, ax = plt.subplots()
+
+    for key, list_of_points in lines.items():
+        y = list_of_points
+        x = np.arange(len(y))
+        ax.plot(x, y, label=key)
+    ax.legend()
+    output_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/" + output_dir
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print("Created directory: " + output_dir)
+    else:
+        print("Directory already exists: " + output_dir)
+    fig.savefig(output_dir + title + ".png", bbox_inches="tight")
+    # Save list_of_points to a file
+    with open(output_dir + title + "gini.csv", 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(["key", "points"])
+        for key, points in lines.items():
+            row = [key] + points
+            writer.writerow(row)
+    return
+
 def plot_gini_over_time(consensus_list, agents_list, list_of_params, title, dir):
     """Plots a line graph showing the gini coefficient over time
     Where time=whatever parameter we varied"""

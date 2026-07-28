@@ -216,7 +216,6 @@ def find_mean_of_multi_run(args):
             # Sort:
             cons_pvs_sets = sorted(cons_pvs_sets)
             cons_prip_sets = sorted(cons_prip_sets)
-            # TODO: Sanity check, make sure these are sorted properly.
 
             # for each of the cons, load them into a df, and store in a dict of dfs with baseline names. j = ~5
             # consensus_list is a list of cons_sets dicts,
@@ -300,8 +299,8 @@ def find_mean_of_multi_run(args):
     plot_mean_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'], "Time Series PVSs and PriPs Residuals",
                         output_dir=args.output_dir)
     ## GINI
-    ### PVS TODO
-    ####plot_gini_over_time(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list, "Time Series Gini PVS",output_dir=args.output_dir)
+    ### PVS
+    plot_mean_gini(dir_dict, "Time Series Gini PVS",output_dir=args.output_dir)
     return
 
 if __name__ == "__main__":
