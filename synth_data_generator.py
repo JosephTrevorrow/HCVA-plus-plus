@@ -63,10 +63,10 @@ def generate_ps(agent_ids, n_values, mu=0.75, p_group_factor=0.5):
     agent_ps = defaultdict(lambda: np.empty(shape=(1,n_values)))
     # Assign values to groups
     values_list = [i for i in range(n_values)]
-    num_of_vals = rng.choice(1, len(values_list), size=1, replace=False)
-    strong_vals_group_a = rng.choice(values_list, size=num_of_vals, replace=False)
+    num_of_vals = rng.integers(1, len(values_list), size=1)
+    strong_vals_group_a = rng.choice(values_list, size=int(num_of_vals), replace=False)
     # Assign agents to groups
-    group_a = rng.choice(0, len(agent_ids), size=int((len(agent_ids)*p_group_factor)), replace=False)
+    group_a = rng.choice(a=np.arange(len(agent_ids)), size=int((len(agent_ids)*p_group_factor)), replace=False)
     # Find strengths for each agent, considering their group and the values that group holds.
     for agent in agent_ids:
         if agent in group_a:
@@ -105,7 +105,7 @@ def generate_vas(agent_ids, n_values, n_actions, va_p, va_mu):
 
     for _ in actions_list:
         num_of_vals = rng.integers(1, len(values_list), size=1)
-        promoted_values = rng.choice(values_list, size=num_of_vals, replace=False)
+        promoted_values = rng.choice(values_list, size=int(num_of_vals), replace=False)
         # Now we have the values the action promotes, take those, and find action judgements for every
         # value.
         for agent in agent_ids:
@@ -216,7 +216,7 @@ def generate(n_values, n_actions, n_agents, pvs_prip=0.3, va_p=0.3,p_group_facto
 
 if __name__ == "__main__":
     output_dir = "value_systems/Synthetic/"
-    for run in range(100):
+    for run in range(500):
         ### Initial: agents, values, actions
         for ag in range(2, 30,1):
             generate(n_values=4, n_actions=2, n_agents=ag, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
