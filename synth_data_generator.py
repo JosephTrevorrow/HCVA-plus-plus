@@ -63,7 +63,7 @@ def generate_ps(agent_ids, n_values, mu=0.75, p_group_factor=0.5):
     agent_ps = defaultdict(lambda: np.empty(shape=(1,n_values)))
     # Assign values to groups
     values_list = [i for i in range(n_values)]
-    num_of_vals = rng.integers(1, len(values_list), size=1)
+    num_of_vals = rng.integers(1, len(values_list))
     strong_vals_group_a = rng.choice(values_list, size=int(num_of_vals), replace=False)
     # Assign agents to groups
     group_a = rng.choice(a=np.arange(len(agent_ids)), size=int((len(agent_ids)*p_group_factor)), replace=False)
@@ -104,7 +104,7 @@ def generate_vas(agent_ids, n_values, n_actions, va_p, va_mu):
     agent_vas = defaultdict(lambda: np.empty(shape=(0,n_values)))
 
     for _ in actions_list:
-        num_of_vals = rng.integers(1, len(values_list), size=1)
+        num_of_vals = rng.integers(1, len(values_list)) #Having size be None, the defualt, means that a scalar will be returned
         promoted_values = rng.choice(values_list, size=int(num_of_vals), replace=False)
         # Now we have the values the action promotes, take those, and find action judgements for every
         # value.
@@ -157,8 +157,9 @@ def save_pvs(ps, vas, agents_ids, n_values, n_acts, filename, output_dir):
             for i in range(n_values):
                 for j in range(n_values):
                     row.append(float(P[i, j]))
-            for i in range(n_acts):
-                for k in range(n_values):
+            # Ensure n_values and n_acts are being used the same when writing columns. Value first is how ESS data is constructed, so we copy this.
+            for i in range(n_values):
+                for k in range(n_acts):
                     row.append(float(VA[i, k]))
             writer.writerow(row)
     return output_dir+values_fn
