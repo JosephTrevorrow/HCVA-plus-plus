@@ -46,7 +46,7 @@ if __name__ == '__main__':
     # find all the dirs in pvs (will be same for prip)
     for current_dir in os.listdir(args.pvs_dir):
         if os.path.isdir(args.pvs_dir+current_dir):
-            print("Found dir: ", args.pvs_dir+current_dir)
+            print("Found output_dir: ", args.pvs_dir+current_dir)
 
         ## Begin by finding a list of all pvs and prips
         pvs_sets = []
@@ -70,6 +70,7 @@ if __name__ == '__main__':
 
         ## Big for loop here running each aggregation and then saving
         # For the max of PriP or pvs sets,
+        # This for loop assumes the pvs_sets and prip sets have the exact same len.
         for i in range(0, max(len(pvs_sets), len(prip_sets))):
             print("Iteration: ",i, " of ", max(len(pvs_sets), len(prip_sets)),)
             # Update the num_vals and num_actions if necessary
@@ -110,7 +111,7 @@ if __name__ == '__main__':
             ## SLM
             print("SLM...")
             filename = str("SLM_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
-            filename_metadata = str("SLM_METADATA_DIR_"+str(current_dir)+"_RUN_"+ now + ".csv")
+            filename_metadata = str("SLM_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
             p, u_pref, cons_pref, u_act, cons_act, converted_principles = find_slm_and_aggregate(P_list, J_list, w, prip_df, t_point, args)
             ## Chop off half of cons_act, as output format has VA_p, and then VA_n. We are not interested in N, so we disregard
             cons_act = cons_act[:len(cons_act) // 2]
@@ -119,8 +120,8 @@ if __name__ == '__main__':
             print("-------------")
             ## HCVA
             print("HCVA...")
-            filename = str("HCVA_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+now + ".csv")
-            filename_metadata = str("HCVA_METADATA_DIR_"+str(current_dir)+"_RUN_"+now + ".csv")
+            filename = str("HCVA_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+now + ".csv")
+            filename_metadata = str("HCVA_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+now + ".csv")
             p, u_pref, u_act, cons_pref, cons_act, con_p = find_hcva_and_aggregate(P_list, J_list, w, prip_df, args)
             output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
             # Convert HCVA to a preference.
@@ -129,8 +130,8 @@ if __name__ == '__main__':
             print("-------------")
             ## HCVA++
             print("HCVA++...")
-            filename = str("HCVApp_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+now + ".csv")
-            filename_metadata = str("HCVApp_METADATA_DIR_"+str(current_dir)+"_RUN_"+now + ".csv")
+            filename = str("HCVApp_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+now + ".csv")
+            filename_metadata = str("HCVApp_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+now + ".csv")
             p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference = find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, t_point, args)
             output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
             save_metadata(filename_metadata, args, transition_p, consensus_p, consensus_preference, output_dir)
@@ -140,8 +141,8 @@ if __name__ == '__main__':
             baseline_ps = [1, np.inf]
             for p in baseline_ps:
                 # Generate filenames
-                filename = str(str(p) + "_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+ now + ".csv")
-                filename_metadata = str(str(p) + "_METADATA_DIR_"+str(current_dir)+"_RUN_"+ now + ".csv")
+                filename = str(str(p) + "_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+ str(i)+"_"+now + ".csv")
+                filename_metadata = str(str(p) + "_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
                 # Aggregate and store
                 if p == np.inf:
                     _, u_pref, cons_pref = aggregate_inf(P_list, J_list, w, p, True)

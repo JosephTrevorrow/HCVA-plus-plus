@@ -7,6 +7,7 @@ import random
 import copy
 from datetime import date
 from lp_regression.solve import *
+import os
 
 from collections import defaultdict
 
@@ -62,10 +63,10 @@ def generate_ps(agent_ids, n_values, mu=0.75, p_group_factor=0.5):
     agent_ps = defaultdict(lambda: np.empty(shape=(1,n_values)))
     # Assign values to groups
     values_list = [i for i in range(n_values)]
-    num_of_vals = rng.integers(1, len(values_list), size=1)
+    num_of_vals = rng.choice(1, len(values_list), size=1, replace=False)
     strong_vals_group_a = rng.choice(values_list, size=num_of_vals, replace=False)
     # Assign agents to groups
-    group_a = rng.integers(1, len(agent_ids), size=int((len(agent_ids)*p_group_factor)))
+    group_a = rng.choice(0, len(agent_ids), size=int((len(agent_ids)*p_group_factor)), replace=False)
     # Find strengths for each agent, considering their group and the values that group holds.
     for agent in agent_ids:
         if agent in group_a:
@@ -128,7 +129,7 @@ def save_pvs(ps, vas, agents_ids, n_values, n_acts, filename, output_dir):
     # Values + Preferences + Action Judgements
     now = str(date.today())
     values_fn = now + "_"+filename + "_PVS.csv"
-    print("The output dir is: ", output_dir, " and the filename is: ", values_fn, "")
+    print("The output output_dir is: ", output_dir, " and the filename is: ", values_fn, "")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
         print("Created directory: " + output_dir)
@@ -165,7 +166,7 @@ def save_pvs(ps, vas, agents_ids, n_values, n_acts, filename, output_dir):
 def save_prips(prips, agents_ids, filename, output_dir):
     now = str(date.today())
     principles_fn = now+"_"+filename+"_PriP.csv"
-    print("The output dir is: ", output_dir, " and the filename is: ", filename, "")
+    print("The output output_dir is: ", output_dir, " and the filename is: ", filename, "")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
         print("Created directory: " + output_dir)

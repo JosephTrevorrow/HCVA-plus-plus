@@ -199,7 +199,7 @@ def time_series_graphs(now, args):
     # TODO: plot the utility over time
     return
 
-def find_mean_of_multi_run(args):
+def find_mean_of_multi_run(args, experiment_name):
     """This method iterates over every dataset and finds the residual line for that timestep and run.
     This residual line is combined with every single matching run, and taken """
     dir_dict = {}
@@ -288,19 +288,19 @@ def find_mean_of_multi_run(args):
 
     ## STEP 2: use dir_dict to find the mean of resiudals
     # PVS
-    plot_mean_residuals(dir_dict, cleaned_values_list + actions_list, "Time Series PVS Residuals", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name+"pvs_100_runs", output_dir=args.output_dir)
     ### Just VAs
-    plot_mean_residuals(dir_dict, actions_list, "Time Series VAs Residuals", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, actions_list, experiment_name+"pvs_100_runs", output_dir=args.output_dir)
     ### Just Ps
-    plot_mean_residuals(dir_dict, cleaned_values_list, "Time Series Ps Residuals", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, cleaned_values_list, experiment_name+"pvs_100_runs", output_dir=args.output_dir)
     ### PriPs Residuals
-    plot_mean_residuals(dir_dict, ['Egalitarian'], "Time Series PriPs Residuals", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, ['Egalitarian'], experiment_name+"pvs_100_runs", output_dir=args.output_dir)
     # PVSs and PriPs
     plot_mean_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'], "Time Series PVSs and PriPs Residuals",
                         output_dir=args.output_dir)
     ## GINI
     ### PVS
-    plot_mean_gini(dir_dict, "Time Series Gini PVS",output_dir=args.output_dir)
+    plot_mean_gini(dir_dict, cleaned_values_list + actions_list, title=experiment_name+"pvs_100_runs",output_dir=args.output_dir)
     return
 
 if __name__ == "__main__":
@@ -316,6 +316,7 @@ if __name__ == "__main__":
 
     now = str(date.today())
 
+
     if args.single_timestep_plots:
         print("single timestep plots:")
         # you want single timestep plots for every method, for every iteration.
@@ -323,7 +324,7 @@ if __name__ == "__main__":
     elif args.time_series_plots:
         if "100_runs" in args.cons_dir:
             print("mean residuals:")
-            find_mean_of_multi_run(args)
+            find_mean_of_multi_run(args, experiment_name)
         else:
             print("time series plots:")
             # you want time series plots for the synthetic methods where agent data has more than one iteration

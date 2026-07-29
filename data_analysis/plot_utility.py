@@ -4,7 +4,7 @@ import numpy as np
 import os
 
 def plot_total_utility(cons_sets, agents_df, list_of_params, filename, output_dir):
-    """Find the total utility for all agents."""
+    """NOT USED IN PAPER Find the total utility for all agents."""
     utilities = {}
     for key, cons_df in cons_sets.items():
         for cons_i in cons_df.iterrows():
@@ -22,7 +22,7 @@ def plot_total_utility(cons_sets, agents_df, list_of_params, filename, output_di
     return utilities
 
 def plot_utility_over_time(consensus_list, agents_list, list_of_params, title, dir):
-    """Plots a line graph showing the total residuals per method over time
+    """NOT USED IN PAPER Plots a line graph showing the total residuals per method over time
     Where time=whatever parameter we varied"""
 
     # lines is a dict {ID: [t1_{sum of residuals}, t2_ etc. ]}, one list per line, one line per method.

@@ -252,6 +252,15 @@ def plot_mean_residuals(dir_dict, list_of_params, title, output_dir):
         for key, points in lines.items():
             row = [key] + points
             writer.writerow(row)
+
+    # Write each line to a single csv (for use with creating latex plots
+    for key, points in lines.items():
+        with open(output_dir + title + "residuals_" + key + ".csv", 'w') as f:
+            writer = csv.writer(f)
+            writer.writerow(["timestep", "residual"])
+            for timestep, residual in enumerate(points):
+                row = [timestep, residual]
+                writer.writerow(row)
     return
 
 def plot_mean_gini(dir_dict, list_of_params, title, output_dir):
@@ -312,6 +321,7 @@ def plot_mean_gini(dir_dict, list_of_params, title, output_dir):
     else:
         print("Directory already exists: " + output_dir)
     fig.savefig(output_dir + title + ".png", bbox_inches="tight")
+
     # Save list_of_points to a file
     with open(output_dir + title + "gini.csv", 'w') as f:
         writer = csv.writer(f)
@@ -319,6 +329,15 @@ def plot_mean_gini(dir_dict, list_of_params, title, output_dir):
         for key, points in lines.items():
             row = [key] + points
             writer.writerow(row)
+
+    # Write each line to a single csv (for use with creating latex plots
+    for key, points in lines.items():
+        with open(output_dir + title + "gini_" + key + ".csv", 'w') as f:
+            writer = csv.writer(f)
+            writer.writerow(["timestep", "gini"])
+            for timestep, gini in enumerate(points):
+                row = [timestep, gini]
+                writer.writerow(row)
     return
 
 def plot_gini_over_time(consensus_list, agents_list, list_of_params, title, dir):
