@@ -93,6 +93,8 @@ def gini_coefficient(cons_sets, agents_df, list_of_params, filename, dir):
             # Mean absolute difference
             mad = np.abs(np.subtract.outer(temp_residuals, temp_residuals)).mean()
             # Relative mean absolute difference
+            if np.mean(temp_residuals) == 0:
+                print("WARNING: Mean of residuals is 0.")
             rmad = mad / np.mean(temp_residuals)
             # Gini coefficient
             g = 0.5 * rmad
@@ -364,6 +366,8 @@ def plot_gini_over_time(consensus_list, agents_list, list_of_params, title, dir)
                 temp_residuals = np.append(temp_residuals, [temp_residual])
             # Mean absolute difference
             mad = np.abs(np.subtract.outer(temp_residuals, temp_residuals)).mean()
+            if np.mean(temp_residuals) == 0:
+                print("WARNING: Mean of residuals is 0.")
             # Relative mean absolute difference
             rmad = mad / np.mean(temp_residuals)
             # Gini coefficient

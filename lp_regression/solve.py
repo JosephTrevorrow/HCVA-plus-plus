@@ -11,13 +11,11 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import cvxpy as cp
 
-
 # Julia for local machine
 #import juliapkg
 #juliapkg.require_julia("=1.10.3")
 #juliapkg.resolve()
 #from juliacall import Main as jl
-
 
 ## Julia for HPC
 from julia.api import Julia

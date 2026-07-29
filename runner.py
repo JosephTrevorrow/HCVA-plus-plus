@@ -47,6 +47,9 @@ if __name__ == '__main__':
     for current_dir in os.listdir(args.pvs_dir):
         if os.path.isdir(args.pvs_dir+current_dir):
             print("Found output_dir: ", args.pvs_dir+current_dir)
+        else:
+            # is not a subdirectory? then skip
+            continue
 
         ## Begin by finding a list of all pvs and prips
         pvs_sets = []

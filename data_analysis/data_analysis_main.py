@@ -290,13 +290,13 @@ def find_mean_of_multi_run(args, experiment_name):
     # PVS
     plot_mean_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name+"pvs_100_runs", output_dir=args.output_dir)
     ### Just VAs
-    plot_mean_residuals(dir_dict, actions_list, experiment_name+"pvs_100_runs", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, actions_list, experiment_name+"va_100_runs", output_dir=args.output_dir)
     ### Just Ps
-    plot_mean_residuals(dir_dict, cleaned_values_list, experiment_name+"pvs_100_runs", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, cleaned_values_list, experiment_name+"p_100_runs", output_dir=args.output_dir)
     ### PriPs Residuals
-    plot_mean_residuals(dir_dict, ['Egalitarian'], experiment_name+"pvs_100_runs", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, ['Egalitarian'], experiment_name+"prip_100_runs", output_dir=args.output_dir)
     # PVSs and PriPs
-    plot_mean_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'], "Time Series PVSs and PriPs Residuals",
+    plot_mean_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'], experiment_name+"pvs_prip_100_runs",
                         output_dir=args.output_dir)
     ## GINI
     ### PVS
@@ -315,8 +315,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     now = str(date.today())
-
-
+    experiment_name = os.path.basename(str(args.cons_dir))
+    print("basename: ", os.path.basename(str(args.cons_dir)))
     if args.single_timestep_plots:
         print("single timestep plots:")
         # you want single timestep plots for every method, for every iteration.
