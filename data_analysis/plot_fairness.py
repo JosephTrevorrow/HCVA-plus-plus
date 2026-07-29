@@ -193,7 +193,7 @@ def plot_residuals_over_time(consensus_list, agents_list, list_of_params, title,
             writer.writerow(row)
     return
 
-def plot_mean_residuals(dir_dict, list_of_params, title, output_dir):
+def plot_mean_residuals(dir_dict, list_of_params, title, output_dir, x):
     """Plots a line graph. Each line is the mean residual of a method over time. By time, we mean the varying of a parameter (e.g. increasing mu_p and mu_va).
         INPUTS:
         - dir_dict a dict of form {x : [normalised_cons_sets, normalised_agents_df]}, x=[0,100], x+=1
@@ -202,6 +202,9 @@ def plot_mean_residuals(dir_dict, list_of_params, title, output_dir):
         - list_of_params: list of parameters to include in the residual calculation. e.g. [pvs, pvs+prip, etc. (listed as col names)]
         - output_dir: directory to save the plot to.
     """
+    #print("x is: ", x)
+    #print("len of x is: ", len(x))
+
     # Step 1: Create a dict `lines`, where we will store mean residuals for each method, for each timestep
     lines = {}
     # for the normalised_cons_sets, first consensus dict, and their keys
@@ -212,7 +215,7 @@ def plot_mean_residuals(dir_dict, list_of_params, title, output_dir):
 
     # Step 2: Iterate over every timestep (each [normalised_cons_sets, normalised_agents_df] in dir_dict)
     #   find the residuals for each of the cons, for each timestep, and add to lines
-    for x, data in dir_dict.items():
+    for iteration, data in dir_dict.items():
         # Unpack
         normalised_cons_sets, normalised_agents_df = data
         # Do what we normally do with a single timestep:
@@ -230,14 +233,17 @@ def plot_mean_residuals(dir_dict, list_of_params, title, output_dir):
 
     # Step 3: Given we have a total residual for each timestep and each method, divide by the number of cons
     for key in lines.keys():
-        lines[key] = [x/len(dir_dict) for x in lines[key]]
+        lines[key] = [iteration/len(dir_dict) for iteration in lines[key]]
 
     # Step 4: Plot the lines and save
     fig, ax = plt.subplots()
 
     for key, list_of_points in lines.items():
+        #print("key is: ", key)
+        #print("y is: ", list_of_points)
+        #print("x is: ", x)
         y = list_of_points
-        x = np.arange(len(y))
+        #x = np.arange(len(y))
         ax.plot(x, y, label=key)
     ax.legend()
     output_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/" + output_dir
@@ -265,7 +271,7 @@ def plot_mean_residuals(dir_dict, list_of_params, title, output_dir):
                 writer.writerow(row)
     return
 
-def plot_mean_gini(dir_dict, list_of_params, title, output_dir):
+def plot_mean_gini(dir_dict, list_of_params, title, output_dir, x):
     """Plots a line graph. Each line is the mean residual of a method over time. By time, we mean the varying of a parameter (e.g. increasing mu_p and mu_va).
             INPUTS:
             - dir_dict a dict of form {x : [normalised_cons_sets, normalised_agents_df]}, x=[0,100], x+=1
@@ -284,7 +290,7 @@ def plot_mean_gini(dir_dict, list_of_params, title, output_dir):
 
     # Step 2: Iterate over every timestep (each [normalised_cons_sets, normalised_agents_df] in dir_dict)
     #   find the residuals for each of the cons, for each timestep, and add to lines
-    for x, data in dir_dict.items():
+    for iterator, data in dir_dict.items():
         # Unpack
         normalised_cons_sets, normalised_agents_df = data
         # Do what we normally do with a single timestep:
@@ -306,14 +312,14 @@ def plot_mean_gini(dir_dict, list_of_params, title, output_dir):
 
     # Step 3: Given we have a total residual for each timestep and each method, divide by the number of cons
     for key in lines.keys():
-        lines[key] = [x / len(dir_dict) for x in lines[key]]
+        lines[key] = [iterator / len(dir_dict) for iterator in lines[key]]
 
     # Step 4: Plot the lines and save
     fig, ax = plt.subplots()
 
     for key, list_of_points in lines.items():
         y = list_of_points
-        x = np.arange(len(y))
+        #x = np.arange(len(y))
         ax.plot(x, y, label=key)
     ax.legend()
     output_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/" + output_dir

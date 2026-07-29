@@ -178,20 +178,21 @@ def time_series_graphs(now, args):
 
     normalised_cons_sets = normalise_cons_time_series(consensus_list)
     normalised_agents_df = normalise_agents_time_series(agents_list)
+
     ## RESIDUALS
     ### PVS Residuals
-    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list, "Time Series PVS Residuals", dir=args.output_dir)
+    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list, "Time Series PVS Residuals", dir=args.output_dir, x=args.x)
     ### Just VAs
-    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, actions_list, "Time Series VAs Residuals", dir=args.output_dir)
+    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, actions_list, "Time Series VAs Residuals", dir=args.output_dir, x=args.x)
     ### Just Ps
-    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, cleaned_values_list, "Time Series Ps Residuals",dir=args.output_dir)
+    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, cleaned_values_list, "Time Series Ps Residuals",dir=args.output_dir, x=args.x)
     ### PriPs Residuals
-    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, ['Egalitarian'], "Time Series PriPs Residuals",dir=args.output_dir)
+    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, ['Egalitarian'], "Time Series PriPs Residuals",dir=args.output_dir, x=args.x)
     # PVSs and PriPs
-    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list+['Egalitarian'], "Time Series PVSs and PriPs Residuals",dir=args.output_dir)
+    plot_residuals_over_time(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list+['Egalitarian'], "Time Series PVSs and PriPs Residuals",dir=args.output_dir, x=args.x)
     ## GINI
     ### PVS
-    plot_gini_over_time(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list, "Time Series Gini PVS",dir=args.output_dir)
+    plot_gini_over_time(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list, "Time Series Gini PVS",dir=args.output_dir, x=args.x)
 
     ## UTILITY
     # plot_pareto_efficiency(cons_df, agents_df, list_of_params)
@@ -216,6 +217,10 @@ def find_mean_of_multi_run(args, experiment_name):
             # Sort:
             cons_pvs_sets = sorted(cons_pvs_sets)
             cons_prip_sets = sorted(cons_prip_sets)
+
+            #print("looking in dir, ", i)
+            #print("cons_pvs_sets: ", [os.path.basename(temp) for temp in cons_pvs_sets])
+            #print("cons_prip_sets: ", [os.path.basename(temp) for temp in cons_prip_sets])
 
             # for each of the cons, load them into a df, and store in a dict of dfs with baseline names. j = ~5
             # consensus_list is a list of cons_sets dicts,
@@ -244,8 +249,9 @@ def find_mean_of_multi_run(args, experiment_name):
         ag_prip = glob.glob(args.agents_prip_dir + str(dir)+"/"+"*PriP*")
         sorted_ag_pvs = sorted(ag_pvs)
         sorted_ag_prip = sorted(ag_prip)
-        #print("sorted_ag_pvs: ", sorted_ag_pvs)
-        #print("sorted_ag_prip: ", sorted_ag_prip)
+        #print("sorted_ag_pvs: ", [os.path.basename(temp) for temp in sorted_ag_pvs])
+        #print("sorted_ag_prip: ", [os.path.basename(temp) for temp in sorted_ag_prip])
+        # TODO: THIS SORTS 0.67 BEFORE 0.6_!
 
         for i in range(0, count):
             agents_pvs_df = pd.read_csv(sorted_ag_pvs[i])
@@ -286,21 +292,24 @@ def find_mean_of_multi_run(args, experiment_name):
         normalised_agents_df = normalise_agents_time_series(agents_list)
         dir_dict[dir] = [normalised_cons_sets, normalised_agents_df]
 
+    # Convert args.x to a list of np floats to match the mean data
+    x = [np.float64(x) for x in args.x]
+
     ## STEP 2: use dir_dict to find the mean of resiudals
     # PVS
-    plot_mean_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name+"pvs_100_runs", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name+"pvs_100_runs_residual", output_dir=args.output_dir, x=x)
     ### Just VAs
-    plot_mean_residuals(dir_dict, actions_list, experiment_name+"va_100_runs", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, actions_list, experiment_name+"va_100_runs_residual", output_dir=args.output_dir, x=x)
     ### Just Ps
-    plot_mean_residuals(dir_dict, cleaned_values_list, experiment_name+"p_100_runs", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, cleaned_values_list, experiment_name+"p_100_runs_residual", output_dir=args.output_dir, x=x)
     ### PriPs Residuals
-    plot_mean_residuals(dir_dict, ['Egalitarian'], experiment_name+"prip_100_runs", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, ['Egalitarian'], experiment_name+"prip_100_runs_residual", output_dir=args.output_dir, x=x)
     # PVSs and PriPs
-    plot_mean_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'], experiment_name+"pvs_prip_100_runs",
-                        output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'], experiment_name+"pvs_prip_100_runs_residual",
+                        output_dir=args.output_dir, x=x)
     ## GINI
     ### PVS
-    plot_mean_gini(dir_dict, cleaned_values_list + actions_list, title=experiment_name+"pvs_100_runs",output_dir=args.output_dir)
+    plot_mean_gini(dir_dict, cleaned_values_list + actions_list, title=experiment_name+"pvs_100_runs_gini",output_dir=args.output_dir, x=x)
     return
 
 if __name__ == "__main__":
@@ -312,6 +321,7 @@ if __name__ == "__main__":
     parser.add_argument('-agents_pvs_dir', type=str, default="/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/ESS/Country/4_val_3_act/PVS/", help='Directory pointing to the agents csvs used in the experiment')
     parser.add_argument('-agents_prip_dir', type=str,default="/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/ESS/Country/4_val_3_act/PriP/", help='Directory pointing to the agents csvs used in the experiment')
     parser.add_argument('-output_dir', type=str, default="/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/", help='Directory to save the output files')
+    parser.add_argument('-x', nargs="*", type=str, default=["0", "1", "2", "3", "4" ,"5"], help="the xticks")
     args = parser.parse_args()
 
     now = str(date.today())
