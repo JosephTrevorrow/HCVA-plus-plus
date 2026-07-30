@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('-prip_dir', type=str, help='Directory pointing to the prips csvs used in the experiment')
     ## ENV ARGS
     parser.add_argument("-n_values", nargs="*", type=int, default=[4], help='Number of values')
-    parser.add_argument("-n_actions",nargs="*", type=int, default=[3], help='Number of actions')
+    parser.add_argument("-n_actions",nargs="*", type=int, default=[2], help='Number of actions')
     parser.add_argument('-e', type=float, default=1e-4, help='Epsilon cut-point for T')
     parser.add_argument('-w', type=int, default=0, help='Weights')
 
@@ -70,6 +70,8 @@ if __name__ == '__main__':
         len_of_prip_sets = len(prip_sets)
         prip_sets.sort()
         print("PriP Sets: ", prip_sets, " and len of PriP sets: ", len_of_prip_sets,)
+
+        # TODO: In debug mode, check that the prip sets and the pvs sets are sorted properly.
 
         ## Big for loop here running each aggregation and then saving
         # For the max of PriP or pvs sets,
