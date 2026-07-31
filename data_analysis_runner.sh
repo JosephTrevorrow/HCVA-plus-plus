@@ -26,11 +26,23 @@
 ###### SYNTHETIC DATA EXP. 100 RUNS######
 
 # Experiment ``vary_grp_fact'''
-python data_analysis/data_analysis_main.py -time_series_plots -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_grp_fact_100_runs/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PriP/" -output_dir "/SYNTH_vary_grp_fact_100_runs/"
+#python data_analysis/data_analysis_main.py -time_series_plots -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_grp_fact_100_runs/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PriP/" -output_dir "/SYNTH_vary_grp_fact_100_runs/"
 
 # Experiment ``vary_mup_vamu'''
-python data_analysis/data_analysis_main.py -time_series_plots -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_mup_vamu_100_runs/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_mup_vamu/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_mup_vamu/PriP/" -output_dir "/SYNTH_vary_mup_vamu_100_runs/"
+#python data_analysis/data_analysis_main.py -time_series_plots -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_mup_vamu_100_runs/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_mup_vamu/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_mup_vamu/PriP/" -output_dir "/SYNTH_vary_mup_vamu_100_runs/"
 
 # Experiment ``vary_pvs_prip'''
-python data_analysis/data_analysis_main.py -time_series_plots -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_pvs_prip_100_runs/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_pvs_prip/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_pvs_prip/PriP/" -output_dir "/SYNTH_vary_pvs_prip_100_runs/"
+#python data_analysis/data_analysis_main.py -time_series_plots -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_pvs_prip_100_runs/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_pvs_prip/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_pvs_prip/PriP/" -output_dir "/SYNTH_vary_pvs_prip_100_runs/"
+
+
+###### SYNTHETIC DATA EXP. 500 RUNS######
+
+# Experiment ``vary_grp_fact'''
+python data_analysis/data_analysis_main.py -time_series_plots -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_grp_fact_500_runs/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_grp_fact/PriP/" -output_dir "/SYNTH_vary_grp_fact_500_runs/"
+
+# Experiment ``vary_mup_vamu'''
+python data_analysis/data_analysis_main.py -time_series_plots -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_mup_vamu_500_runs/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_mup_vamu/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_mup_vamu/PriP/" -output_dir "/SYNTH_vary_mup_vamu_500_runs/"
+
+# Experiment ``vary_pvs_prip'''
+python data_analysis/data_analysis_main.py -time_series_plots -cons_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/SYNTH_vary_pvs_prip_500_runs/" -agents_pvs_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_pvs_prip/PVS/" -agents_prip_dir "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/value_systems/Synthetic/vary_pvs_prip/PriP/" -output_dir "/SYNTH_vary_pvs_prip_500_runs/"
 
