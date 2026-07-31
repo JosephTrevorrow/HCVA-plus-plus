@@ -1,3 +1,5 @@
+import re
+
 import pandas as pd
 import copy
 from plot_fairness import *
@@ -9,6 +11,25 @@ from datetime import date
 import os
 import fnmatch
 import glob
+
+## CREDIT: https://nedbatchelder.com/blog/200712/human_sorting
+def tryint(s):
+    try:
+        return int(s)
+    except:
+        return s
+
+def alphanum_key(s):
+    """ Turn a string into a list of string and number chunks.
+        "z23a" -> ["z", 23, "a"]
+    """
+    return [ tryint(c) for c in re.split('([0-9]+)', s) ]
+
+def sort_nicely(l):
+    """ Sort the given list in the way that humans expect.
+    """
+    l.sort(key=alphanum_key)
+    return l
 
 def single_timestep_graphs(now, args):
     # Find the number of pvs files (this, or any other list of files will tell us the number of iterations)
@@ -203,21 +224,40 @@ def time_series_graphs(now, args):
 def find_mean_of_multi_run(args, experiment_name):
     """This method iterates over every dataset and finds the residual line for that timestep and run.
     This residual line is combined with every single matching run, and taken """
+
+    # Figure out how many output_dirs there are!
+    # This needs to be a list
+    sum_of_output_dirs = 0
+    list_of_output_dirs = []
+    for fname in os.listdir(args.cons_dir):
+        # use HCVA here just as a filter for a single method. Only get the 49s, as that is the last step to be computed
+        if re.search(r"HCVA_PERSONALS_DIR_[0-9]+_RUN_49_*", fname):
+            sum_of_output_dirs += 1
+            # get the dir num from the fname
+            list_of_output_dirs.append(fname.split("_")[3])
+    print("I found ", sum_of_output_dirs, " output dirs.")
+
     dir_dict = {}
-    ## iterate over every output_dir (100)
-    for dir in range(0,100):
+    ## iterate over every output_dir
+    #for dir in range(0,sum_of_output_dirs):
+    for dir in list_of_output_dirs:
         ## STEP 1: READ IN THE DATA
-        count = len(fnmatch.filter(os.listdir(args.agents_pvs_dir+str(dir)+"/"),"*.csv"))
+        #count = len(fnmatch.filter(os.listdir(args.agents_pvs_dir+str(dir)+"/"),"*.csv"))
         consensus_list = []
-        for i in range(0, count):
+        #for i in range(0, sum_of_output_dirs):
+        for i in list_of_output_dirs:
             # Find a list of all filenames for output_dir i
             #print("looking in: "+args.cons_dir + "*_PERSONALS_DIR_" + str(i) +"_RUN_[0-9]_"+"*")
-            cons_pvs_sets = glob.glob(args.cons_dir+"*_PERSONALS_DIR_" + str(i) +"_RUN_[0-9]_"+"*")
-            cons_prip_sets = glob.glob(args.cons_dir+"*_METADATA_DIR_" + str(i) +"_RUN_[0-9]_"+"*")
+            cons_pvs_sets = []
+            cons_prip_sets = []
+            for fname in os.listdir(args.cons_dir):
+                if re.search(r"_PERSONALS_DIR_" + str(i) +"_RUN_[0-9]+", fname):
+                    cons_pvs_sets.append(args.cons_dir+fname)
+                elif re.search(r"_METADATA_DIR_" + str(i) +"_RUN_[0-9]+", fname):
+                    cons_prip_sets.append(args.cons_dir+fname)
             # Sort:
-            cons_pvs_sets = sorted(cons_pvs_sets)
-            cons_prip_sets = sorted(cons_prip_sets)
-
+            cons_pvs_sets = sort_nicely(cons_pvs_sets)
+            cons_prip_sets = sort_nicely(cons_prip_sets)
             #print("looking in dir, ", i)
             #print("cons_pvs_sets: ", [os.path.basename(temp) for temp in cons_pvs_sets])
             #print("cons_prip_sets: ", [os.path.basename(temp) for temp in cons_prip_sets])
@@ -225,6 +265,7 @@ def find_mean_of_multi_run(args, experiment_name):
             # for each of the cons, load them into a df, and store in a dict of dfs with baseline names. j = ~5
             # consensus_list is a list of cons_sets dicts,
             # cons_sets is a temp dict {method: df_of_file}
+            print("len of pvs_sets: ", len(cons_pvs_sets), " len of prip_sets: ", len(cons_prip_sets), "")
             cons_sets = {}
             for j in range(0, len(cons_pvs_sets)):
                 cons_pvs = pd.read_csv(cons_pvs_sets[j])
@@ -247,13 +288,13 @@ def find_mean_of_multi_run(args, experiment_name):
         ## Grab the agents PVS and concat them
         ag_pvs = glob.glob(args.agents_pvs_dir + str(dir)+"/"+"*PVS*")
         ag_prip = glob.glob(args.agents_prip_dir + str(dir)+"/"+"*PriP*")
-        sorted_ag_pvs = sorted(ag_pvs)
-        sorted_ag_prip = sorted(ag_prip)
+        sorted_ag_pvs = sort_nicely(ag_pvs)
+        sorted_ag_prip = sort_nicely(ag_prip)
         #print("sorted_ag_pvs: ", [os.path.basename(temp) for temp in sorted_ag_pvs])
         #print("sorted_ag_prip: ", [os.path.basename(temp) for temp in sorted_ag_prip])
         # TODO: THIS SORTS 0.67 BEFORE 0.6_!
 
-        for i in range(0, count):
+        for i in range(0, sum_of_output_dirs):
             agents_pvs_df = pd.read_csv(sorted_ag_pvs[i])
             agents_prip_df = pd.read_csv(sorted_ag_prip[i])
             agents_df = pd.concat([agents_pvs_df, agents_prip_df], axis=1, join="inner")
@@ -332,7 +373,7 @@ if __name__ == "__main__":
         # you want single timestep plots for every method, for every iteration.
         single_timestep_graphs(now, args)
     elif args.time_series_plots:
-        if "100_runs" in args.cons_dir:
+        if "100_runs" in args.cons_dir or "500_runs" in args.cons_dir:
             print("mean residuals:")
             find_mean_of_multi_run(args, experiment_name)
         else:
