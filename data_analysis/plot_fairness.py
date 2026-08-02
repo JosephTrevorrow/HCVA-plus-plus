@@ -40,24 +40,20 @@ def normalise_agents(df):
     return df
 
 def normalise_cons_time_series(sets):
-    normalised = []
-    for timestep in sets:
-        normalised_sets = {}
-        for key, df in timestep.items():
-            ## This only works when you know the max and min value of EVERY SINGLE CONS!!!
-            # Normalise all data for consensus between 0-1
-            #df = df.astype(float)
-            for column in df.columns:
-                if 'VA__' in column:
-                    min_val = -1
-                    max_val = 1
-                else:
-                    min_val = 0
-                    max_val = 1
-                if column != 'p':
-                    df[column]= (df[column] - min_val) / (max_val - min_val)
-            normalised_sets[key] = copy.deepcopy(df)
-        normalised.append(copy.deepcopy(normalised_sets))
+    normalised = {}
+    for key, df in sets.items():
+        ## This only works when you know the max and min value of EVERY SINGLE CONS!!!
+        # Normalise all data for consensus between 0-1
+        for column in df.columns:
+            if 'VA__' in column:
+                min_val = -1
+                max_val = 1
+            else:
+                min_val = 0
+                max_val = 1
+            if column != 'p':
+                df[column]= (df[column] - min_val) / (max_val - min_val)
+        normalised[key] = copy.deepcopy(df)
     return normalised
 
 def normalise_agents_time_series(sets):
@@ -202,35 +198,30 @@ def plot_mean_residuals(dir_dict, list_of_params, title, output_dir, x):
         - list_of_params: list of parameters to include in the residual calculation. e.g. [pvs, pvs+prip, etc. (listed as col names)]
         - output_dir: directory to save the plot to.
     """
-    #print("x is: ", x)
-    #print("len of x is: ", len(x))
-    print("I'm in mean residuals")
     # Step 1: Create a dict `lines`, where we will store mean residuals for each method, for each timestep
     lines = {}
     # for the normalised_cons_sets, first consensus dict, and their keys
-    for key in dir_dict[list(dir_dict.keys())[0]][0][0].keys():
+    for key in dir_dict[list(dir_dict.keys())[0]][0].keys():
         # create an empty list to store the mean residuals for each timestep
         # find the number of timesteps using the length of normalised_cons_sets
-        lines[key] = [0]*len(dir_dict[0][0])
-    print("blah ")
+        lines[key] = [0]*len(dir_dict[list(dir_dict.keys())[0]][0]["HCVA"])
     # Step 2: Iterate over every timestep (each [normalised_cons_sets, normalised_agents_df] in dir_dict)
     #   find the residuals for each of the cons, for each timestep, and add to lines
     for iteration, data in dir_dict.items():
         # Unpack
-        normalised_cons_sets, normalised_agents_df = data
-        # Do what we normally do with a single timestep:
-        for i, (cons_dict_single, agents_single) in enumerate(zip(normalised_cons_sets, normalised_agents_df)):
+        normalised_cons_sets, normalised_agents = data
+        for key, cons_df in normalised_cons_sets.items():
+            # cons_df will be a df for a cons. each row will correspond with a
+            for j in range(0,len(cons_df.index)):
             # find the residuals for each of the cons in cons_dict_single
             # For every consensus, go through each agent, and find difference.
-            for key, cons_df in cons_dict_single.items():
                 sum_of_residuals = 0
-                for agent in agents_single.iterrows():
-                    temp_residual = np.abs(
-                        agent[1][list_of_params].to_numpy() - cons_df[list_of_params].to_numpy()).sum()
-                    sum_of_residuals += temp_residual
+                temp_residual = np.abs(
+                    normalised_agents[j][list_of_params].to_numpy() - cons_df.iloc[j][list_of_params].to_numpy()).sum()
+                sum_of_residuals += temp_residual
                 # Update the mean residual for this method and timestep
-                lines[key][i] += sum_of_residuals
-        print("Timstep done ")
+                lines[key][j] += sum_of_residuals
+        print("dir done ")
 
     # Step 3: Given we have a total residual for each timestep and each method, divide by the number of cons
     for key in lines.keys():
@@ -244,7 +235,7 @@ def plot_mean_residuals(dir_dict, list_of_params, title, output_dir, x):
         #print("y is: ", list_of_points)
         #print("x is: ", x)
         y = list_of_points
-        #x = np.arange(len(y))
+        x = np.arange(len(y))
         ax.plot(x, y, label=key)
     ax.legend()
     output_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/" + output_dir
@@ -284,24 +275,23 @@ def plot_mean_gini(dir_dict, list_of_params, title, output_dir, x):
     # Step 1: Create a dict `lines`, where we will store mean residuals for each method, for each timestep
     lines = {}
     # for the normalised_cons_sets, first consensus dict, and their keys
-    for key in dir_dict[list(dir_dict.keys())[0]][0][0].keys():
+    for key in dir_dict[list(dir_dict.keys())[0]][0].keys():
         # create an empty list to store the mean residuals for each timestep
         # find the number of timesteps using the length of normalised_cons_sets
-        lines[key] = [0] * len(dir_dict[0][0])
-
+        lines[key] = [0]*len(dir_dict[list(dir_dict.keys())[0]][0]["HCVA"])
     # Step 2: Iterate over every timestep (each [normalised_cons_sets, normalised_agents_df] in dir_dict)
     #   find the residuals for each of the cons, for each timestep, and add to lines
-    for iterator, data in dir_dict.items():
+    for iteration, data in dir_dict.items():
         # Unpack
-        normalised_cons_sets, normalised_agents_df = data
-        # Do what we normally do with a single timestep:
-        for i, (cons_dict_single, agents_single) in enumerate(zip(normalised_cons_sets, normalised_agents_df)):
-            # find the residuals for each of the cons in cons_dict_single
-            # For every consensus, go through each agent, and find difference.
-            for key, cons_df in cons_dict_single.items():
+        normalised_cons_sets, normalised_agents = data
+        for key, cons_df in normalised_cons_sets.items():
+            # cons_df will be a df for a cons. each row will correspond with a
+            for j in range(0,len(cons_df.index)):
+                # find the residuals for each of the cons in cons_dict_single
+                # For every consensus, go through each agent, and find difference.
                 temp_residuals = np.array([], dtype=float)
-                for agent in agents_single.iterrows():
-                    temp_residual = np.abs(agent[1][list_of_params].to_numpy() - cons_df[list_of_params].to_numpy()).sum()
+                for agent in normalised_agents:
+                    temp_residual = np.abs(agent[list_of_params].to_numpy() - cons_df.iloc[j][list_of_params].to_numpy()).sum()
                     temp_residuals = np.append(temp_residuals, [temp_residual])
                 # Mean absolute difference
                 mad = np.abs(np.subtract.outer(temp_residuals, temp_residuals)).mean()
@@ -309,8 +299,8 @@ def plot_mean_gini(dir_dict, list_of_params, title, output_dir, x):
                 rmad = mad / np.mean(temp_residuals)
                 # Gini coefficient
                 g = 0.5 * rmad
-                lines[key][i] += g
-
+                lines[key][j] += g
+        print("dir done ")
     # Step 3: Given we have a total residual for each timestep and each method, divide by the number of cons
     for key in lines.keys():
         lines[key] = [iterator / len(dir_dict) for iterator in lines[key]]
@@ -320,7 +310,7 @@ def plot_mean_gini(dir_dict, list_of_params, title, output_dir, x):
 
     for key, list_of_points in lines.items():
         y = list_of_points
-        #x = np.arange(len(y))
+        x = np.arange(len(y))
         ax.plot(x, y, label=key)
     ax.legend()
     output_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/plots/" + output_dir

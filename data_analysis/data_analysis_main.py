@@ -232,19 +232,20 @@ def find_mean_of_multi_run(args, experiment_name):
     for fname in os.listdir(args.cons_dir):
         # use HCVA here just as a filter for a single method. Only get the end of the steps, as that is the last step to be computed
         if re.search(r"HCVA_PERSONALS_DIR_[0-9]+_RUN_"+str(args.steps)+"_", fname):
-            sum_of_output_dirs += 1
             # get the dir num from the fname
             list_of_output_dirs.append(fname.split("_")[3])
+    # cut the number to two, for debugging
+    #list_of_output_dirs = list_of_output_dirs[:2]
+    sum_of_output_dirs = len(list_of_output_dirs)
     print("I found ", sum_of_output_dirs, " output dirs.")
 
     dir_dict = {}
     ## iterate over every output_dir
     for dir in list_of_output_dirs:
-        consensus_list = []
         agents_list = []
         # Given a directory where a consensus is, find all of the consensuses in that directory. There should be 50*baseline (for 500 runs), or ~5/6 otherwise
         # Find a list of all filenames for output_dir i
-        print("looking in: "+args.cons_dir + "*_PERSONALS_DIR_" + str(dir) +"_RUN_[0-9]_")
+        print("looking in: "+str(dir))
         cons_pvs_sets = []
         cons_prip_sets = []
         for fname in os.listdir(args.cons_dir):
@@ -257,8 +258,7 @@ def find_mean_of_multi_run(args, experiment_name):
         cons_prip_sets = sort_nicely(cons_prip_sets)
 
         # for each of the cons filenames, load them into a df, and store in a dict of dfs with baseline names.
-        # consensus_list is a list of cons_sets dicts,
-        # cons_sets is a temp dict {method: df_of_file}
+        # This loop will return a dict cons_sets, which has 6 dfs, 1 for each baseline. The df will contain 50 rows, 1 per cons.
         cons_sets = {}
         for j in range(0, len(cons_pvs_sets)):
             cons_pvs = pd.read_csv(cons_pvs_sets[j])
@@ -274,12 +274,7 @@ def find_mean_of_multi_run(args, experiment_name):
             else:
                 cons_sets[key] = pd.concat([cons_sets[key], copy.deepcopy(cons_df)])
 
-        consensus_list.append(copy.deepcopy(cons_sets))
-
         ## input every single agent, place in a list of df (form: [t1_agents, t2_agents, etc.
-        #print("args.agents_pvs_dir: ", args.agents_pvs_dir)
-        #print("args.agents_prip_dir: ", args.agents_prip_dir)
-        ## Grab the agents PVS and concat them
         ag_pvs = glob.glob(args.agents_pvs_dir + str(dir)+"/"+"*PVS*")
         ag_prip = glob.glob(args.agents_prip_dir + str(dir)+"/"+"*PriP*")
         sorted_ag_pvs = sort_nicely(ag_pvs)
@@ -294,10 +289,7 @@ def find_mean_of_multi_run(args, experiment_name):
         ## remove the irrelevant cols from every single df you've just sorted out. Create a list of params to use with residuals
         #  Every df will have the same cols, so we find them for one, and copy this
         # note, we will use values_list and actions_list to filter our data analysis plots.
-        #print("________________________________")
-        #print("CONSENSUS_LIST: len", len(consensus_list), "")
-        #print("AGENTS_LIST: ", agents_list, "")
-        values_list = list([col for col in consensus_list[0]["HCVA"].columns if 'P__' in col])
+        values_list = list([col for col in cons_sets["HCVA"].columns if 'P__' in col])
         cleaned_values_list = copy.deepcopy(values_list)
         # Clean list_of_params
         # Remove all cols that have the same two values (P__Universalism__Universalism, P__Benevolence__Benevolence, etc.)
@@ -312,20 +304,22 @@ def find_mean_of_multi_run(args, experiment_name):
                     cleaned_values_list.remove(symmetrical_col)
         #print("cleaned values list: ", cleaned_values_list, "")
         ## Again, because every method will have the exact same col names, we just use HCVA here.
-        actions_list = list([col for col in consensus_list[0]["HCVA"].columns if 'VA__' in col])
+        actions_list = list([col for col in cons_sets["HCVA"].columns if 'VA__' in col])
         agents_cols_to_keep = cleaned_values_list + actions_list + ["Egalitarian"]
         cons_cols_to_keep = cleaned_values_list + actions_list + ["Egalitarian"]
 
         # Filter using cols_to_keeps (Agents list and cons list will be the same)
         for i in range(0, len(agents_list)):
             agents_list[i] = agents_list[i][agents_cols_to_keep]
-        consensus_list[0] = {k: v[cons_cols_to_keep] for k, v in consensus_list[0].items()}
-        normalised_cons_sets = normalise_cons_time_series(consensus_list)
+        cons_sets = {k: v[cons_cols_to_keep] for k, v in cons_sets.items()}
+
+        normalised_cons_sets = normalise_cons_time_series(cons_sets)
         normalised_agents_df = normalise_agents_time_series(agents_list)
         dir_dict[int(dir)] = [normalised_cons_sets, normalised_agents_df]
 
     # Convert args.x to a list of np floats to match the mean data
-    x = [np.float64(x) for x in args.x]
+    #x = [np.float64(x) for x in args.x]
+    x = np.arange(0,1, 50)
 
     print("Time to plot!")
     ## STEP 2: use dir_dict to find the mean of resiudals
