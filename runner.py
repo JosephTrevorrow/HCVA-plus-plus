@@ -53,7 +53,7 @@ if __name__ == '__main__':
         if os.path.isdir(args.pvs_dir+current_dir):
             print("Found output_dir: ", args.pvs_dir+current_dir)
             # check if a valid dir, if not, skip.
-            if int(current_dir) >= max_dir or int(current_dir) <= min_dir:
+            if int(current_dir) > max_dir or int(current_dir) < min_dir:
                 print("Not valid")
                 continue
         else:

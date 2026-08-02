@@ -41,14 +41,14 @@ def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_
             # We start with mu = p, scale = 0.08.
             #   To truncate this, you have to normalise this. truncnorm expects the trunc points to be stds away from the mean, rather than points on the x-axis
             loc = 1
-            sigma_prip = 1
+            sigma_prip = 0.25
             a_trunc = 0.5
             b_trunc = 1
             a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
             prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)
         else:
             loc = 0
-            sigma_prip = 1
+            sigma_prip = 0.25
             a_trunc = 0
             b_trunc = 0.5
             a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
@@ -70,11 +70,11 @@ def generate_ps(agent_ids, n_values, mu=0.75, p_group_factor=0.5):
     # Find strengths for each agent, considering their group and the values that group holds.
     for agent in agent_ids:
         if agent in group_a:
-            samples_a= rng.normal(mu, 0.08, len(strong_vals_group_a))
-            samples_b = rng.normal(mu-0.5, 0.08, len(values_list)-len(strong_vals_group_a))
+            samples_a= rng.normal(mu, 0.05, len(strong_vals_group_a))
+            samples_b = rng.normal(mu-0.7, 0.05, len(values_list)-len(strong_vals_group_a))
         else:
-            samples_a = rng.normal(mu-0.5, 0.08, len(strong_vals_group_a))
-            samples_b = rng.normal(mu, 0.08, len(values_list)-len(strong_vals_group_a))
+            samples_a = rng.normal(mu-0.7, 0.05, len(strong_vals_group_a))
+            samples_b = rng.normal(mu, 0.05, len(values_list)-len(strong_vals_group_a))
         # Save these samples in the right order
         for k in range(0, n_values):
             if k in strong_vals_group_a:
@@ -104,7 +104,7 @@ def generate_vas(agent_ids, n_values, n_actions, va_p, va_mu):
     agent_vas = defaultdict(lambda: np.empty(shape=(0,n_values)))
 
     for _ in actions_list:
-        num_of_vals = rng.integers(1, len(values_list)) #Having size be None, the defualt, means that a scalar will be returned
+        num_of_vals = rng.integers(1, len(values_list)) #Having size be None, the default, means that a scalar will be returned
         promoted_values = rng.choice(values_list, size=int(num_of_vals), replace=False)
         # Now we have the values the action promotes, take those, and find action judgements for every
         # value.
@@ -113,10 +113,10 @@ def generate_vas(agent_ids, n_values, n_actions, va_p, va_mu):
             for value in values_list:
                 if value in promoted_values:
                     # Promoted, so must be closer to 1
-                    va_temp = rng.normal(va_mu, 0.08)
+                    va_temp = rng.normal(va_mu, 0.05)
                 else:
                     # Demoted, so must be closer to -1
-                    va_temp = rng.normal(-va_mu, 0.08)
+                    va_temp = rng.normal(-va_mu, 0.05)
                 # Add a bit of noise and add to va
                 noise = rng.normal(0, va_p, size=1)
                 va_temp = va_temp+noise
@@ -160,7 +160,8 @@ def save_pvs(ps, vas, agents_ids, n_values, n_acts, filename, output_dir):
             # Ensure n_values and n_acts are being used the same when writing columns. Value first is how ESS data is constructed, so we copy this.
             for i in range(n_values):
                 for k in range(n_acts):
-                    row.append(float(VA[i, k]))
+                    # Generate vas generates vas action major, although we want to store it value major.
+                    row.append(float(VA[k, i]))
             writer.writerow(row)
     return output_dir+values_fn
 
@@ -221,29 +222,29 @@ if __name__ == "__main__":
         ### Initial: agents, values, actions
         for ag in range(2, 30,1):
             generate(n_values=4, n_actions=2, n_agents=ag, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
-                    mu_p=0.75, va_mu=0.75, pvs_filename="vary_agents_"+str(ag), prip_filename="vary_agents_"+str(ag), pvs_output_dir=output_dir+"vary_agents/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_agents/PriP/"+str(run)+"/")
+                    mu_p=0.85, va_mu=0.85, pvs_filename="vary_agents_"+str(ag), prip_filename="vary_agents_"+str(ag), pvs_output_dir=output_dir+"vary_agents/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_agents/PriP/"+str(run)+"/")
         for val in range(2,10,1):
             generate(n_values=val, n_actions=2, n_agents=30, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
-                    mu_p=0.75, va_mu=0.75, pvs_filename="vary_values_"+str(val), prip_filename="vary_values_"+str(val), pvs_output_dir=output_dir+"vary_vals/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_vals/PriP/"+str(run)+"/")
+                    mu_p=0.85, va_mu=0.85, pvs_filename="vary_values_"+str(val), prip_filename="vary_values_"+str(val), pvs_output_dir=output_dir+"vary_vals/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_vals/PriP/"+str(run)+"/")
         for act in range(1, 10, 1):
             generate(n_values=4, n_actions=act, n_agents=30, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
-                     mu_p=0.75, va_mu=0.75, pvs_filename="vary_actions_" + str(act), prip_filename="vary_actions_" + str(act), pvs_output_dir=output_dir+"vary_acts/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_acts/PriP/"+str(run)+"/")
+                     mu_p=0.85, va_mu=0.85, pvs_filename="vary_actions_" + str(act), prip_filename="vary_actions_" + str(act), pvs_output_dir=output_dir+"vary_acts/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_acts/PriP/"+str(run)+"/")
 
         ## MAJ/MIN SPLIT
-        grp_facts = np.linspace(0.5, 1, 6)
+        grp_facts = np.linspace(0.5, 1, 50)
         for grp_fact in grp_facts:
             generate(n_values=4, n_actions=2, n_agents=30, pvs_prip=0.3, va_p=0.3, p_group_factor=grp_fact,
-                     mu_p=0.75, va_mu=0.75, pvs_filename="vary_grp_fact_"+str(grp_fact), prip_filename="vary_grp_fact_"+str(grp_fact), pvs_output_dir=output_dir+"vary_grp_fact/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_grp_fact/PriP/"+str(run)+"/")
+                     mu_p=0.85, va_mu=0.85, pvs_filename="vary_grp_fact_"+str(grp_fact), prip_filename="vary_grp_fact_"+str(grp_fact), pvs_output_dir=output_dir+"vary_grp_fact/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_grp_fact/PriP/"+str(run)+"/")
 
         ## EXTREME PVSs
-        mupvamu = np.linspace(0.6, 1, 6)
+        mupvamu = np.linspace(0.5, 1, 50)
         for mup_vamu in mupvamu:
             generate(n_values=4, n_actions=2, n_agents=30, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
                      mu_p=mup_vamu, va_mu=mup_vamu, pvs_filename="vary_mup_vamu_"+str(mup_vamu), prip_filename="vary_mup_vamu_"+str(mup_vamu), pvs_output_dir=output_dir+"vary_mup_vamu/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_mup_vamu/PriP/"+str(run)+"/")
 
         ## PriP NOISE
-        pvs_prips = np.linspace(0, 1, 11)
+        pvs_prips = np.linspace(0, 1, 50)
         for pvs_prip in pvs_prips:
             generate(n_values=4, n_actions=2, n_agents=30, pvs_prip=pvs_prip, va_p=0.3, p_group_factor=0.5,
-                     mu_p=0.75, va_mu=0.75, pvs_filename="vary_pvs_prip_"+str(pvs_prip), prip_filename="vary_pvs_prip_"+str(pvs_prip), pvs_output_dir=output_dir+"vary_pvs_prip/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_pvs_prip/PriP/"+str(run)+"/")
+                     mu_p=0.85, va_mu=0.85, pvs_filename="vary_pvs_prip_"+str(pvs_prip), prip_filename="vary_pvs_prip_"+str(pvs_prip), pvs_output_dir=output_dir+"vary_pvs_prip/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_pvs_prip/PriP/"+str(run)+"/")
 
