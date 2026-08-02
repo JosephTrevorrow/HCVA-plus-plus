@@ -22,6 +22,10 @@ if __name__ == '__main__':
     parser.add_argument('-e', type=float, default=1e-4, help='Epsilon cut-point for T')
     parser.add_argument('-w', type=int, default=0, help='Weights')
 
+    parser.add_argument('-max', type=int, default=40, help='maximum dir to search')
+    parser.add_argument('-min', type=int, default=0, help='minimum dir to search')
+
+
     parser.add_argument('-output_dir', type=str, default="output", help='Directory to save the output files')
     # Looking for the number of agents? This is not explicitly defined and can be found from the corresponding pvs_dir and prip_dir of each experiment.
 
@@ -41,12 +45,17 @@ if __name__ == '__main__':
     )
     jl.eval(f'include("{action_path}")')
     jl.eval("""using Main.MyActionModule""")
-
+    max_dir = args.max
+    min_dir = args.min
     # Because we are going to run many experiments, we put this in a big for loop
     # find all the dirs in pvs (will be same for prip)
     for current_dir in os.listdir(args.pvs_dir):
         if os.path.isdir(args.pvs_dir+current_dir):
             print("Found output_dir: ", args.pvs_dir+current_dir)
+            # check if a valid dir, if not, skip.
+            if int(current_dir) >= max_dir or int(current_dir) <= min_dir:
+                print("Not valid")
+                continue
         else:
             # is not a subdirectory? then skip
             continue
