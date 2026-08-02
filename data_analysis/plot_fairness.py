@@ -204,15 +204,15 @@ def plot_mean_residuals(dir_dict, list_of_params, title, output_dir, x):
     """
     #print("x is: ", x)
     #print("len of x is: ", len(x))
-
+    print("I'm in mean residuals")
     # Step 1: Create a dict `lines`, where we will store mean residuals for each method, for each timestep
     lines = {}
     # for the normalised_cons_sets, first consensus dict, and their keys
-    for key in dir_dict[0][0][0].keys():
+    for key in dir_dict[list(dir_dict.keys())[0]][0][0].keys():
         # create an empty list to store the mean residuals for each timestep
         # find the number of timesteps using the length of normalised_cons_sets
         lines[key] = [0]*len(dir_dict[0][0])
-
+    print("blah ")
     # Step 2: Iterate over every timestep (each [normalised_cons_sets, normalised_agents_df] in dir_dict)
     #   find the residuals for each of the cons, for each timestep, and add to lines
     for iteration, data in dir_dict.items():
@@ -230,6 +230,7 @@ def plot_mean_residuals(dir_dict, list_of_params, title, output_dir, x):
                     sum_of_residuals += temp_residual
                 # Update the mean residual for this method and timestep
                 lines[key][i] += sum_of_residuals
+        print("Timstep done ")
 
     # Step 3: Given we have a total residual for each timestep and each method, divide by the number of cons
     for key in lines.keys():
@@ -283,7 +284,7 @@ def plot_mean_gini(dir_dict, list_of_params, title, output_dir, x):
     # Step 1: Create a dict `lines`, where we will store mean residuals for each method, for each timestep
     lines = {}
     # for the normalised_cons_sets, first consensus dict, and their keys
-    for key in dir_dict[0][0][0].keys():
+    for key in dir_dict[list(dir_dict.keys())[0]][0][0].keys():
         # create an empty list to store the mean residuals for each timestep
         # find the number of timesteps using the length of normalised_cons_sets
         lines[key] = [0] * len(dir_dict[0][0])
