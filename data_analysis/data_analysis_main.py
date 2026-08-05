@@ -129,7 +129,7 @@ def plot_synth(args, experiment_name):
             # get the dir num from the fname
             list_of_output_dirs.append(fname.split("_")[3])
     # CAUTION: Cutting for debug
-    list_of_output_dirs = list_of_output_dirs[:2]
+    #list_of_output_dirs = list_of_output_dirs[:2]
 
     # Construct dir_dict of form {dir_id: [normalised_cons, normalised_agents], ...}
     dir_dict = {}
