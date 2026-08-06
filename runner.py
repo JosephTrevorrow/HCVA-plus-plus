@@ -10,6 +10,26 @@ from julia.api import Julia
 jl = Julia(compiled_modules=False)
 from julia import Main
 from julia import PyCall
+import re
+
+## CREDIT: https://nedbatchelder.com/blog/200712/human_sorting
+def tryint(s):
+    try:
+        return int(s)
+    except:
+        return s
+
+def alphanum_key(s):
+    """ Turn a string into a list of string and number chunks.
+        "z23a" -> ["z", 23, "a"]
+    """
+    return [ tryint(c) for c in re.split('([0-9]+)', s) ]
+
+def sort_nicely(l):
+    """ Sort the given list in the way that humans expect.
+    """
+    l.sort(key=alphanum_key)
+    return l
 
 if __name__ == '__main__':
     parser = ap.ArgumentParser()
@@ -67,8 +87,8 @@ if __name__ == '__main__':
             if file.endswith(".csv"):
                 pvs_sets.append(pvs_dir + file)
         len_of_pvs_sets = len(pvs_sets)
-        pvs_sets.sort()
-        print("PVS Sets: ", pvs_sets, " and len of pvs sets: ", len_of_pvs_sets,)
+
+        pvs_sets = sort_nicely(pvs_sets)
         pvs = pvs_sets[0]
 
         prip_sets = []
@@ -77,10 +97,7 @@ if __name__ == '__main__':
             if file.endswith(".csv"):
                 prip_sets.append(prip_dir + file)
         len_of_prip_sets = len(prip_sets)
-        prip_sets.sort()
-        print("PriP Sets: ", prip_sets, " and len of PriP sets: ", len_of_prip_sets,)
-
-        # TODO: In debug mode, check that the prip sets and the pvs sets are sorted properly.
+        prip_sets = sort_nicely(prip_sets)
 
         ## Big for loop here running each aggregation and then saving
         # For the max of PriP or pvs sets,
@@ -107,6 +124,8 @@ if __name__ == '__main__':
             prip_df = pd.read_csv(prip_sets[i])
             print("-------------")
 
+            filename = str("DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
+            rows = []
             # Do a full run of aggregations and then cache it, to speed up computation
 
             # Run aggregations
@@ -114,49 +133,53 @@ if __name__ == '__main__':
             ## T
             # We do T first because we will use the t_point for other methods
             print("T...")
-            filename = str("T_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
-            filename_metadata = str("T_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
+            #filename = str("T_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
+            #filename_metadata = str("T_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
             filename_limits = "LIMITS_DIR_"+str(current_dir)+"_RUN_"+ str(i)+ "_"+now+"limits.csv"
             p, u_pref, cons_pref, u_act, cons_act, t_point = find_transition_and_aggregate(P_list, J_list, w,
                                                                                            output_dir, filename_limits, args.e, args)
-            output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
-            save_metadata(filename_metadata, args, t_point, t_point, 0.5, output_dir)
+            rows.append(["T", p, u_pref, u_act, cons_pref, cons_act, t_point, t_point, 0.5])
+            #output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
+            #save_metadata(filename_metadata, args, t_point, t_point, 0.5, output_dir)
             print("-------------")
             ## SLM
             print("SLM...")
-            filename = str("SLM_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
-            filename_metadata = str("SLM_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
+            #filename = str("SLM_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
+            #filename_metadata = str("SLM_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
             p, u_pref, cons_pref, u_act, cons_act, converted_principles = find_slm_and_aggregate(P_list, J_list, w, prip_df, t_point, args)
             ## Chop off half of cons_act, as output format has VA_p, and then VA_n. We are not interested in N, so we disregard
             cons_act = cons_act[:len(cons_act) // 2]
-            output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
-            save_metadata(filename_metadata, args, 0, converted_principles, 0, output_dir)
+            rows.append(["SLM", p, u_pref, u_act, cons_pref, cons_act,0, converted_principles, 0,])
+            #output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
+            #save_metadata(filename_metadata, args, 0, converted_principles, 0, output_dir)
             print("-------------")
             ## HCVA
             print("HCVA...")
-            filename = str("HCVA_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+now + ".csv")
-            filename_metadata = str("HCVA_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+now + ".csv")
+            #filename = str("HCVA_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+now + ".csv")
+            #filename_metadata = str("HCVA_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+now + ".csv")
             p, u_pref, u_act, cons_pref, cons_act, con_p = find_hcva_and_aggregate(P_list, J_list, w, prip_df, args)
-            output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
+            #output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
             # Convert HCVA to a preference.
             con_preference = np.log(con_p) / (2*np.log(t_point))
-            save_metadata(filename_metadata, args, None, con_p, con_preference, output_dir)
+            #save_metadata(filename_metadata, args, None, con_p, con_preference, output_dir)
+            rows.append(["HCVA", p, u_pref, u_act, cons_pref, cons_act, None, con_p, con_preference])
             print("-------------")
             ## HCVA++
             print("HCVA++...")
-            filename = str("HCVApp_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+now + ".csv")
-            filename_metadata = str("HCVApp_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+now + ".csv")
+            #filename = str("HCVApp_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+now + ".csv")
+            #filename_metadata = str("HCVApp_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+now + ".csv")
             p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference = find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, t_point, args)
-            output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
-            save_metadata(filename_metadata, args, transition_p, consensus_p, consensus_preference, output_dir)
+            #output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
+            #save_metadata(filename_metadata, args, transition_p, consensus_p, consensus_preference, output_dir)
+            rows.append(["HCVA++", p, u_pref, u_act, cons_pref, cons_act, transition_p, consensus_p, consensus_preference])
             print("-------------")
             ## EGAL/UTIL
             print("EGAL/UTIL...")
             baseline_ps = [1, np.inf]
             for p in baseline_ps:
                 # Generate filenames
-                filename = str(str(p) + "_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+ str(i)+"_"+now + ".csv")
-                filename_metadata = str(str(p) + "_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
+                #filename = str(str(p) + "_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+ str(i)+"_"+now + ".csv")
+                #filename_metadata = str(str(p) + "_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
                 # Aggregate and store
                 if p == np.inf:
                     _, u_pref, cons_pref = aggregate_inf(P_list, J_list, w, p, True)
@@ -171,14 +194,28 @@ if __name__ == '__main__':
                     _, u_pref, cons_pref = aggregate(P_list, J_list, w, p, True)
                     _, u_act, cons_act = aggregate(P_list, J_list, w, p, False)
                     cons_act = cons_act[:len(cons_act) // 2]
-                output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
+                #output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
                 if p == np.inf:
-                    save_metadata(filename_metadata, args, 0, p, 1, output_dir)
+                    rows.append(["inf", p, u_pref, u_act, cons_pref, cons_act, 0, p, 1])
+                    #save_metadata(filename_metadata, args, 0, p, 1, output_dir)
                 elif p == 1:
-                    save_metadata(filename_metadata, args, 0, p, 0, output_dir)
+                    rows.append(["1", p, u_pref, u_act, cons_pref, cons_act, 0, p, 0])
+                    #save_metadata(filename_metadata, args, 0, p, 0, output_dir)
                 else:
-                    save_metadata(filename_metadata, args, 0, p, p, output_dir)
-
+                    rows.append(["1", p, u_pref, u_act, cons_pref, cons_act, 0, p, p])
+                    #save_metadata(filename_metadata, args, 0, p, p, output_dir)
+            # Save the rows to a csv.
+            header = ['p', 'U_pref', 'u_act', ] + values_list + actions_list + ['transition_p', 'consensus_p', 'consensus_preference']
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+                print("Created directory: " + output_dir)
+            else:
+                print("Directory already exists: " + output_dir)
+            with open(output_dir + filename, 'w', newline='') as csvfile:
+                # writing file
+                writer = csv.writer(csvfile)
+                writer.writerows(rows)
+            csvfile.close()
             print("-------------")
             print("Done with iteration: {}".format(i))
 
