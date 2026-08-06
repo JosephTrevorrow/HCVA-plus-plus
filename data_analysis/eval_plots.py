@@ -237,40 +237,39 @@ def plot_violin_individuals(dir_dict, list_of_params, title, output_dir, differe
     - output_dir: directory to save the plot to.
     - difference: bool that if True will make points = the difference in residual t and t-1, if False, then residuals are just the residuals for that timestep.
     """
-    # Step 1: Create a dict `lines`, where we will store mean residuals for each method, for each timestep
+    # Step 1: Create a dict `lines`, where we will store mean residuals
     lines = {}
     for key in dir_dict[list(dir_dict.keys())[0]][0].keys():
         # create subdicts for every agent, using a default initial agents set
         _, agents = dir_dict[list(dir_dict.keys())[0]]
         lines[key] = {}
-        for i in range (0, len(agents[0])):
-            lines[key][i] = [0 for i in range(0, 50)]
+        for i in range (0, len(agents[0])*len(dir_dict)): # Len of 1 runs agents * number of runs
+            lines[key][i] = []
 
     # Step 2: Iterate over every timestep (each [normalised_cons_sets, normalised_agents_df] in dir_dict)
     #   find the residuals for each of the cons, for each timestep, and add to lines
-    for iteration, data in dir_dict.items():
+
+    for run, (iteration, data) in enumerate(dir_dict.items()):
         # Unpack
         normalised_cons_sets, normalised_agents = data
         for key, cons_df in normalised_cons_sets.items():
-            # cons_df will be a df for a cons. each row will correspond with a
-            for j in range(0,len(cons_df.index)):
-                # find the residuals for each of the cons in cons_dict_single
-                # For every consensus, go through each agent, and find difference.
-                for timestep_id, agent in enumerate(normalised_agents):
-                    temp_residual = np.abs(agent[list_of_params].to_numpy() - cons_df.iloc[j][list_of_params].to_numpy()).sum(axis=1)
-                    if difference and timestep_id >0 and j >0:
-                        previous_residual = np.abs(normalised_agents[timestep_id - 1][list_of_params].to_numpy() - cons_df.iloc[j-1][list_of_params].to_numpy()).sum(axis=1)
-                    # Add this agent's residual data to a line for the agent
-                    # Now add to lines for each agent
-                    for i in range(0,len(temp_residual)):
-                        if difference and timestep_id !=0 and j > 0:
-                            lines[key][i][timestep_id]+= temp_residual[i] - previous_residual[i]
-                        else:
-                            lines[key][i][timestep_id]+=temp_residual[i]
+            for timestep_id, agent in enumerate(normalised_agents):
+                temp_residual = np.abs(
+                    agent[list_of_params].to_numpy() - cons_df.iloc[timestep_id][list_of_params].to_numpy()).sum(axis=1)
+                if difference and timestep_id > 0:
+                    previous_residual = np.abs(
+                        normalised_agents[timestep_id - 1][list_of_params].to_numpy() - cons_df.iloc[timestep_id - 1][
+                            list_of_params].to_numpy()).sum(axis=1)
+                for i in range(0, len(temp_residual)):
+                    if difference and timestep_id > 0:
+                        lines[key][i + (run * len(agents[0]))].append(temp_residual[i] - previous_residual[i])
+                    else:
+                        lines[key][i + (run * len(agents[0]))].append(temp_residual[i])
     # Step 3: Given we have a total residual for each timestep and each method, divide by the number of cons to scale!
-    for key in lines.keys():
-        for i in range(0, len(lines[key])):
-            lines[key][i] = [element / len(dir_dict) for element in lines[key][i]]
+    #for key in lines.keys():
+    #    for i in range(0, len(lines[key])):
+    #        lines[key][i] = [element / len(dir_dict) for element in lines[key][i]]
+
     """
     # Step 4: Plot the lines and save
     #fig, ax = plt.subplots()

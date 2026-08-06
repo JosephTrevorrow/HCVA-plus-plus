@@ -129,7 +129,7 @@ def plot_synth(args, experiment_name):
             # get the dir num from the fname
             list_of_output_dirs.append(fname.split("_")[3])
     # CAUTION: Cutting for debug
-    #list_of_output_dirs = list_of_output_dirs[:2]
+    list_of_output_dirs = list_of_output_dirs[:2]
 
     # Construct dir_dict of form {dir_id: [normalised_cons, normalised_agents], ...}
     dir_dict = {}
@@ -206,35 +206,47 @@ def plot_synth(args, experiment_name):
         normalised_agents_df = normalise_agents_time_series(agents_list)
         dir_dict[int(dir)] = [normalised_cons_sets, normalised_agents_df]
 
-
-
     print("Time to plot!")
     ## STEP 2: use dir_dict to find the mean of resiudals
     # PVS
-    plot_mean_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name+"pvs_100_runs_residual", output_dir=args.output_dir)
+    #plot_mean_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name+"pvs_100_runs_residual", output_dir=args.output_dir)
     ### Just VAs
-    plot_mean_residuals(dir_dict, actions_list, experiment_name+"va_100_runs_residual", output_dir=args.output_dir)
+    #plot_mean_residuals(dir_dict, actions_list, experiment_name+"va_100_runs_residual", output_dir=args.output_dir)
     ### Just Ps
-    plot_mean_residuals(dir_dict, cleaned_values_list, experiment_name+"p_100_runs_residual", output_dir=args.output_dir)
+    #plot_mean_residuals(dir_dict, cleaned_values_list, experiment_name+"p_100_runs_residual", output_dir=args.output_dir)
     ### PriPs Residuals
-    plot_mean_residuals(dir_dict, ['Egalitarian'], experiment_name+"prip_100_runs_residual", output_dir=args.output_dir)
+    #plot_mean_residuals(dir_dict, ['Egalitarian'], experiment_name+"prip_100_runs_residual", output_dir=args.output_dir)
     # PVSs and PriPs
-    plot_mean_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'], experiment_name+"pvs_prip_100_runs_residual", output_dir=args.output_dir)
+    #plot_mean_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'], experiment_name+"pvs_prip_100_runs_residual", output_dir=args.output_dir)
 
     ## GINI
     ### PVS
-    plot_mean_gini(dir_dict, cleaned_values_list + actions_list, title=experiment_name+"pvs_gini",output_dir=args.output_dir)
-    plot_mean_gini(dir_dict, actions_list, title=experiment_name+"actions_gini",output_dir=args.output_dir)
-    plot_mean_gini(dir_dict, cleaned_values_list, title=experiment_name+"prefs_gini",output_dir=args.output_dir)
-    plot_mean_gini(dir_dict, ['Egalitarian'], title=experiment_name+"prips_gini",output_dir=args.output_dir)
-    plot_mean_gini(dir_dict, cleaned_values_list + actions_list + ["Egalitarian"], title=experiment_name+"pvs_prips_gini",output_dir=args.output_dir)
+    #plot_mean_gini(dir_dict, cleaned_values_list + actions_list, title=experiment_name+"pvs_gini",output_dir=args.output_dir)
+    #plot_mean_gini(dir_dict, actions_list, title=experiment_name+"actions_gini",output_dir=args.output_dir)
+    #plot_mean_gini(dir_dict, cleaned_values_list, title=experiment_name+"prefs_gini",output_dir=args.output_dir)
+    #plot_mean_gini(dir_dict, ['Egalitarian'], title=experiment_name+"prips_gini",output_dir=args.output_dir)
+    #plot_mean_gini(dir_dict, cleaned_values_list + actions_list + ["Egalitarian"], title=experiment_name+"pvs_prips_gini",output_dir=args.output_dir)
 
     ## Individual agents
-    plot_violin_individuals(dir_dict, cleaned_values_list+actions_list, title=experiment_name+"pvs_residuals_individuals", output_dir=args.output_dir, difference=True)
-    plot_violin_individuals(dir_dict, actions_list, title=experiment_name+"violin", output_dir=args.output_dir+"actions_residuals_individuals", difference=True)
-    plot_violin_individuals(dir_dict, cleaned_values_list, title=experiment_name+"prefs_residuals_individuals", output_dir=args.output_dir, difference=True)
-    plot_violin_individuals(dir_dict, ["Egalitarian"], title=experiment_name+"prips_residuals_individuals", output_dir=args.output_dir, difference=True)
-    plot_violin_individuals(dir_dict, cleaned_values_list+actions_list+["Egalitarian"], title=experiment_name+"pvs_prips_residuals_individuals", output_dir=args.output_dir, difference=True)
+    plot_violin_individuals(dir_dict, cleaned_values_list+actions_list, title=experiment_name+"pvs_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
+    plot_violin_individuals(dir_dict, actions_list, title=experiment_name+"actions_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
+    plot_violin_individuals(dir_dict, cleaned_values_list, title=experiment_name+"prefs_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
+    plot_violin_individuals(dir_dict, ["Egalitarian"], title=experiment_name+"prips_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
+    plot_violin_individuals(dir_dict, cleaned_values_list+actions_list+["Egalitarian"], title=experiment_name+"pvs_prips_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
+
+    plot_violin_individuals(dir_dict, cleaned_values_list + actions_list,
+                            title=experiment_name + "pvs_residuals_individuals", output_dir=args.output_dir,
+                            difference=False)
+    plot_violin_individuals(dir_dict, actions_list, title=experiment_name + "actions_residuals_individuals",
+                            output_dir=args.output_dir, difference=False)
+    plot_violin_individuals(dir_dict, cleaned_values_list, title=experiment_name + "prefs_residuals_individuals",
+                            output_dir=args.output_dir, difference=False)
+    plot_violin_individuals(dir_dict, ["Egalitarian"], title=experiment_name + "prips_residuals_individuals",
+                            output_dir=args.output_dir, difference=False)
+    plot_violin_individuals(dir_dict, cleaned_values_list + actions_list + ["Egalitarian"],
+                            title=experiment_name + "pvs_prips_residuals_individuals", output_dir=args.output_dir,
+                            difference=False)
+
     return
 
 if __name__ == "__main__":
