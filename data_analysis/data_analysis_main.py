@@ -1,7 +1,5 @@
 import re
-
 import pandas as pd
-import copy
 from eval_plots import *
 import argparse as ap
 from datetime import date
@@ -153,7 +151,7 @@ def plot_synth(args, experiment_name):
     list_of_output_dirs = sort_nicely(list(set(list_of_output_dirs)))
 
     # CAUTION: Cutting for debug
-    #list_of_output_dirs = list_of_output_dirs[:2]
+    list_of_output_dirs = list_of_output_dirs[:2]
 
     # Construct dir_dict of form {dir_id: [normalised_cons, normalised_agents], ...}
     dir_dict = {}
@@ -257,31 +255,33 @@ def plot_synth(args, experiment_name):
 
     ## GINI
     ### PVS
-    #plot_mean_gini(dir_dict, cleaned_values_list + actions_list, title=experiment_name+"pvs_gini",output_dir=args.output_dir)
-    #plot_mean_gini(dir_dict, actions_list, title=experiment_name+"actions_gini",output_dir=args.output_dir)
-    #plot_mean_gini(dir_dict, cleaned_values_list, title=experiment_name+"prefs_gini",output_dir=args.output_dir)
-    #plot_mean_gini(dir_dict, ['Egalitarian'], title=experiment_name+"prips_gini",output_dir=args.output_dir)
-    #plot_mean_gini(dir_dict, cleaned_values_list + actions_list + ["Egalitarian"], title=experiment_name+"pvs_prips_gini",output_dir=args.output_dir)
+    plot_mean_gini(dir_dict, cleaned_values_list + actions_list, title=experiment_name+"pvs_gini",output_dir=args.output_dir)
+    plot_mean_gini(dir_dict, actions_list, title=experiment_name+"actions_gini",output_dir=args.output_dir)
+    plot_mean_gini(dir_dict, cleaned_values_list, title=experiment_name+"prefs_gini",output_dir=args.output_dir)
+    plot_mean_gini(dir_dict, ['Egalitarian'], title=experiment_name+"prips_gini",output_dir=args.output_dir)
+    plot_mean_gini(dir_dict, cleaned_values_list + actions_list + ["Egalitarian"], title=experiment_name+"pvs_prips_gini",output_dir=args.output_dir)
 
     ## Individual agents
-    plot_violin_individuals(dir_dict, cleaned_values_list+actions_list, title=experiment_name+"pvs_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
-    plot_violin_individuals(dir_dict, actions_list, title=experiment_name+"actions_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
-    plot_violin_individuals(dir_dict, cleaned_values_list, title=experiment_name+"prefs_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
-    plot_violin_individuals(dir_dict, ["Egalitarian"], title=experiment_name+"prips_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
-    plot_violin_individuals(dir_dict, cleaned_values_list+actions_list+["Egalitarian"], title=experiment_name+"pvs_prips_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
+    """
+    find_and_store_residuals(dir_dict, cleaned_values_list+actions_list, title=experiment_name+"pvs_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
+    find_and_store_residuals(dir_dict, actions_list, title=experiment_name+"actions_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
+    find_and_store_residuals(dir_dict, cleaned_values_list, title=experiment_name+"prefs_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
+    find_and_store_residuals(dir_dict, ["Egalitarian"], title=experiment_name+"prips_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
+    find_and_store_residuals(dir_dict, cleaned_values_list+actions_list+["Egalitarian"], title=experiment_name+"pvs_prips_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
 
-    plot_violin_individuals(dir_dict, cleaned_values_list + actions_list,
+    find_and_store_residuals(dir_dict, cleaned_values_list + actions_list,
                             title=experiment_name + "pvs_residuals_individuals", output_dir=args.output_dir,
                             difference=False)
-    plot_violin_individuals(dir_dict, actions_list, title=experiment_name + "actions_residuals_individuals",
+    find_and_store_residuals(dir_dict, actions_list, title=experiment_name + "actions_residuals_individuals",
                             output_dir=args.output_dir, difference=False)
-    plot_violin_individuals(dir_dict, cleaned_values_list, title=experiment_name + "prefs_residuals_individuals",
+    find_and_store_residuals(dir_dict, cleaned_values_list, title=experiment_name + "prefs_residuals_individuals",
                             output_dir=args.output_dir, difference=False)
-    plot_violin_individuals(dir_dict, ["Egalitarian"], title=experiment_name + "prips_residuals_individuals",
+    find_and_store_residuals(dir_dict, ["Egalitarian"], title=experiment_name + "prips_residuals_individuals",
                             output_dir=args.output_dir, difference=False)
-    plot_violin_individuals(dir_dict, cleaned_values_list + actions_list + ["Egalitarian"],
+    find_and_store_residuals(dir_dict, cleaned_values_list + actions_list + ["Egalitarian"],
                             title=experiment_name + "pvs_prips_residuals_individuals", output_dir=args.output_dir,
                             difference=False)
+    """
 
     return
 
