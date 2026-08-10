@@ -153,7 +153,7 @@ def plot_synth(args, experiment_name):
     list_of_output_dirs = sort_nicely(list(set(list_of_output_dirs)))
 
     # CAUTION: Cutting for debug
-    list_of_output_dirs = list_of_output_dirs[:2]
+    #list_of_output_dirs = list_of_output_dirs[:2]
 
     # Construct dir_dict of form {dir_id: [normalised_cons, normalised_agents], ...}
     dir_dict = {}

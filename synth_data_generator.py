@@ -27,15 +27,16 @@ def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_
     _, _, cons_pref_1 = aggregate_one(P_list, J_list, w, 1, True)
     _, _, cons_act_1 = aggregate_one(P_list, J_list, w, 1, False)
     cons_act_1 = cons_act_1[:len(cons_act_1) // 2]
-    # Now we have the consensus for complete util and complete egal, we can see which values of 1 promote
-    # which values, and which values of inf promote the others.
-    # So now for each agent, find their residual to inf and 1. Whichever is smaller, sample from a norm dist relevant to them
-    # As the stored PriP is egalitarian, we say if inf is closer, then we centre on 1, if 1 is closer, we centre on 0.
+    # For each agent, find their residual to the egalitarian (inf) and utilitarian (1) consensus.
+    # Minimising strategy: assign the PrIP whose consensus is closest to the agent's own preferences.
+    # If the egalitarian consensus is closer (inf_diff < ones_diff), centre PrIP on 1 (high egalitarian).
+    # If the utilitarian consensus is closer, centre PrIP on 0.
     prips = {}
     for agent in agent_ids:
-        inf_diff = np.abs(cons_pref_inf - ps[agent].flatten()).sum() + np.abs(cons_act_inf - vas[agent].flatten()).sum()
-        ones_diff = np.abs(cons_pref_1 - ps[agent].flatten()).sum() + np.abs(cons_act_1 - vas[agent].flatten()).sum()
-        if inf_diff > ones_diff:
+        vas_flat = vas[agent].T.flatten()  # transpose to value-major order to match consensus ordering
+        inf_diff = np.abs(cons_pref_inf - ps[agent].flatten()).sum() + np.abs(cons_act_inf - vas_flat).sum()
+        ones_diff = np.abs(cons_pref_1 - ps[agent].flatten()).sum() + np.abs(cons_act_1 - vas_flat).sum()
+        if inf_diff < ones_diff:
             # if we want egal to be closer to 1
             # loc and scale are just mean and std for normal.
             # We start with mu = p, scale = 0.08.
