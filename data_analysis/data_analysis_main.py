@@ -8,6 +8,7 @@ from datetime import date
 import os
 import fnmatch
 import glob
+import ast
 
 ## CREDIT: https://nedbatchelder.com/blog/200712/human_sorting
 def tryint(s):
@@ -27,6 +28,22 @@ def sort_nicely(l):
     """
     l.sort(key=alphanum_key)
     return l
+
+def parse_vector_cell(cell):
+    """Parse a vector stored in a CSV cell.
+    New synthetic consensus files store cons_pref/cons_act in a single
+    cell, as a stringified Python-style list.
+    """
+    if isinstance(cell, list):
+        return cell
+    if pd.isna(cell):
+        return []
+    if isinstance(cell, str):
+        # Remove the whitespace between the "[" and the first character, then the regex will match.
+        # Otherwise, you end up with the string "[    mydecimalnumberhere" becoming [,mydecimalnumberhere], which is a syntax error
+        cell = cell.strip('[]')
+        return ast.literal_eval(','.join(re.sub(r'(?<=\S)(\s+)(?=-?\S)', ',', cell).splitlines()))
+    return list(cell)
 
 def plot_ess(now, args):
     # Find the number of pvs files (this, or any other list of files will tell us the number of iterations)
@@ -49,11 +66,9 @@ def plot_ess(now, args):
         # for each of the cons, load them into a df, and store in a dict of dfs with baseline names
         for j in range(0, len(cons_pvs_sets)):
             cons_pvs = pd.read_csv(cons_pvs_sets[j])
-            cons_prip = pd.read_csv(cons_prip_sets[j])
+            cons_prip = pd.read_csv(cons_prip_sets[j], usecols=["Egalitarian"])
             # Get the key (the text before the first _ in the filename)
             key = os.path.splitext(os.path.basename(cons_pvs_sets[j]))[0].split("_")[0]
-            # Removed PriP cols other than preference
-            cons_prip = cons_prip[['Egalitarian']]
             cons_df = pd.concat([cons_pvs, cons_prip], axis=1, join="inner")
             ## Add cons_df to cons_sets dict
             cons_sets[key] = copy.deepcopy(cons_df)
@@ -120,14 +135,23 @@ def plot_ess(now, args):
 
 def plot_synth(args, experiment_name):
     """This method computes plots from synthetic data"""
-
     # Find output_dirs/sum
+    all_cons_files = os.listdir(args.cons_dir)
+    cons_files_by_dir = {}
     list_of_output_dirs = []
-    for fname in os.listdir(args.cons_dir):
-        # HCVA here as a filter for a single method. All methods will have same len.
-        if re.search(r"HCVA_PERSONALS_DIR_[0-9]+_RUN_"+str(args.steps)+"_", fname):
-            # get the dir num from the fname
-            list_of_output_dirs.append(fname.split("_")[3])
+    for fname in all_cons_files:
+        match = re.search(r"DIR_([0-9]+)_RUN_([0-9]+)", fname)
+        if not match:
+            continue
+        dir_id = match.group(1)
+        run_id = match.group(2)
+        if run_id == str(args.steps):
+            list_of_output_dirs.append(dir_id)
+        cons_files_by_dir.setdefault(dir_id, [])
+        cons_files_by_dir[dir_id].append(os.path.join(args.cons_dir, fname))
+    # Sort: (Note, these are filenames for cons sets)
+    list_of_output_dirs = sort_nicely(list(set(list_of_output_dirs)))
+
     # CAUTION: Cutting for debug
     list_of_output_dirs = list_of_output_dirs[:2]
 
@@ -135,52 +159,64 @@ def plot_synth(args, experiment_name):
     dir_dict = {}
     for dir in list_of_output_dirs:
         agents_list = []
-        # Given a directory where a consensus is, find all consensuses in dir.
-        cons_pvs_sets = []
-        cons_prip_sets = []
-        for fname in os.listdir(args.cons_dir):
-            if re.search(r"_PERSONALS_DIR_" + str(dir) +"_RUN_[0-9]+", fname):
-                cons_pvs_sets.append(args.cons_dir+fname)
-            elif re.search(r"_METADATA_DIR_" + str(dir) +"_RUN_[0-9]+", fname):
-                cons_prip_sets.append(args.cons_dir+fname)
-        # Sort: (Note, these are filenames for cons sets)
-        cons_pvs_sets = sort_nicely(cons_pvs_sets)
-        cons_prip_sets = sort_nicely(cons_prip_sets)
-
-        # For each cons found, load into a df, store in a dict of dfs with baseline names.
-        # For loop returns a dict cons_sets, which has <len(baselines)> dfs, 1 for each baseline. The df will contain <len(timesteps)> rows, 1 per cons.
-        cons_sets = {}
-        for j in range(0, len(cons_pvs_sets)):
-            cons_pvs = pd.read_csv(cons_pvs_sets[j])
-            cons_prip = pd.read_csv(cons_prip_sets[j])
-            # Get the key (=baseline name) (the text before the first _ in the filename)
-            key = os.path.splitext(os.path.basename(cons_pvs_sets[j]))[0].split("_")[0]
-            # Removed PriP cols other than preference
-            cons_prip = cons_prip[['Egalitarian']]
-            cons_df = pd.concat([cons_pvs, cons_prip], axis=1, join="inner")
-            # Add cons_df to cons_sets dict
-            if key not in cons_sets:
-                cons_sets[key] = copy.deepcopy(cons_df)
-            else:
-                cons_sets[key] = pd.concat([cons_sets[key], copy.deepcopy(cons_df)])
-
         # input every single agent, place in a list of df (form: [t1_agents, t2_agents, etc.
-        ag_pvs = glob.glob(args.agents_pvs_dir + str(dir)+"/"+"*PVS*")
-        ag_prip = glob.glob(args.agents_prip_dir + str(dir)+"/"+"*PriP*")
+        ag_pvs = glob.glob(args.agents_pvs_dir + str(dir) + "/" + "*PVS*")
+        ag_prip = glob.glob(args.agents_prip_dir + str(dir) + "/" + "*PriP*")
         sorted_ag_pvs = sort_nicely(ag_pvs)
         sorted_ag_prip = sort_nicely(ag_prip)
 
+        # Use the agents header col to name cons_pref and cons_act.
+        # These should be stable for all timesteps in the same dir.
+        agents_pvs_header_df = pd.read_csv(sorted_ag_pvs[0], nrows=0)
+        pref_cols = [col for col in agents_pvs_header_df.columns if 'P__' in col]
+        act_cols = [col for col in agents_pvs_header_df.columns if 'VA__' in col]
+
+        # For each cons found, load into a df, store in a dict of dfs with baseline names.
+        #   Manually define names as runner.py does not set them
+        cons_run_files = sort_nicely(cons_files_by_dir[dir])
+        cons_sets_parts = {}
+        for cons_file in cons_run_files:
+            cons_run_df = pd.read_csv(
+                cons_file,
+                header=None,
+                names=[
+                    "name",
+                    "p",
+                    "u_pref",
+                    "u_act",
+                    "cons_pref",
+                    "cons_act",
+                    "t_point",
+                    "con_p",
+                    "cons_preference",
+                ],
+            )
+            for _, row in cons_run_df.iterrows():
+                key = str(row["name"])
+                cons_pref = parse_vector_cell(row["cons_pref"])
+                cons_act = parse_vector_cell(row["cons_act"])
+                # Make a dataframe after unpacking the values from cons_pref and cons_act, append the Egalitarian pref.
+                cons_df = pd.DataFrame(
+                    [[*cons_pref, *cons_act, row["cons_preference"]]],
+                    columns=pref_cols + act_cols + ["Egalitarian"],
+                )
+                cons_sets_parts.setdefault(key, []).append(cons_df)
+        cons_sets = {
+            key: pd.concat(parts, ignore_index=True)
+            for key, parts in cons_sets_parts.items()
+        }
+        # Finally, get those agents
         for i in range(0, len(sorted_ag_pvs)):
             agents_pvs_df = pd.read_csv(sorted_ag_pvs[i])
-            agents_prip_df = pd.read_csv(sorted_ag_prip[i])
+            agents_prip_df = pd.read_csv(sorted_ag_prip[i], usecols=["Egalitarian"])
             agents_df = pd.concat([agents_pvs_df, agents_prip_df], axis=1, join="inner")
-            agents_list.append(copy.deepcopy(agents_df))
+            agents_list.append(agents_df)
 
-        ## remove the irrelevant cols from every single df you've just sorted out. Create a list of params to use with residuals
+        # remove the irrelevant cols from every single df you've just sorted out. Create a list of params to use with residuals
         #  Every df will have the same cols, so we find them for one, and copy this
         # note, we will use values_list and actions_list to filter our data analysis plots.
-        values_list = list([col for col in cons_sets["HCVA"].columns if 'P__' in col])
-        cleaned_values_list = copy.deepcopy(values_list)
+        values_list = pref_cols
+        cleaned_values_list = values_list.copy()
         # Clean list_of_params
         # Remove all cols that have the same two values (P__Universalism__Universalism, P__Benevolence__Benevolence, etc.)
         for col in values_list:
@@ -193,7 +229,7 @@ def plot_synth(args, experiment_name):
                 if symmetrical_col in cleaned_values_list:
                     cleaned_values_list.remove(symmetrical_col)
         ## Again, because every method will have the exact same col names, we just use HCVA here.
-        actions_list = list([col for col in cons_sets["HCVA"].columns if 'VA__' in col])
+        actions_list = act_cols
         agents_cols_to_keep = cleaned_values_list + actions_list + ["Egalitarian"]
         cons_cols_to_keep = cleaned_values_list + actions_list + ["Egalitarian"]
 
