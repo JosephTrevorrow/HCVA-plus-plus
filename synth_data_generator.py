@@ -188,7 +188,7 @@ def save_prips(prips, agents_ids, filename, output_dir):
     return
 
 def generate(n_values, n_actions, n_agents, pvs_prip=0.3, va_p=0.3,p_group_factor=0.5,
-             mu_p=0.75, va_mu=0.75,  sigma_prip=0.08, pvs_filename="default", prip_filename="default", pvs_output_dir="", prip_output_dir=""):
+             mu_p=0.75, va_mu=0.75, pvs_filename="default", prip_filename="default", pvs_output_dir="", prip_output_dir=""):
     """Generates a synthetic data distribution.
     - n_values: number of values
     - n_actions: number of actions
@@ -222,25 +222,25 @@ if __name__ == "__main__":
     for run in range(500):
         ### Initial: agents, values, actions
         for ag in range(2, 30,1):
-            generate(n_values=4, n_actions=2, n_agents=ag, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
+            generate(n_values=4, n_actions=2, n_agents=ag, pvs_prip=0.08, va_p=0.3, p_group_factor=0.5,
                     mu_p=0.85, va_mu=0.85, pvs_filename="vary_agents_"+str(ag), prip_filename="vary_agents_"+str(ag), pvs_output_dir=output_dir+"vary_agents/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_agents/PriP/"+str(run)+"/")
         for val in range(2,10,1):
-            generate(n_values=val, n_actions=2, n_agents=30, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
+            generate(n_values=val, n_actions=2, n_agents=30, pvs_prip=0.08, va_p=0.3, p_group_factor=0.5,
                     mu_p=0.85, va_mu=0.85, pvs_filename="vary_values_"+str(val), prip_filename="vary_values_"+str(val), pvs_output_dir=output_dir+"vary_vals/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_vals/PriP/"+str(run)+"/")
         for act in range(1, 10, 1):
-            generate(n_values=4, n_actions=act, n_agents=30, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
+            generate(n_values=4, n_actions=act, n_agents=30, pvs_prip=0.08, va_p=0.3, p_group_factor=0.5,
                      mu_p=0.85, va_mu=0.85, pvs_filename="vary_actions_" + str(act), prip_filename="vary_actions_" + str(act), pvs_output_dir=output_dir+"vary_acts/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_acts/PriP/"+str(run)+"/")
 
         ## MAJ/MIN SPLIT
         grp_facts = np.linspace(0.5, 1, 50)
         for grp_fact in grp_facts:
-            generate(n_values=4, n_actions=2, n_agents=30, pvs_prip=0.3, va_p=0.3, p_group_factor=grp_fact,
+            generate(n_values=4, n_actions=2, n_agents=30, pvs_prip=0.08, va_p=0.3, p_group_factor=grp_fact,
                      mu_p=0.85, va_mu=0.85, pvs_filename="vary_grp_fact_"+str(grp_fact), prip_filename="vary_grp_fact_"+str(grp_fact), pvs_output_dir=output_dir+"vary_grp_fact/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_grp_fact/PriP/"+str(run)+"/")
 
         ## EXTREME PVSs
         mupvamu = np.linspace(0.5, 1, 50)
         for mup_vamu in mupvamu:
-            generate(n_values=4, n_actions=2, n_agents=30, pvs_prip=0.3, va_p=0.3, p_group_factor=0.5,
+            generate(n_values=4, n_actions=2, n_agents=30, pvs_prip=0.08, va_p=0.3, p_group_factor=0.5,
                      mu_p=mup_vamu, va_mu=mup_vamu, pvs_filename="vary_mup_vamu_"+str(mup_vamu), prip_filename="vary_mup_vamu_"+str(mup_vamu), pvs_output_dir=output_dir+"vary_mup_vamu/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_mup_vamu/PriP/"+str(run)+"/")
 
         ## PriP NOISE
