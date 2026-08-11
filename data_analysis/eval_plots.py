@@ -7,6 +7,24 @@ import os
 import numpy as np
 import copy
 
+
+def _compute_gini_from_residuals(residuals):
+    """Compute the Gini coefficient from a 1D array of residuals."""
+    residuals = np.asarray(residuals, dtype=float).ravel()
+    if residuals.size == 0:
+        return 0.0
+    if np.allclose(residuals, 0):
+        return 0.0
+
+    mean_residual = residuals.mean()
+    if np.isclose(mean_residual, 0):
+        return 0.0
+
+    pairwise_diffs = np.abs(np.subtract.outer(residuals, residuals))
+    mad = pairwise_diffs.mean()
+    return 0.5 * (mad / mean_residual)
+
+
 def normalise_cons(sets):
     """Normalises the consensus data to be between 0-1. sets is of form: dict{key: df}"""
     normalised = {}
@@ -76,20 +94,11 @@ def gini_coefficient(cons_sets, agents_df, list_of_params, filename, args):
     Low total utility with High Gini means cons favours majority at expense of minority (low because lower is better)"""
     ginis = {}
     for key, cons_df in cons_sets.items():
-        temp_residuals = np.array([], dtype=float)
+        temp_residuals = []
         for agent in agents_df.iterrows():
-            # For every col, match these two dfs
             temp_residual = np.abs(agent[1][list_of_params].to_numpy() - cons_df.iloc[0][list_of_params].to_numpy()).sum()
-            temp_residuals = np.append(temp_residuals, [temp_residual])
-        # Mean absolute difference
-        mad = np.abs(np.subtract.outer(temp_residuals, temp_residuals)).mean()
-        # Relative mean absolute difference
-        if np.mean(temp_residuals) == 0:
-            print("WARNING: Mean of residuals is 0.")
-        rmad = mad / np.mean(temp_residuals)
-        # Gini coefficient
-        g = 0.5 * rmad
-        ginis[key] = copy.copy(g)
+            temp_residuals.append(float(temp_residual))
+        ginis[key] = _compute_gini_from_residuals(temp_residuals)
     ## Add to/Make a gini csv file and save ginis
     output_dir = args.output_dir
     if not os.path.exists(output_dir):
@@ -202,47 +211,46 @@ def plot_mean_gini(dir_dict, list_of_params, title, output_dir):
                     - where each dict is all cons for a single timestep.
             - list_of_params: list of parameters to include in the residual calculation. e.g. [pvs, pvs+prip, etc. (listed as col names)]
             - output_dir: directory to save the plot to.
-        """
-    # Step 1: Create a dict `lines`, where we will store mean residuals
-    lines = {}
-    for key in dir_dict[list(dir_dict.keys())[0]][0].keys():
-        # create subdicts for every agent, using a default initial agents set
-        _, agents = dir_dict[list(dir_dict.keys())[0]]
-        lines[key] = [0]*len(dir_dict[list(dir_dict.keys())[0]][0]["HCVA"])
+    """
+    first_cons_sets = dir_dict[list(dir_dict.keys())[0]][0]
+    num_timesteps = max(len(cons_df) for cons_df in first_cons_sets.values())
 
+    residuals_by_key = {
+        key: [[] for _ in range(num_timesteps)]
+        for key in first_cons_sets.keys()
+    }
 
-    # Step 2: Iterate over every timestep (each [normalised_cons_sets, normalised_agents_df] in dir_dict)
-    #   find the residuals for each of the cons, for each timestep, and add to lines
-    for iteration, data in dir_dict.items():
+    for _, data in dir_dict.items():
         # Unpack
         normalised_cons_sets, normalised_agents = data
         for key, cons_df in normalised_cons_sets.items():
-            # cons_df will be a df for a cons. each row will correspond with a
-            for j in range(0, len(cons_df.index)):
-                # find the residuals for each of the cons in cons_dict_single
-                # For every consensus, go through each agent, and find difference.
-                temp_residuals = np.array([], dtype=float)
-                for agent in normalised_agents:
+            for timestep_id, agents_df in enumerate(normalised_agents):
+                if timestep_id >= num_timesteps:
+                    continue
+
+                timestep_residuals = []
+                for _, agent in agents_df.iterrows():
                     temp_residual = np.abs(
-                        agent[list_of_params].to_numpy() - cons_df.iloc[j][list_of_params].to_numpy()).sum()
-                    temp_residuals = np.append(temp_residuals, [temp_residual])
-                # Mean absolute difference
-                mad = np.abs(np.subtract.outer(temp_residuals, temp_residuals)).mean()
-                # Relative mean absolute difference
-                rmad = mad / np.mean(temp_residuals)
-                # Gini coefficient
-                g = 0.5 * rmad
-                lines[key][j] += g
-    # Step 3: Given we have a total residual for each timestep and each method, divide by the number of cons
-    for key in lines.keys():
-        lines[key] = [iterator / len(dir_dict) for iterator in lines[key]]
+                        agent[list_of_params].to_numpy() - cons_df.iloc[timestep_id][list_of_params].to_numpy()
+                    ).sum()
+                    timestep_residuals.append(float(temp_residual))
+
+                residuals_by_key[key][timestep_id].extend(timestep_residuals)
+    lines = {}
+    for key, residuals_per_timestep in residuals_by_key.items():
+        lines[key] = [
+            _compute_gini_from_residuals(residuals)
+            if residuals
+            else 0.0
+            for residuals in residuals_per_timestep
+        ]
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
         print("Created directory: " + output_dir)
     else:
         print("Directory already exists: " + output_dir)
-    # Save list_of_points to a file
+
     with open(output_dir + title + "gini.csv", 'w') as f:
         writer = csv.writer(f)
         writer.writerow(["key", "points"])
