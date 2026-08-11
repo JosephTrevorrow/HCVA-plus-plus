@@ -331,7 +331,7 @@ def transition_point(P_list, J_list, w, e):
         dist_1p = np.linalg.norm(cons_1 - cons, i)
         dist_pl = np.linalg.norm(cons_l - cons, i)
         # Go to at least 3. SLM note that p >= 3 is not significantly different to p = \infty
-        if p > 3.0:
+        if i > 3.0:
             #abs(dist_1p - dist_pl) < e and
             best_p = i
             if __debug__:
