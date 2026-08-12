@@ -42,20 +42,20 @@ def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_
             # We start with mu = p, scale = 0.08.
             #   To truncate this, you have to normalise this. truncnorm expects the trunc points to be stds away from the mean, rather than points on the x-axis
             loc = 1
-            sigma_prip = 0.25
+            sigma_prip = pvs_prip
             a_trunc = 0.5
             b_trunc = 1
             a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
             prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)
         else:
             loc = 0
-            sigma_prip = 0.25
+            sigma_prip = pvs_prip
             a_trunc = 0
             b_trunc = 0.5
             a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
             prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)
         # add some random noise according to sigma_noise, and clip the noise
-        prip += rng.normal(0, sigma_noise, size=1)
+        #prip += rng.normal(0, sigma_noise, size=1)
         np.clip(prip, 0, 1, out=prip)
         prips[agent] = prip[0]
     return prips
@@ -72,9 +72,9 @@ def generate_ps(agent_ids, n_values, mu=0.75, p_group_factor=0.5):
     for agent in agent_ids:
         if agent in group_a:
             samples_a= rng.normal(mu, 0.05, len(strong_vals_group_a))
-            samples_b = rng.normal(mu-0.7, 0.05, len(values_list)-len(strong_vals_group_a))
+            samples_b = rng.normal(1-mu, 0.05, len(values_list)-len(strong_vals_group_a))
         else:
-            samples_a = rng.normal(mu-0.7, 0.05, len(strong_vals_group_a))
+            samples_a = rng.normal(1-mu, 0.05, len(strong_vals_group_a))
             samples_b = rng.normal(mu, 0.05, len(values_list)-len(strong_vals_group_a))
         # Save these samples in the right order
         for k in range(0, n_values):
@@ -119,7 +119,8 @@ def generate_vas(agent_ids, n_values, n_actions, va_p, va_mu):
                     # Demoted, so must be closer to -1
                     va_temp = rng.normal(-va_mu, 0.05)
                 # Add a bit of noise and add to va
-                noise = rng.normal(0, va_p, size=1)
+                #noise = rng.normal(0, va_p, size=1)
+                noise=0
                 va_temp = va_temp+noise
                 va = np.append(va, copy.deepcopy(va_temp))
             np.clip(va, -1, 1, out=va)
