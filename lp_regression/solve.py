@@ -184,13 +184,13 @@ def find_transition_and_aggregate(P_list, J_list, w, output_dir, filename_limits
     """ Compute the transition point, and find an aggregation with that transition point P """
     # 1. Compute transition point
     p_list, dist_p_list, dist_inf_list, diff_list, t_point = transition_point(P_list, J_list, w, e)
-    limit_output(
-        p_list,
-        dist_p_list,
-        dist_inf_list,
-        diff_list,
-        output_dir,
-        filename_limits)
+    #limit_output(
+    #    p_list,
+    #    dist_p_list,
+    #    dist_inf_list,
+    #    diff_list,
+    #    output_dir,
+    #    filename_limits)
     # 2. Aggregate and store to a file.
     p, u_pref, cons_pref = aggregate(P_list, J_list, w, t_point, True)
     _, u_act, cons_act = aggregate(P_list, J_list, w, t_point, False)
