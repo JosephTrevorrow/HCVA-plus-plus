@@ -15,7 +15,23 @@ from collections import defaultdict
 seed = 4832095623890
 rng = np.random.default_rng(seed)
 
-def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_noise):
+def generate_prips_groupings(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_prip, maximise, p_group_factor):
+    prips = {}
+    agent_ps = defaultdict(lambda: np.empty(shape=(1, n_values)))
+    # Assign agents to groups
+    group_a = rng.choice(a=np.arange(len(agent_ids)), size=int((len(agent_ids) * p_group_factor)), replace=False)
+    # Find strengths for each agent, considering their group and the values that group holds.
+    for agent in agent_ids:
+        a_trunc = 0
+        b_trunc = 1
+        loc = 1 if agent in group_a else 0
+        a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
+        prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)
+        np.clip(prip, 0, 1, out=prip)
+        prips[agent] = prip[0]
+    return prips
+
+def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_prip, maximise):
     """Generates a PriP set for agents by considering the PVS and alignment."""
     P_list, J_list, w, country_dict = FormalisationObjects(filename=pvs_filename, delimiter=',', weights=0,
                                                            n_values=n_values, n_actions=n_actions)
@@ -36,26 +52,20 @@ def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_
         vas_flat = vas[agent].T.flatten()  # transpose to value-major order to match consensus ordering
         inf_diff = np.abs(cons_pref_inf - ps[agent].flatten()).sum() + np.abs(cons_act_inf - vas_flat).sum()
         ones_diff = np.abs(cons_pref_1 - ps[agent].flatten()).sum() + np.abs(cons_act_1 - vas_flat).sum()
-        if inf_diff < ones_diff:
+        a_trunc = 0
+        b_trunc = 1
+        if inf_diff < ones_diff and maximise:
             # if we want egal to be closer to 1
             # loc and scale are just mean and std for normal.
             # We start with mu = p, scale = 0.08.
             #   To truncate this, you have to normalise this. truncnorm expects the trunc points to be stds away from the mean, rather than points on the x-axis
             loc = 1
-            sigma_prip = pvs_prip
-            a_trunc = 0.5
-            b_trunc = 1
             a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
             prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)
         else:
             loc = 0
-            sigma_prip = pvs_prip
-            a_trunc = 0
-            b_trunc = 0.5
             a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
             prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)
-        # add some random noise according to sigma_noise, and clip the noise
-        #prip += rng.normal(0, sigma_noise, size=1)
         np.clip(prip, 0, 1, out=prip)
         prips[agent] = prip[0]
     return prips
@@ -97,7 +107,7 @@ def generate_ps(agent_ids, n_values, mu=0.75, p_group_factor=0.5):
         agent_ps[agent] = copy.deepcopy(diff_norm)
     return agent_ps
 
-def generate_vas(agent_ids, n_values, n_actions, va_p, va_mu):
+def generate_vas(agent_ids, n_values, n_actions, va_mu):
     """Generates action judgements for certain actions and preferences, returns as a dict of agents/vas"""
     # Assign actions to values
     values_list = [i for i in range(n_values)]
@@ -118,13 +128,39 @@ def generate_vas(agent_ids, n_values, n_actions, va_p, va_mu):
                 else:
                     # Demoted, so must be closer to -1
                     va_temp = rng.normal(-va_mu, 0.05)
-                # Add a bit of noise and add to va
-                #noise = rng.normal(0, va_p, size=1)
-                noise=0
-                va_temp = va_temp+noise
                 va = np.append(va, copy.deepcopy(va_temp))
             np.clip(va, -1, 1, out=va)
             agent_vas[agent] = np.append(agent_vas[agent], [copy.deepcopy(va)], axis=0)
+    return agent_vas
+
+def generate_random_ps(agent_ids, n_values):
+    agent_ps = {}
+    for agent in agent_ids:
+        agent_ps[agent] = rng.random(n_values)
+        # for every value in the values list, compare it to every other value
+        diff = agent_ps[agent][0][:, np.newaxis] - agent_ps[agent]
+        if np.max(diff) - np.min(diff) == 0:
+            diff_norm = np.full(diff.shape, 0.5)
+        else:
+            diff_norm = (diff - np.min(diff)) / (np.max(diff) - np.min(diff))
+        np.clip(diff_norm, 0, 1, out=diff_norm)
+        agent_ps[agent] = copy.deepcopy(diff_norm)
+    return agent_ps
+
+def generate_random_vas(agent_ids, n_values,n_actions):
+    """Generates action judgements for certain actions and preferences, returns as a dict of agents/vas"""
+    # Assign actions to values
+    values_list = [i for i in range(n_values)]
+    actions_list = [j for j in range(n_actions)]
+    agent_vas = defaultdict(lambda: np.empty(shape=(0,n_values)))
+    for action in range(0, n_actions):
+        for agent in agent_ids:
+            for value in range(0, n_values):
+                va_temp = rng.random(size=n_values)
+                va_temp = (2*va_temp)-1
+            va = np.append(va, copy.deepcopy(va_temp))
+        np.clip(va, -1, 1, out=va)
+        agent_vas[agent] = np.append(agent_vas[agent], [copy.deepcopy(va)], axis=0)
     return agent_vas
 
 def save_pvs(ps, vas, agents_ids, n_values, n_acts, filename, output_dir):
@@ -188,14 +224,13 @@ def save_prips(prips, agents_ids, filename, output_dir):
             writer.writerow(row)
     return
 
-def generate(n_values, n_actions, n_agents, pvs_prip=0.3, va_p=0.3,p_group_factor=0.5,
-             mu_p=0.75, va_mu=0.75, pvs_filename="default", prip_filename="default", pvs_output_dir="", prip_output_dir=""):
+def generate(n_values, n_actions, n_agents, sigma_prip=0.3,p_group_factor=0.5,
+             mu_p=0.75, va_mu=0.75, pvs_filename="default", prip_filename="default", pvs_output_dir="", prip_output_dir="", prip_groups=False):
     """Generates a synthetic data distribution.
     - n_values: number of values
     - n_actions: number of actions
     - n_agents: number of agents
-    - pvs_prip: The amount of noise to add to the PriP values.
-    - va_p: The amount of noise to add to the VA_p values.
+    - sigma_prip: The sigma value for PriP generation.
     - mu_p: The mean of the normal dist. for p vals
     - sigma_p: The std of the normal dist. for p vals
     - p_group_factor: The percentage of agents assigned to a group.
@@ -207,13 +242,27 @@ def generate(n_values, n_actions, n_agents, pvs_prip=0.3, va_p=0.3,p_group_facto
     ps = generate_ps(agent_ids, n_values, mu_p, p_group_factor)
     ## Step 1.2: Given the number of actions and values, randomly assign an action 1 or more values it promotes.
     # The remaining values are demoted. This can always be random.
-    vas = generate_vas(agent_ids, n_values, n_actions, va_p, va_mu)
+    vas = generate_vas(agent_ids, n_values, n_actions, va_mu)
     ## Step 1.3 Given the ps and vas, save the pvs to a csv.
     pvs_dir = save_pvs(ps, vas, agent_ids, n_values, n_actions, pvs_filename, pvs_output_dir)
 
     ## Step 3: For every agent's PVS, we can use the value aggregation code to find aggregations of 1 and inf. We find the consensus that minimises
     # the agent's residual. This consensus (when converted back to a preference) is the mean point of the normal distribution.
-    prips = generate_prips(agent_ids, ps, vas, pvs_dir, n_values, n_actions, pvs_prip)
+    if prip_groups:
+        print("generating prip groupings.")
+        prips = generate_prips_groupings(agent_ids, ps, vas, pvs_dir, n_values, n_actions, sigma_prip)
+    else:
+        prips = generate_prips(agent_ids, ps, vas, pvs_dir, n_values, n_actions, sigma_prip)
+    ## Step 3.1: Save prips to a csv.
+    save_prips(prips, agent_ids, prip_filename, prip_output_dir)
+    return ps, vas, prips, agent_ids
+
+def generate_randoms(n_values, n_actions, n_agents,  pvs_filename="default", prip_filename="default", pvs_output_dir="", prip_output_dir=""):
+    agent_ids = list(range(n_agents))
+    ps = generate_random_ps(agent_ids, n_values)
+    vas = generate_random_vas(agent_ids, n_values,n_actions)
+    pvs_dir = save_pvs(ps, vas, agent_ids, n_values, n_actions, pvs_filename, pvs_output_dir)
+    prips = generate_random_ps(agent_ids, 1)
     ## Step 3.1: Save prips to a csv.
     save_prips(prips, agent_ids, prip_filename, prip_output_dir)
     return ps, vas, prips, agent_ids
@@ -223,30 +272,50 @@ if __name__ == "__main__":
     for run in range(500):
         ### Initial: agents, values, actions
         for ag in range(2, 30,1):
-            generate(n_values=4, n_actions=2, n_agents=ag, pvs_prip=0.08, va_p=0.3, p_group_factor=0.5,
-                    mu_p=0.85, va_mu=0.85, pvs_filename="vary_agents_"+str(ag), prip_filename="vary_agents_"+str(ag), pvs_output_dir=output_dir+"vary_agents/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_agents/PriP/"+str(run)+"/")
+            generate(n_values=4, n_actions=2, n_agents=ag, sigma_prip=0.08, p_group_factor=0.5,
+                    mu_p=0.85, va_mu=0.85, maximise=True, pvs_filename="vary_agents_"+str(ag), prip_filename="vary_agents_"+str(ag), pvs_output_dir=output_dir+"vary_agents/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_agents/PriP/"+str(run)+"/")
         for val in range(2,10,1):
-            generate(n_values=val, n_actions=2, n_agents=30, pvs_prip=0.08, va_p=0.3, p_group_factor=0.5,
-                    mu_p=0.85, va_mu=0.85, pvs_filename="vary_values_"+str(val), prip_filename="vary_values_"+str(val), pvs_output_dir=output_dir+"vary_vals/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_vals/PriP/"+str(run)+"/")
+            generate(n_values=val, n_actions=2, n_agents=30, sigma_prip=0.08, p_group_factor=0.5,
+                    mu_p=0.85, va_mu=0.85, maximise=True, pvs_filename="vary_values_"+str(val), prip_filename="vary_values_"+str(val), pvs_output_dir=output_dir+"vary_vals/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_vals/PriP/"+str(run)+"/")
         for act in range(1, 10, 1):
-            generate(n_values=4, n_actions=act, n_agents=30, pvs_prip=0.08, va_p=0.3, p_group_factor=0.5,
-                     mu_p=0.85, va_mu=0.85, pvs_filename="vary_actions_" + str(act), prip_filename="vary_actions_" + str(act), pvs_output_dir=output_dir+"vary_acts/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_acts/PriP/"+str(run)+"/")
+            generate(n_values=4, n_actions=act, n_agents=30, sigma_prip=0.08, p_group_factor=0.5,
+                     mu_p=0.85, va_mu=0.85, maximise=True, pvs_filename="vary_actions_" + str(act), prip_filename="vary_actions_" + str(act), pvs_output_dir=output_dir+"vary_acts/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_acts/PriP/"+str(run)+"/")
 
         ## MAJ/MIN SPLIT
-        grp_facts = np.linspace(0.5, 1, 50)
+        grp_facts = np.linspace(0.5, 1, 10)
         for grp_fact in grp_facts:
-            generate(n_values=4, n_actions=2, n_agents=30, pvs_prip=0.08, va_p=0.3, p_group_factor=grp_fact,
-                     mu_p=0.85, va_mu=0.85, pvs_filename="vary_grp_fact_"+str(grp_fact), prip_filename="vary_grp_fact_"+str(grp_fact), pvs_output_dir=output_dir+"vary_grp_fact/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_grp_fact/PriP/"+str(run)+"/")
+            generate(n_values=4, n_actions=2, n_agents=30, sigma_prip=0.08, p_group_factor=grp_fact,
+                     mu_p=0.85, va_mu=0.85, maximise=True, pvs_filename="vary_grp_fact_"+str(grp_fact), prip_filename="vary_grp_fact_"+str(grp_fact), pvs_output_dir=output_dir+"vary_grp_fact/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_grp_fact/PriP/"+str(run)+"/")
 
         ## EXTREME PVSs
-        mupvamu = np.linspace(0.5, 1, 50)
+        mupvamu = np.linspace(0.5, 1, 10)
         for mup_vamu in mupvamu:
-            generate(n_values=4, n_actions=2, n_agents=30, pvs_prip=0.08, va_p=0.3, p_group_factor=0.5,
-                     mu_p=mup_vamu, va_mu=mup_vamu, pvs_filename="vary_mup_vamu_"+str(mup_vamu), prip_filename="vary_mup_vamu_"+str(mup_vamu), pvs_output_dir=output_dir+"vary_mup_vamu/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_mup_vamu/PriP/"+str(run)+"/")
+            generate(n_values=4, n_actions=2, n_agents=30, sigma_prip=0.08, p_group_factor=0.5,
+                     mu_p=mup_vamu, va_mu=mup_vamu, maximise=True, pvs_filename="vary_mup_vamu_"+str(mup_vamu), prip_filename="vary_mup_vamu_"+str(mup_vamu), pvs_output_dir=output_dir+"vary_mup_vamu/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_mup_vamu/PriP/"+str(run)+"/")
 
-        ## PriP NOISE
-        pvs_prips = np.linspace(0, 1, 50)
-        for pvs_prip in pvs_prips:
-            generate(n_values=4, n_actions=2, n_agents=30, pvs_prip=pvs_prip, va_p=0.3, p_group_factor=0.5,
-                     mu_p=0.85, va_mu=0.85, pvs_filename="vary_pvs_prip_"+str(pvs_prip), prip_filename="vary_pvs_prip_"+str(pvs_prip), pvs_output_dir=output_dir+"vary_pvs_prip/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_pvs_prip/PriP/"+str(run)+"/")
+        ## PriP ALIGNMENT
+        sigma_prips = np.linspace(0, 1, 10)
+        sigma_prips = np.delete(sigma_prips, 0)
+        for sigma_prip in sigma_prips:
+            generate(n_values=4, n_actions=2, n_agents=30, sigma_prip=sigma_prip, p_group_factor=0.5,
+                     mu_p=0.85, va_mu=0.85, maximise=True, pvs_filename="vary_sigma_prip_"+str(sigma_prip), prip_filename="vary_sigma_prip_"+str(sigma_prip), pvs_output_dir=output_dir+"vary_sigma_prip/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_sigma_prip/PriP/"+str(run)+"/")
+
+        ## What if every person is completely random?
+        generate_randoms(n_values=4, n_actions=2, n_agents=30, pvs_filename="randoms", prip_filename="randoms", pvs_output_dir=output_dir+"randoms/PVS/"+str(run)+"/", prip_output_dir=output_dir+"randoms/PriP/"+str(run)+"/")
+
+        ## What if every person minimised their PriP strategy?
+        sigma_prips = np.linspace(0, 1, 10)
+        sigma_prips = np.delete(sigma_prips, 0)
+        for sigma_prip in sigma_prips:
+            generate(n_values=4, n_actions=2, n_agents=30, sigma_prip=sigma_prip, p_group_factor=0.5,
+                     mu_p=0.85, va_mu=0.85, maximise=False, pvs_filename="vary_sigma_prip_MINIMISE"+str(sigma_prip), prip_filename="vary_sigma_prip_MINIMISE"+str(sigma_prip), pvs_output_dir=output_dir+"vary_sigma_prip_MINIMISE/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_sigma_prip_MINIMISE/PriP/"+str(run)+"/")
+
+        ## What if there are varying sizes of groups A and B for $PriP$ selection, having no $PVS-PriP$ alignment with agents' $PVS$.
+        sigma_prips = np.linspace(0, 1, 10)
+        sigma_prips = np.delete(sigma_prips, 0)
+        for sigma_prip in sigma_prips:
+            generate(n_values=4, n_actions=2, n_agents=30, sigma_prip=sigma_prip, p_group_factor=0.5,
+                     mu_p=0.85, va_mu=0.85, maximise=False, pvs_filename="vary_sigma_prip_MINIMISE"+str(sigma_prip), prip_filename="vary_sigma_prip_MINIMISE"+str(sigma_prip), pvs_output_dir=output_dir+"vary_sigma_prip_MINIMISE/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_sigma_prip_MINIMISE/PriP/"+str(run)+"/",
+                     prip_groups=True)
+
 
