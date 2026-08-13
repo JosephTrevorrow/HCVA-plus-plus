@@ -24,6 +24,7 @@ from julia import Main
 from julia import PyCall
 
 ## L_P REGRESSION FUNCTIONS HERE
+# Note that functions L1, L2, Linf, IRLS,  and Lp are taken from the paper "Aggregating Value Systems for Decision Support" https://www.sciencedirect.com/science/article/pii/S0950705124000881
 def L1(A, b):
     """
     This function runs the L1 norm on values and returns consensus.
@@ -44,7 +45,7 @@ def L1(A, b):
     constraints = constraint1 + constraint2
     cost = cp.sum(t)
     prob = cp.Problem(cp.Minimize(cost), constraints)
-    # optimize model
+    # optimise model
     prob.solve(solver='ECOS', verbose=False, solver_verbose=False)
     cons = list(x.value)
     cons = np.array(cons)
@@ -81,7 +82,7 @@ def Linf(A, b):
     constraint2 = [A @ x - b <= t * np.ones_like(b)]
     constraints = constraint1 + constraint2
     prob = cp.Problem(cp.Minimize(t), constraints)
-    # optimize model
+    # optimise model
     prob.solve(solver='ECOS', verbose=False, solver_verbose=False)
     # prob.solve(solver='GLPK', verbose=True)
     cons = list(x.value)
@@ -153,17 +154,26 @@ def Lp(A, b, p):
     else:  # vanilla IRLS implementation
         return IRLS(A, b, p)
 
+def Lp_norm(A,b,p):
+    """ This function is taken from https://github.com/filippobistaffa/social-choice-pnorm. It should be identical in output to Lp, but to be certain that the SLM
+    baseline is computing as intended, we use their solver here."""
+    x = cp.Variable(v)
+    cost = cp.pnorm(A @ x - b, p)
+    prob = cp.Problem(cp.Minimize(cost))
+    prob.solve(solver='CPLEX', verbose=False)
+    return prob.value
+
 def mLp(A, b, ps, λs, weight=True):
     """
     This function is used by the -slm arg to run the mLp method for finding consensus using multiple p values.
     This function is taken from the following repo: https://github.com/filippobistaffa/social-choice-pnorm
     """
-    wps = [λ / Lp(A, b, p) if weight else λ for λ, p in zip(λs, ps)]
+    wps = [λ / Lp_norm(A, b, p) if weight else λ for λ, p in zip(λs, ps)]
     v = A.shape[1]
     x = cp.Variable(v)
     cost = cp.sum([wp * cp.pnorm(A @ x - b, p) for wp, p in zip(wps, ps)])
     prob = cp.Problem(cp.Minimize(cost))
-    for solver_name in ("CLARABEL", "SCS", "ECOS"):
+    for solver_name in ("CPLEX", "GUROBI"):
         try:
             prob.solve(solver=solver_name, verbose=False, solver_verbose=False)
             if x.value is not None and prob.status in ("optimal", "optimal_inaccurate"):
