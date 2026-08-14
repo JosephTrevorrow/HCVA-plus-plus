@@ -10,7 +10,6 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import cvxpy as cp
-import cplex
 
 # Julia for local machine
 #import juliapkg
