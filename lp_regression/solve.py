@@ -10,6 +10,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import cvxpy as cp
+import cplex
 
 # Julia for local machine
 #import juliapkg
@@ -34,7 +35,6 @@ def L1(A, b):
     r - The value of the solved function ||Ax - b||
     u - The distance between the value of the solved function ||Ax - b|| and 1
     """
-    import cvxpy as cp
     # create variables
     l = A.shape[1]
     t = cp.Variable(len(b), integer=False)
@@ -63,7 +63,6 @@ def L2(A, b):
     r = np.abs(A @ cons - b)
     return cons, r, np.linalg.norm(r)
 
-
 def Linf(A, b):
     """
     This function runs the Linf norm on values and returns consensus
@@ -72,7 +71,6 @@ def Linf(A, b):
     r - The value of the solved function ||Ax - b||
     u - The distance between the value of the solved function ||Ax - b|| and np.inf
     """
-    import cvxpy as cp
     # create variables
     l = A.shape[1]
     t = cp.Variable(1, integer=False)
@@ -154,36 +152,27 @@ def Lp(A, b, p):
     else:  # vanilla IRLS implementation
         return IRLS(A, b, p)
 
-def Lp_norm(A,b,p):
+def Lp_norm(A,b,p, v):
     """ This function is taken from https://github.com/filippobistaffa/social-choice-pnorm. It should be identical in output to Lp, but to be certain that the SLM
-    baseline is computing as intended, we use their solver here."""
+    baseline is computing as intended, we use their solver here. (The main difference is that SLM uses CPLEX, but other methods use ECOS)"""
     x = cp.Variable(v)
     cost = cp.pnorm(A @ x - b, p)
     prob = cp.Problem(cp.Minimize(cost))
-    prob.solve(solver='CPLEX', verbose=False)
+    print("Lp_norm solving")
+    prob.solve(solver='GUROBI', verbose=True)
     return prob.value
 
 def mLp(A, b, ps, λs, weight=True):
     """
     This function is used by the -slm arg to run the mLp method for finding consensus using multiple p values.
-    This function is taken from the following repo: https://github.com/filippobistaffa/social-choice-pnorm
-    """
-    wps = [λ / Lp_norm(A, b, p) if weight else λ for λ, p in zip(λs, ps)]
+    This function is taken from the following repo: https://github.com/filippobistaffa/social-choice-pnorm    """
     v = A.shape[1]
+    wps = [λ / Lp_norm(A, b, p, v) if weight else λ for λ, p in zip(λs, ps)]
     x = cp.Variable(v)
     cost = cp.sum([wp * cp.pnorm(A @ x - b, p) for wp, p in zip(wps, ps)])
     prob = cp.Problem(cp.Minimize(cost))
-    for solver_name in ("CPLEX", "GUROBI"):
-        try:
-            prob.solve(solver=solver_name, verbose=False, solver_verbose=False)
-            if x.value is not None and prob.status in ("optimal", "optimal_inaccurate"):
-                print(f"mLp solved with {solver_name}.")
-                break
-        except Exception as exc:
-            last_error = exc
-    else:
-        raise RuntimeError(f"All solvers failed in mLp. Last error: {last_error}")
-
+    print("mLp solving")
+    prob.solve(solver="GUROBI", verbose=False, warm_start=True)
     res = np.abs(A @ x.value - b)
     psi = np.var([wp * np.linalg.norm(res, p) for wp, p in zip(wps, ps)])
     return x.value, res, prob.value / sum(wps), psi
@@ -283,7 +272,6 @@ def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
     """ Compute aggregation with Salas-Molina et al. baseline (Many P's) """
     principle_preferences = prip_df["Egalitarian"].astype("float").values.tolist()
     # Convert the principles (which are preferences) into numbers (need to first find transition point
-    #print("Principles: ", principles)
     if transition_p is None:
         _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
     converted_principles = []

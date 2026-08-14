@@ -70,6 +70,13 @@ def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_
         prips[agent] = prip[0]
     return prips
 
+def generate_random_prips(agent_ids):
+        """Generates a PriP set for agents by considering the PVS and alignment."""
+        prips = {}
+        for agent in agent_ids:
+            prips[agent] = rng.random()
+        return prips
+
 def generate_ps(agent_ids, n_values, mu=0.75, p_group_factor=0.5):
     agent_ps = defaultdict(lambda: np.empty(shape=(1,n_values)))
     # Assign values to groups
@@ -259,7 +266,7 @@ def generate_randoms(n_values, n_actions, n_agents,  pvs_filename="default", pri
     ps = generate_random_ps(agent_ids, n_values)
     vas = generate_random_vas(agent_ids, n_values,n_actions)
     pvs_dir = save_pvs(ps, vas, agent_ids, n_values, n_actions, pvs_filename, pvs_output_dir)
-    prips = generate_random_ps(agent_ids, 1)
+    prips = generate_random_prips(agent_ids)
     ## Step 3.1: Save prips to a csv.
     save_prips(prips, agent_ids, prip_filename, prip_output_dir)
     return ps, vas, prips, agent_ids

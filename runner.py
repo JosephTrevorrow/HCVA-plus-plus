@@ -69,13 +69,12 @@ if __name__ == '__main__':
     min_dir = args.min
     # Because we are going to run many experiments, we put this in a big for loop
     # find all the dirs in pvs (will be same for prip)
-    for current_dir in os.listdir(args.pvs_dir):
+    all_dirs = sort_nicely(os.listdir(args.pvs_dir))
+    # Cut based on our min/max
+    all_dirs = all_dirs[min_dir:max_dir]
+    for current_dir in all_dirs:
         if os.path.isdir(args.pvs_dir+current_dir):
             print("Found output_dir: ", args.pvs_dir+current_dir)
-            # check if a valid dir, if not, skip.
-            if int(current_dir) > max_dir or int(current_dir) < min_dir:
-                print("Not valid")
-                continue
         else:
             # is not a subdirectory? then skip
             continue
