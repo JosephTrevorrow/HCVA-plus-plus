@@ -65,9 +65,6 @@ if __name__ == '__main__':
     )
     jl.eval(f'include("{action_path}")')
     jl.eval("""using Main.MyActionModule""")
-    ## Define our CVXPY problem for GUROBI.
-    cost, prob = mLp_caching()
-
     max_dir = args.max
     min_dir = args.min
     # Because we are going to run many experiments, we put this in a big for loop
@@ -148,7 +145,7 @@ if __name__ == '__main__':
             print("SLM...")
             #filename = str("SLM_PERSONALS_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
             #filename_metadata = str("SLM_METADATA_DIR_"+str(current_dir)+"_RUN_"+str(i)+"_"+ now + ".csv")
-            p, u_pref, cons_pref, u_act, cons_act, converted_principles = find_slm_and_aggregate(P_list, J_list, w, prip_df, t_point, cost, prob, args)
+            p, u_pref, cons_pref, u_act, cons_act, converted_principles = find_slm_and_aggregate(P_list, J_list, w, prip_df, t_point, args)
             ## Chop off half of cons_act, as output format has VA_p, and then VA_n. We are not interested in N, so we disregard
             cons_act = cons_act[:len(cons_act) // 2]
             rows.append(["SLM", p, u_pref, u_act, cons_pref, cons_act,0, converted_principles, 0,])
