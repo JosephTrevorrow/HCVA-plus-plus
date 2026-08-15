@@ -172,9 +172,9 @@ def mLp(A, b, ps, λs, weight=True):
     prob = cp.Problem(cp.Minimize(cost))
     print("mLp solving")
     prob.solve(solver="GUROBI", verbose=False, warm_start=True)
-    res = np.abs(A @ x.value - b)
-    psi = np.var([wp * np.linalg.norm(res, p) for wp, p in zip(wps, ps)])
-    return x.value, res, prob.value / sum(wps), psi
+    #res = np.abs(A @ x.value - b)
+    #psi = np.var([wp * np.linalg.norm(res, p) for wp, p in zip(wps, ps)])
+    return x.value, None, prob.value / sum(wps), None
 
 #### RUNNER FUNCTIONS HERE ######
 
@@ -281,9 +281,9 @@ def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
         converted_p = round(converted_p, 2)
         converted_p = max(1, converted_p)
         converted_principles.append(float(converted_p))
-    p, u_pref, cons_pref = aggregate_slm(P_list, J_list, w, converted_principles, True)
-    _, u_act, cons_act = aggregate_slm(P_list, J_list, w, converted_principles, False)
-    return p, u_pref, cons_pref, u_act, cons_act, converted_principles
+    p, _, cons_pref = aggregate_slm(P_list, J_list, w, converted_principles, True)
+    _, _, cons_act = aggregate_slm(P_list, J_list, w, converted_principles, False)
+    return p, _, cons_pref, _, cons_act, converted_principles
 
 def transition_point(P_list, J_list, w, e):
     """
@@ -474,8 +474,8 @@ def aggregate_slm(P_list, J_list, w, list_of_ps, v):
         print("A min/max:", np.min(np.asarray(A, dtype=float)), np.max(np.asarray(A, dtype=float)))
         print("b min/max:", np.min(np.asarray(b, dtype=float)), np.max(np.asarray(b, dtype=float)))
     # Aggregate over all principles together using the matrix
-    cons, res, u, psi = mLp(A, b, ps, λs, False)
-    return list_of_ps, u, cons
+    cons, _, _, _ = mLp(A, b, ps, λs, False)
+    return list_of_ps, _, cons
 
 def aggregate_inf(P_list, J_list, w, p, v):
     # Compute one aggregation using the P specified
