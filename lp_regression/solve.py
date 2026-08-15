@@ -42,13 +42,13 @@ def L1(A, b):
     constraint1 = [A @ x - b >= -t]
     constraint2 = [A @ x - b <= t]
     constraints = constraint1 + constraint2
-    cost = cp.sum(t)
-    prob = cp.Problem(cp.Minimize(cost), constraints)
+    cost_l1 = cp.sum(t)
+    prob_l1 = cp.Problem(cp.Minimize(cost_l1), constraints)
     # optimise model
-    prob.solve(solver='ECOS', verbose=False, solver_verbose=False)
+    prob_l1.solve(solver='ECOS', verbose=False, solver_verbose=False)
     cons = list(x.value)
     cons = np.array(cons)
-    obj = prob.value
+    obj = prob_l1.value
     #print("obj value:", obj)
     r = np.abs(A @ cons - b)
     return cons, r, np.linalg.norm(r, 1)
@@ -78,13 +78,13 @@ def Linf(A, b):
     constraint1 = [A @ x - b >= -t * np.ones_like(b)]
     constraint2 = [A @ x - b <= t * np.ones_like(b)]
     constraints = constraint1 + constraint2
-    prob = cp.Problem(cp.Minimize(t), constraints)
+    prob_inf = cp.Problem(cp.Minimize(t), constraints)
     # optimise model
-    prob.solve(solver='ECOS', verbose=False, solver_verbose=False)
+    prob_inf.solve(solver='ECOS', verbose=False, solver_verbose=False)
     # prob.solve(solver='GLPK', verbose=True)
     cons = list(x.value)
     cons = np.array(cons)
-    obj = prob.value
+    obj = prob_inf.value
     #print("obj value: ", obj)
     r = np.abs(A @ cons - b)
     return cons, r, np.linalg.norm(r, np.inf)
@@ -161,20 +161,23 @@ def Lp_norm(A,b,p, v):
     prob.solve(solver='GUROBI', verbose=True)
     return prob.value
 
-def mLp(A, b, ps, λs, weight=True):
+def mLp(A, b, ps, λs, cost, prob, weight=True):
     """
     This function is used by the -slm arg to run the mLp method for finding consensus using multiple p values.
     This function is taken from the following repo: https://github.com/filippobistaffa/social-choice-pnorm    """
     v = A.shape[1]
     wps = [λ / Lp_norm(A, b, p, v) if weight else λ for λ, p in zip(λs, ps)]
     x = cp.Variable(v)
-    cost = cp.sum([wp * cp.pnorm(A @ x - b, p) for wp, p in zip(wps, ps)])
-    prob = cp.Problem(cp.Minimize(cost))
-    print("mLp solving")
-    prob.solve(solver="GUROBI", verbose=False, warm_start=True)
+    cost.value = cp.sum([wp * cp.pnorm(A @ x - b, p) for wp, p in zip(wps, ps)])
+    prob.solve(solver="GUROBI", verbose=True, warm_start=True)
     res = np.abs(A @ x.value - b)
     psi = np.var([wp * np.linalg.norm(res, p) for wp, p in zip(wps, ps)])
     return x.value, res, prob.value / sum(wps), psi
+
+def mLp_caching():
+    cost = cp.Parameter()
+    prob = cp.Problem(cp.Minimize(cost))
+    return cost, prob
 
 #### RUNNER FUNCTIONS HERE ######
 
@@ -267,7 +270,7 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
     _, u_act, cons_act = aggregate(P_list, J_list, w, consensus_p, False)
     return p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference
 
-def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
+def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, cost, prob, args):
     """ Compute aggregation with Salas-Molina et al. baseline (Many P's) """
     principle_preferences = prip_df["Egalitarian"].astype("float").values.tolist()
     # Convert the principles (which are preferences) into numbers (need to first find transition point
@@ -281,8 +284,8 @@ def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
         converted_p = round(converted_p, 2)
         converted_p = max(1, converted_p)
         converted_principles.append(float(converted_p))
-    p, u_pref, cons_pref = aggregate_slm(P_list, J_list, w, converted_principles, True)
-    _, u_act, cons_act = aggregate_slm(P_list, J_list, w, converted_principles, False)
+    p, u_pref, cons_pref = aggregate_slm(P_list, J_list, w, converted_principles, True, cost, prob)
+    _, u_act, cons_act = aggregate_slm(P_list, J_list, w, converted_principles, False, cost, prob)
     return p, u_pref, cons_pref, u_act, cons_act, converted_principles
 
 def transition_point(P_list, J_list, w, e):
@@ -449,7 +452,7 @@ def aggregate_prefs_only(P_list, J_list, w):
         # print('{:.2f} \t \t {:.4f}'.format(p, ub))
     return p_list, u_list, cons_list, dist_1p_list, dist_pl_list, cons_1_pref, cons_l_pref
 
-def aggregate_slm(P_list, J_list, w, list_of_ps, v):
+def aggregate_slm(P_list, J_list, w, list_of_ps, v, cost, prob):
     p_list = []
     u_list = []
     cons_list = []
@@ -474,7 +477,7 @@ def aggregate_slm(P_list, J_list, w, list_of_ps, v):
         print("A min/max:", np.min(np.asarray(A, dtype=float)), np.max(np.asarray(A, dtype=float)))
         print("b min/max:", np.min(np.asarray(b, dtype=float)), np.max(np.asarray(b, dtype=float)))
     # Aggregate over all principles together using the matrix
-    cons, res, u, psi = mLp(A, b, ps, λs, False)
+    cons, res, u, psi = mLp(A, b, ps, λs, cost, prob, False)
     return list_of_ps, u, cons
 
 def aggregate_inf(P_list, J_list, w, p, v):
