@@ -173,7 +173,7 @@ def mLp(A, b, ps, λs, weight=True):
     cost = cp.sum([wp * cp.pnorm(A @ x - b, p) for wp, p in zip(wps, ps)])
     prob = cp.Problem(cp.Minimize(cost), constraints=constraints)
     print("mLp solving")
-    prob.solve(solver="GUROBI", verbose=True, warm_start=True)
+    prob.solve(solver="GUROBI", verbose=True, warm_start=True, canon_backend=cp.COO_CANON_BACKEND)
     #res = np.abs(A @ x.value - b)
     #psi = np.var([wp * np.linalg.norm(res, p) for wp, p in zip(wps, ps)])
     return x.value, None, prob.value / sum(wps), None
