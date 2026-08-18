@@ -168,10 +168,12 @@ def mLp(A, b, ps, λs, weight=True):
     v = A.shape[1]
     wps = [λ / Lp_norm(A, b, p, v) if weight else λ for λ, p in zip(λs, ps)]
     x = cp.Variable(v)
+    print("X", v)
+    constraints = [x == 16]
     cost = cp.sum([wp * cp.pnorm(A @ x - b, p) for wp, p in zip(wps, ps)])
-    prob = cp.Problem(cp.Minimize(cost))
+    prob = cp.Problem(cp.Minimize(cost), constraints=constraints)
     print("mLp solving")
-    prob.solve(solver="GUROBI", verbose=False, warm_start=True)
+    prob.solve(solver="GUROBI", verbose=True, warm_start=True)
     #res = np.abs(A @ x.value - b)
     #psi = np.var([wp * np.linalg.norm(res, p) for wp, p in zip(wps, ps)])
     return x.value, None, prob.value / sum(wps), None
@@ -336,17 +338,17 @@ def transition_point(P_list, J_list, w, e):
             # Stop this for performance.
             return p_list, dist_p_list, dist_inf_list, diff_list, best_p
         else:
-            if __debug__:
-                print('p = {:.2f}'.format(i))
-                print('Distance L1<-->L{:.2f} = {:.4f}'.format(i, dist_1p))
-                print(
-                    'Distance L{:.2f}<-->L{:.2f} = {:.4f}'.format(i, p, dist_pl))
-                print(
-                    'Difference (L1<-->L{:.2f}) - (L{:.2f}<-->L{:.2f}) = {:.4f}'.format(
-                        i, i, p, abs(
-                            dist_1p - dist_pl)))
-                print(
-                    'Current best difference (L1<-->L{:.2f}) - (L{:.2f}<-->L{:.2f}) = {:.4f}'.format(i, i, best_p, diff))
+            #if __debug__:
+                #print('p = {:.2f}'.format(i))
+                #print('Distance L1<-->L{:.2f} = {:.4f}'.format(i, dist_1p))
+                #print(
+                #    'Distance L{:.2f}<-->L{:.2f} = {:.4f}'.format(i, p, dist_pl))
+                #print(
+                #    'Difference (L1<-->L{:.2f}) - (L{:.2f}<-->L{:.2f}) = {:.4f}'.format(
+                #        i, i, p, abs(
+                #            dist_1p - dist_pl)))
+                #print(
+                #    'Current best difference (L1<-->L{:.2f}) - (L{:.2f}<-->L{:.2f}) = {:.4f}'.format(i, i, best_p, diff))
             if abs(dist_1p - dist_pl) < diff:
                 diff = abs(dist_1p - dist_pl)
                 best_p = i
@@ -473,6 +475,7 @@ def aggregate_slm(P_list, J_list, w, list_of_ps, v):
         print("b finite:", np.isfinite(np.asarray(b, dtype=float)).all())
         print("A min/max:", np.min(np.asarray(A, dtype=float)), np.max(np.asarray(A, dtype=float)))
         print("b min/max:", np.min(np.asarray(b, dtype=float)), np.max(np.asarray(b, dtype=float)))
+        print("Type of min:", type(np.min(np.asarray(A, dtype=float)).item()))
     # Aggregate over all principles together using the matrix
     cons, _, _, _ = mLp(A, b, ps, λs, False)
     return list_of_ps, _, cons

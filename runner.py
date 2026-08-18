@@ -7,10 +7,10 @@ import pandas as pd
 import traceback
 import copy as copy
 import numpy as np
-from julia.api import Julia
-jl = Julia(compiled_modules=False)
-from julia import Main
-from julia import PyCall
+#from julia.api import Julia
+#jl = Julia(compiled_modules=False)
+#from julia import Main
+#from julia import PyCall
 import re
 import multiprocessing as mp
 
