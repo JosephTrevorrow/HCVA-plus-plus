@@ -37,8 +37,8 @@ def JMatrixs(actions, num_values=4, num_actions=3):
             J_p[i][j] = actions[k]
             J_n[i][j] = -actions[k]
             k+=1
-    if __debug__:
-        print("J_p: ", J_p, "\nJ_n: ", J_n, "\n")
+    #if __debug__:
+    #    print("J_p: ", J_p, "\nJ_n: ", J_n, "\n")
     return J_p, J_n
 
 def Weights(df, n_countries, weights=0):

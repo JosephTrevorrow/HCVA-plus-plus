@@ -184,9 +184,16 @@ if __name__ == '__main__':
             tasks.append((args, current_dir, i, now, output_dir,
                           pvs_sets, prip_sets, n_values, n_actions))
 
+    tasks = tasks[:1]
+
     n_workers = args.n_workers or int(os.environ.get('SLURM_CPUS_PER_TASK', mp.cpu_count()))
     print(f"Running {len(tasks)} task(s) across {n_workers} worker process(es)")
 
+    _worker_init()
+    run_experiment(tasks[0])
+
+
+    """ The parallelisation bit
     # 'spawn' (not the Linux default 'fork') is required: each worker boots
     # its own independent Julia runtime in _worker_init, and forking a
     # process that already has Julia loaded is unsupported.
@@ -199,3 +206,5 @@ if __name__ == '__main__':
                 print(f"FAILED: {current_dir} run {i}\n{err}")
 
     print(f"Finished. {len(tasks) - len(failures)}/{len(tasks)} succeeded.")
+    
+    """

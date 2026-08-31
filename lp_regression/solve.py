@@ -169,11 +169,69 @@ def mLp(A, b, ps, λs, weight=True):
     wps = [λ / Lp_norm(A, b, p, v) if weight else λ for λ, p in zip(λs, ps)]
     x = cp.Variable(v)
     print("X", v)
-    constraints = [x == 16]
+    constraints = [x >= 0]
+    A = cp.Parameter(shape=A.shape, value=A)
     cost = cp.sum([wp * cp.pnorm(A @ x - b, p) for wp, p in zip(wps, ps)])
     prob = cp.Problem(cp.Minimize(cost), constraints=constraints)
     print("mLp solving")
-    prob.solve(solver="GUROBI", verbose=True, warm_start=True, canon_backend=cp.COO_CANON_BACKEND)
+    print("My ps are: ", ps)
+    import time
+    start = time.time()
+    prob.solve(solver="GUROBI",
+               verbose=True,
+               warm_start=True,
+               #canon_backend=cp.COO_CANON_BACKEND,
+               #Threads=0,
+               #Method=2,
+               #Crossover=0,
+               #NumericFocus=1,
+               #Presolve=2,
+    )
+    end = time.time()
+    length = end-start
+    print("Time taken GUROBI: ", length)
+
+    start = time.time()
+    prob.solve(solver="GUROBI",
+               verbose=True,
+               warm_start=True,
+               canon_backend=cp.COO_CANON_BACKEND,
+               Threads=0,
+               Method=2,
+               Crossover=0,
+               NumericFocus=1,
+               Presolve=2,
+               )
+    end = time.time()
+    length = end - start
+    print("Time taken GUROBI + ARGS: ", length)
+
+    start = time.time()
+    prob.solve(solver="CPLEX",
+               verbose=True,
+               warm_start=True,
+               canon_backend=cp.COO_CANON_BACKEND,
+               cplex_params={
+                   "threads": 0,
+                   "lpmethod": 4,  # barrier (Gurobi Method=2 equivalent)
+                   "solutiontype": 2,  # skip crossover, return interior-point solution
+                   "emphasis.numerical": 1,
+                   "preprocessing.presolve": 1,
+               },
+               )
+    end = time.time()
+    length = end - start
+    print("Time taken CPLEX + ARGS: ", length)
+
+
+    start = time.time()
+    prob.solve(solver="CPLEX",
+               verbose=True,
+               warm_start=True,
+               )
+    end = time.time()
+    length = end - start
+    print("Time taken CPLEX: ", length)
     #res = np.abs(A @ x.value - b)
     #psi = np.var([wp * np.linalg.norm(res, p) for wp, p in zip(wps, ps)])
     return x.value, None, prob.value / sum(wps), None
