@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#SBATCH --job-name=ia23938-pvs_prip
-#SBATCH --output=pvs_prip.out
-#SBATCH --error=pvs_prip.err
+#SBATCH --job-name=ia23938-pvs_prip_3
+#SBATCH --output=pvs_prip_3.out
+#SBATCH --error=pvs_prip_3.err
 #SBATCH --time=24:00:00
-#SBATCH --mem=64G
+#SBATCH --mem=32G
 
 cd "${SLURM_SUBMIT_DIR}"
 
@@ -20,7 +20,7 @@ conda activate abpi
 # "$PATH:$HOME/julia-1.11.7/bin"
 export JULIA_BINDIR=$HOME/julia-1.11.7/bin
 export PATH=$JULIA_BINDIR:$PATH
-  
+
 echo Julia path set
 
 export JULIA_DEPOT_PATH=$HOME/julia_depot/global
@@ -39,4 +39,6 @@ echo Instantiated!
 julia -e 'using PythonCall; println("PythonCall OK")'
 
 echo Starting Python
-python -O synth_data_generator.py
+
+# Experiment ``vary_pvs_prip'''
+python -O runner.py -min 80 -max 119 -pvs_dir "value_systems/Synthetic/vary_pvs_prip/PVS/" -prip_dir "value_systems/Synthetic/vary_pvs_prip/PriP/" -n_values 4 -n_actions 2 -output_dir "results/SYNTH_vary_pvs_prip/"

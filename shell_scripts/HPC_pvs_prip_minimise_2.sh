@@ -1,9 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=ia23938-pvs_prip
-#SBATCH --output=pvs_prip.out
-#SBATCH --error=pvs_prip.err
-#SBATCH --time=01:00:00
+#SBATCH --job-name=ia23938-minimise_2
+#SBATCH --time=24:00:00
 #SBATCH --mem=32G
 
 cd "${SLURM_SUBMIT_DIR}"
@@ -41,4 +39,4 @@ julia -e 'using PythonCall; println("PythonCall OK")'
 echo Starting Python
 
 # Experiment ``vary_pvs_prip'''
-python -O runner.py -pvs_dir "value_systems/Synthetic/vary_pvs_prip/PVS/" -prip_dir "value_systems/Synthetic/vary_pvs_prip/PriP/" -n_values 4 -n_actions 2 -output_dir "results/SYNTH_vary_pvs_prip/"
+python -O runner.py -min 40 -max 79 -pvs_dir "value_systems/Synthetic/vary_sigma_prip_MINIMISE/PVS/" -prip_dir "value_systems/Synthetic/vary_sigma_prip_MINIMISE/PriP/" -n_values 4 -n_actions 2 -output_dir "results/vary_sigma_prip_MINIMISE/"

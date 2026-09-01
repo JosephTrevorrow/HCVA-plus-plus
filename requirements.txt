@@ -7,3 +7,5 @@ juliacall
 matplotlib
 cvxpy[ECOS,GUROBI]
 pyreadstat
+cplex
+docplex
