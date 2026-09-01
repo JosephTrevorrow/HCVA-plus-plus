@@ -173,12 +173,13 @@ def mLp(A, b, ps, λs, weight=True):
     A = cp.Parameter(shape=A.shape, value=A)
     cost = cp.sum([wp * cp.pnorm(A @ x - b, p) for wp, p in zip(wps, ps)])
     prob = cp.Problem(cp.Minimize(cost), constraints=constraints)
+    """
     print("mLp solving")
     print("My ps are: ", ps)
     import time
     start = time.time()
     prob.solve(solver="GUROBI",
-               verbose=True,
+               verbose=False,
                warm_start=True,
                #canon_backend=cp.COO_CANON_BACKEND,
                #Threads=0,
@@ -188,12 +189,10 @@ def mLp(A, b, ps, λs, weight=True):
                #Presolve=2,
     )
     end = time.time()
-    length = end-start
-    print("Time taken GUROBI: ", length)
-
+    gurobi_time = end-start
     start = time.time()
     prob.solve(solver="GUROBI",
-               verbose=True,
+               verbose=False,
                warm_start=True,
                canon_backend=cp.COO_CANON_BACKEND,
                Threads=0,
@@ -203,12 +202,17 @@ def mLp(A, b, ps, λs, weight=True):
                Presolve=2,
                )
     end = time.time()
-    length = end - start
-    print("Time taken GUROBI + ARGS: ", length)
-
+    gurobi_args_time = end - start
     start = time.time()
     prob.solve(solver="CPLEX",
-               verbose=True,
+               verbose=v,
+               warm_start=True,
+               )
+    end = time.time()
+    cplex_time = end - start
+    start = time.time()
+    prob.solve(solver="CPLEX",
+               verbose=False,
                warm_start=True,
                canon_backend=cp.COO_CANON_BACKEND,
                cplex_params={
@@ -220,18 +224,22 @@ def mLp(A, b, ps, λs, weight=True):
                },
                )
     end = time.time()
-    length = end - start
-    print("Time taken CPLEX + ARGS: ", length)
+    cplex_args_time = end - start
 
-
-    start = time.time()
+    print("SUMMARY: cplex: ", cplex_time, " cplex_args: ", cplex_args_time, " gurobi: ", gurobi_time, " gurobi_args: ", gurobi_args_time, "")
+    """
     prob.solve(solver="CPLEX",
-               verbose=True,
+               verbose=False,
                warm_start=True,
-               )
-    end = time.time()
-    length = end - start
-    print("Time taken CPLEX: ", length)
+               canon_backend=cp.COO_CANON_BACKEND,
+               cplex_params={
+                   "threads": 0,
+                   "lpmethod": 4,  # barrier (Gurobi Method=2 equivalent)
+                   "solutiontype": 2,  # skip crossover, return interior-point solution
+                   "emphasis.numerical": 1,
+                   "preprocessing.presolve": 1,
+               },
+    )
     #res = np.abs(A @ x.value - b)
     #psi = np.var([wp * np.linalg.norm(res, p) for wp, p in zip(wps, ps)])
     return x.value, None, prob.value / sum(wps), None
