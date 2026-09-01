@@ -22,6 +22,7 @@ def _worker_init():
     from julia.api import Julia
     Julia(compiled_modules=False)
     from julia import Main
+    #from julia import PyCall
 
     action_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), 'lp_regression/IRLS-pNorm.jl')
@@ -192,8 +193,7 @@ if __name__ == '__main__':
     _worker_init()
     run_experiment(tasks[0])
 
-
-    """ The parallelisation bit
+    """ The parallelisation bit """
     # 'spawn' (not the Linux default 'fork') is required: each worker boots
     # its own independent Julia runtime in _worker_init, and forking a
     # process that already has Julia loaded is unsupported.
@@ -206,5 +206,3 @@ if __name__ == '__main__':
                 print(f"FAILED: {current_dir} run {i}\n{err}")
 
     print(f"Finished. {len(tasks) - len(failures)}/{len(tasks)} succeeded.")
-    
-    """
