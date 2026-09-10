@@ -23,6 +23,15 @@ import cvxpy as cp
 #from julia import Main
 #from julia import PyCall
 
+## Julia using _JL_MAIN
+
+Main = None
+
+def julia_init(_JL_MAIN):
+    global Main
+    Main = _JL_MAIN
+    return
+
 ## L_P REGRESSION FUNCTIONS HERE
 # Note that functions L1, L2, Linf, IRLS,  and Lp are taken from the paper "Aggregating Value Systems for Decision Support" https://www.sciencedirect.com/science/article/pii/S0950705124000881
 def L1(A, b):
