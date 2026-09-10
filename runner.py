@@ -77,7 +77,7 @@ def run_experiment(task):
         filename_limits = "LIMITS_DIR_" + str(current_dir) + "_RUN_" + str(i) + "_" + now + "limits.csv"
         p, u_pref, cons_pref, u_act, cons_act, t_point = find_transition_and_aggregate(P_list, J_list, w,
                                                                                        output_dir, filename_limits,
-                                                                                       args.e, _JL_MAIN, args)
+                                                                                       args.e, args)
         rows.append(["T", p, u_pref, u_act, cons_pref, cons_act, t_point, t_point, 0.5])
         ## SLM
         p, _, cons_pref, _, cons_act, converted_principles = find_slm_and_aggregate(P_list, J_list, w, prip_df, t_point,
