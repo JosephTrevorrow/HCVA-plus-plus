@@ -8,7 +8,7 @@ import traceback
 import copy as copy
 import numpy as np
 #from julia.api import Julia
-#jl = Julia(compiled_modules=False)
+#jl = Julia(compiled_modules=True)
 #from julia import Main
 #from julia import PyCall
 import re
@@ -28,9 +28,8 @@ def _worker_init():
         os.path.join(os.path.dirname(__file__), 'lp_regression/IRLS-pNorm.jl')
     )
     Main.eval(f'include("{action_path}")')
-    Main.eval("using Main.MyActionModule")
+    #Main.eval("using Main.MyActionModule")
     _JL_MAIN = Main
-
 
 ## CREDIT: https://nedbatchelder.com/blog/200712/human_sorting
 def tryint(s):
@@ -122,6 +121,8 @@ def run_experiment(task):
         # Save the rows to a csv.
         header = ['p', 'U_pref', 'u_act', ] + values_list + actions_list + ['transition_p', 'consensus_p',
                                                                             'consensus_preference']
+        output_dir = os.environ["SCRATCHDIR"]+output_dir
+        print("I AM WRITING TO: ", output_dir)
         with open(output_dir + filename, 'w', newline='') as csvfile:
             # writing file
             writer = csv.writer(csvfile)
@@ -152,6 +153,8 @@ if __name__ == '__main__':
 
     # Looking for the number of agents? This is not explicitly defined and can be found from the corresponding pvs_dir and prip_dir of each experiment.
     args = parser.parse_args()
+    
+    print("num workers is: ", args.n_workers)
 
     # Note, these are lists
     n_values_list = args.n_values
@@ -161,7 +164,8 @@ if __name__ == '__main__':
     print(now)
     os.makedirs(output_dir, exist_ok=True)
     all_dirs = sort_nicely(os.listdir(args.pvs_dir))[args.min:args.max]
-
+    # Debugging: lop off a few dirs:
+    all_dirs = all_dirs[:50]
     tasks = []
     for idx, current_dir in enumerate(all_dirs):
         if not os.path.isdir(args.pvs_dir + current_dir):
@@ -180,20 +184,27 @@ if __name__ == '__main__':
 
         n_values = n_values_list[idx] if idx < len(n_values_list) else n_values_list[-1]
         n_actions = n_actions_list[idx] if idx < len(n_actions_list) else n_actions_list[-1]
-
+        print("'Ello, in ", current_dir)
         for i in range(min(len(pvs_sets), len(prip_sets))):
             tasks.append((args, current_dir, i, now, output_dir,
                           pvs_sets, prip_sets, n_values, n_actions))
 
+    ## DEBUG
+    print("DEBUGGING!")
     tasks = tasks[:1]
+    _worker_init()
+    import resource
+    print("Peak RSS after _worker_init:", resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1e6, "GB")
+    run_experiment(tasks[0])
 
+
+    """
     n_workers = args.n_workers or int(os.environ.get('SLURM_CPUS_PER_TASK', mp.cpu_count()))
     print(f"Running {len(tasks)} task(s) across {n_workers} worker process(es)")
 
     _worker_init()
     run_experiment(tasks[0])
 
-    """ The parallelisation bit """
     # 'spawn' (not the Linux default 'fork') is required: each worker boots
     # its own independent Julia runtime in _worker_init, and forking a
     # process that already has Julia loaded is unsupported.
@@ -205,4 +216,4 @@ if __name__ == '__main__':
                 failures.append((current_dir, i, err))
                 print(f"FAILED: {current_dir} run {i}\n{err}")
 
-    print(f"Finished. {len(tasks) - len(failures)}/{len(tasks)} succeeded.")
+    print(f"Finished. {len(tasks) - len(failures)}/{len(tasks)} succeeded.")"""

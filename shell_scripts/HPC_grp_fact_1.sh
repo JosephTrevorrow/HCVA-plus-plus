@@ -4,7 +4,7 @@
 #SBATCH --output=grp_fact_1.out
 #SBATCH --error=grp_fact_1.err
 #SBATCH --time=24:00:00
-#SBATCH --mem=32G
+#SBATCH --mem=100G
 
 cd "${SLURM_SUBMIT_DIR}"
 
@@ -28,17 +28,18 @@ mkdir -p "$JULIA_DEPOT_PATH"
 
 echo Starting Pkg
 
-julia -e 'using Pkg; Pkg.add("PyCall"); Pkg.build("PyCall")'
+#julia -e 'using Pkg; Pkg.add("PyCall"); Pkg.build("PyCall")'
 
-echo Added PyCall!
+#echo Added PyCall!
 
-julia -e 'using Pkg; Pkg.add("StatsBase"); Pkg.add("JSON"); Pkg.add("PythonCall"); Pkg.instantiate();'
+#julia -e 'using Pkg; Pkg.add("StatsBase"); Pkg.add("JSON"); Pkg.add("PythonCall"); Pkg.instantiate();'
+julia -e 'using Pkg; Pkg.add(PackageSpec(name="PyCall", rev="master")); Pkg.build("PyCall")'
 echo Instantiated!
-#julia -e 'include(pwd()* "/abpi_environment/env/action.jl"); using Main.MyActionModule'
+julia -e 'include(pwd()* "/lp_regression/IRLS-pNorm.jl"); using Main.MyActionModule'
 
-julia -e 'using PythonCall; println("PythonCall OK")'
+#julia -e 'using PythonCall; println("PythonCall OK")'
 
 echo Starting Python
 
 # Experiment ``vary_grp_fact'''
-python -O runner.py -min 0 -max 39 -pvs_dir "value_systems/Synthetic/vary_grp_fact/PVS/" -prip_dir "value_systems/Synthetic/vary_grp_fact/PriP/" -n_values 4 -n_actions 2 -output_dir "results/SYNTH_vary_grp_fact/"
+python runner.py -min 0 -max 39 -pvs_dir "value_systems/Synthetic/vary_grp_fact/PVS/" -prip_dir "value_systems/Synthetic/vary_grp_fact/PriP/" -n_values 4 -n_actions 2 -output_dir "results/SYNTH_vary_grp_fact/" -n_workers 1

@@ -18,10 +18,10 @@ import cvxpy as cp
 #from juliacall import Main as jl
 
 ## Julia for HPC
-from julia.api import Julia
-jl = Julia(compiled_modules=False)
-from julia import Main
-from julia import PyCall
+#from julia.api import Julia
+#jl = Julia(compiled_modules=False)
+#from julia import Main
+#from julia import PyCall
 
 ## L_P REGRESSION FUNCTIONS HERE
 # Note that functions L1, L2, Linf, IRLS,  and Lp are taken from the paper "Aggregating Value Systems for Decision Support" https://www.sciencedirect.com/science/article/pii/S0950705124000881

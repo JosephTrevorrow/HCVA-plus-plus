@@ -11,7 +11,9 @@ cd "${SLURM_SUBMIT_DIR}"
 echo Time is "$(date)"
 echo Directory is "$(pwd)"
 
-for i in {1..5}; do
+export SCRATCHDIR=$SCRATCHDIR/HCVA/
+
+for i in {1..10}; do
   echo "Iteration $i"
   sbatch shell_scripts/HPC_grp_fact_$i.sh
   sbatch shell_scripts/HPC_mup_vamu_$i.sh

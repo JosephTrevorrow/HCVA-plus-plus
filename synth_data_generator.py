@@ -285,7 +285,7 @@ if __name__ == "__main__":
         for act in range(1, 10, 1):
             generate(n_values=4, n_actions=act, n_agents=30, sigma_prip=0.5, p_group_factor=0.5,
                      mu_p=0.85, va_mu=0.85, maximise=True, pvs_filename="vary_actions_" + str(act), prip_filename="vary_actions_" + str(act), pvs_output_dir=output_dir+"vary_acts/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_acts/PriP/"+str(run)+"/")
-
+"""
         ## MAJ/MIN SPLIT
         grp_facts = np.linspace(0.5, 1, 10)
         for grp_fact in grp_facts:
@@ -304,7 +304,7 @@ if __name__ == "__main__":
         for sigma_prip in sigma_prips:
             generate(n_values=4, n_actions=2, n_agents=30, sigma_prip=sigma_prip, p_group_factor=0.5,
                      mu_p=0.85, va_mu=0.85, maximise=True, pvs_filename="vary_sigma_prip_"+str(sigma_prip), prip_filename="vary_sigma_prip_"+str(sigma_prip), pvs_output_dir=output_dir+"vary_sigma_prip/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_sigma_prip/PriP/"+str(run)+"/")
-        """
+        
         ## What if every person is completely random?
         generate_randoms(n_values=4, n_actions=2, n_agents=30, pvs_filename="randoms", prip_filename="randoms", pvs_output_dir=output_dir+"randoms/PVS/"+str(run)+"/", prip_output_dir=output_dir+"randoms/PriP/"+str(run)+"/")
 
