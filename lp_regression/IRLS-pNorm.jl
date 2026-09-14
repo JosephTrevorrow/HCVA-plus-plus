@@ -3,14 +3,7 @@ using LinearAlgebra
 using SparseArrays
 
 function collector()
-    # Explicitly clear large variables
-    #println("Clearing variables")
-    Δ = nothing
-    α = nothing
-    R = nothing
-    g = nothing
-    C_aug = nothing
-    current = nothing
+    GC.gc()
     return 0;
 end
 
