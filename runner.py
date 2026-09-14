@@ -154,6 +154,7 @@ if __name__ == '__main__':
 
     # Looking for the number of agents? This is not explicitly defined and can be found from the corresponding pvs_dir and prip_dir of each experiment.
     args = parser.parse_args()
+
     # Note, these are lists
     n_values_list = args.n_values
     n_actions_list = args.n_actions
@@ -162,7 +163,6 @@ if __name__ == '__main__':
     print(now)
     os.makedirs(output_dir, exist_ok=True)
     all_dirs = sort_nicely(os.listdir(args.pvs_dir))[args.min:args.max]
-
 
     tasks = []
     for idx, current_dir in enumerate(all_dirs):
@@ -188,12 +188,9 @@ if __name__ == '__main__':
             tasks.append((args, current_dir, i, now, output_dir,
                           pvs_sets[i], pvs_sets_0, prip_sets[i], n_values, n_actions))
 
-    tasks = tasks[:1]
-
     n_workers = args.n_workers or int(os.environ.get('SLURM_CPUS_PER_TASK', mp.cpu_count()))
+    n_workers = min(n_workers, len(tasks))
     print(f"Running {len(tasks)} task(s) across {n_workers} worker process(es)")
-    _worker_init()
-    run_experiment(tasks[0])
 
     """ The parallelisation bit """
     # 'spawn' (not the Linux default 'fork') is required: each worker boots
