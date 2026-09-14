@@ -21,6 +21,7 @@ def _worker_init():
     global _JL_MAIN
     from julia.api import Julia
     Julia(compiled_modules=False)
+
     from julia import Main
     #from julia import PyCall
 
@@ -193,7 +194,7 @@ if __name__ == '__main__':
     n_workers = args.n_workers or int(os.environ.get('SLURM_CPUS_PER_TASK', mp.cpu_count()))
     print(f"Running {len(tasks)} task(s) across {n_workers} worker process(es)")
 
-    _worker_init()
+    #_worker_init()
     run_experiment(tasks[0])
 
     """ The parallelisation bit """

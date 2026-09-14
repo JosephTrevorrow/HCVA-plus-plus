@@ -18,10 +18,10 @@ import cvxpy as cp
 #from juliacall import Main as jl
 
 ## Julia for HPC
-#from julia.api import Julia
-#jl = Julia(compiled_modules=False)
-#from julia import Main
-#from julia import PyCall
+from julia.api import Julia
+jl = Julia(compiled_modules=False)
+from julia import Main
+from julia import PyCall
 
 ## Julia using _JL_MAIN
 
