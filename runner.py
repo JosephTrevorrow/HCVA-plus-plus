@@ -18,10 +18,9 @@ _JL_MAIN = None  # set once per worker by _worker_init
 
 def _worker_init():
     """Runs once when each worker process starts."""
-    # REMOVED: If we do this, we get an OOM error, even with 1
     global _JL_MAIN
     from julia.api import Julia
-    jl = Julia(compiled_modules=False)
+    Julia(compiled_modules=False)
     from julia import Main
     from julia import PyCall
     action_path = os.path.abspath(
@@ -155,7 +154,7 @@ if __name__ == '__main__':
 
     # Looking for the number of agents? This is not explicitly defined and can be found from the corresponding pvs_dir and prip_dir of each experiment.
     args = parser.parse_args()
-
+    """
     # Note, these are lists
     n_values_list = args.n_values
     n_actions_list = args.n_actions
@@ -164,6 +163,7 @@ if __name__ == '__main__':
     print(now)
     os.makedirs(output_dir, exist_ok=True)
     all_dirs = sort_nicely(os.listdir(args.pvs_dir))[args.min:args.max]
+
 
     tasks = []
     for idx, current_dir in enumerate(all_dirs):
@@ -192,8 +192,8 @@ if __name__ == '__main__':
 
     n_workers = args.n_workers or int(os.environ.get('SLURM_CPUS_PER_TASK', mp.cpu_count()))
     print(f"Running {len(tasks)} task(s) across {n_workers} worker process(es)")
-
-    #_worker_init()
+    """
+    _worker_init()
     run_experiment(tasks[0])
 
     """ The parallelisation bit """

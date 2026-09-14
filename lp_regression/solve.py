@@ -18,25 +18,25 @@ import cvxpy as cp
 #from juliacall import Main as jl
 
 ## Julia for HPC
-from julia.api import Julia
-jl = Julia(compiled_modules=False)
-from julia import Main
-from julia import PyCall
+#from julia.api import Julia
+#jl = Julia(compiled_modules=False)
+#from julia import Main
+#from julia import PyCall
 ## Now import the module!
-action_path = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), 'lp_regression/IRLS-pNorm.jl')
-)
+#action_path = os.path.abspath(
+#    os.path.join(os.path.dirname(__file__), 'lp_regression/IRLS-pNorm.jl')
+#)
 #Main.eval(f'include("{action_path}")') Note: Include evaluates source code from a file, while using shares a name between two modules. Include should only happen once ever?
-Main.eval("using Main.MyActionModule")
+#Main.eval("using Main.MyActionModule")
 
 ## Julia using _JL_MAIN
 
-#Main = None
+Main = None
 
-#def julia_init(_JL_MAIN):
-#    global Main
-#    Main = _JL_MAIN
-#    return
+def julia_init(_JL_MAIN):
+    global Main
+    Main = _JL_MAIN
+    return
 
 ## L_P REGRESSION FUNCTIONS HERE
 # Note that functions L1, L2, Linf, IRLS,  and Lp are taken from the paper "Aggregating Value Systems for Decision Support" https://www.sciencedirect.com/science/article/pii/S0950705124000881
