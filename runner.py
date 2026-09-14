@@ -55,7 +55,7 @@ def run_experiment(task):
     try:
 
         # Setup Main in solve.py
-        #julia_init(_JL_MAIN)
+        julia_init(_JL_MAIN)
 
         print(f"{tag} PREPROCESSING PVS...")
         ## PVS
