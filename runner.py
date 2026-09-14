@@ -18,12 +18,12 @@ _JL_MAIN = None  # set once per worker by _worker_init
 
 def _worker_init():
     """Runs once when each worker process starts."""
+    # REMOVED: If we do this, we get an OOM error, even with 1
     global _JL_MAIN
     from julia.api import Julia
-    Julia(compiled_modules=False)
+    jl = Julia(compiled_modules=False)
     from julia import Main
-    #from julia import PyCall
-
+    from julia import PyCall
     action_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), 'lp_regression/IRLS-pNorm.jl')
     )
@@ -56,7 +56,7 @@ def run_experiment(task):
     try:
 
         # Setup Main in solve.py
-        julia_init(_JL_MAIN)
+        #julia_init(_JL_MAIN)
 
         print(f"{tag} PREPROCESSING PVS...")
         ## PVS
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     n_workers = args.n_workers or int(os.environ.get('SLURM_CPUS_PER_TASK', mp.cpu_count()))
     print(f"Running {len(tasks)} task(s) across {n_workers} worker process(es)")
 
-    _worker_init()
+    #_worker_init()
     run_experiment(tasks[0])
 
     """ The parallelisation bit """

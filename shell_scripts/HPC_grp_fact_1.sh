@@ -13,7 +13,7 @@ echo Directory is "$(pwd)"
 
 source ~/miniforge3/bin/activate
 
-conda activate abpi
+conda activate hcva
 
 # Ensure Julia is found
 #
@@ -26,16 +26,19 @@ echo Julia path set
 export JULIA_DEPOT_PATH=$HOME/julia_depot/global
 mkdir -p "$JULIA_DEPOT_PATH"
 
-echo Starting Pkg
+#echo Starting Pkg
 
 #julia -e 'using Pkg; Pkg.add("PyCall"); Pkg.build("PyCall")'
 
 #echo Added PyCall!
 
+#python -m julia.sysimage sys.so
+
+
 #julia -e 'using Pkg; Pkg.add("StatsBase"); Pkg.add("JSON"); Pkg.add("PythonCall"); Pkg.instantiate();'
-julia -e 'using Pkg; Pkg.add(PackageSpec(name="PyCall", rev="master")); Pkg.build("PyCall")'
-echo Instantiated!
-julia -e 'include(pwd()* "/lp_regression/IRLS-pNorm.jl"); using Main.MyActionModule'
+#julia -e 'using Pkg; Pkg.add(PackageSpec(name="PyCall", rev="master")); Pkg.build("PyCall")'
+#echo Instantiated!
+#julia -e 'include(pwd()* "/lp_regression/IRLS-pNorm.jl"); using Main.MyActionModule'
 
 #julia -e 'using PythonCall; println("PythonCall OK")'
 

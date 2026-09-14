@@ -9,3 +9,4 @@ cvxpy[ECOS,GUROBI]
 pyreadstat
 cplex
 docplex
+julia
