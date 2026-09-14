@@ -50,7 +50,7 @@ def sort_nicely(l):
     return l
 
 def run_experiment(task):
-    (args, current_dir, i, now, output_dir, pvs_sets, prip_sets, n_values, n_actions) = task
+    (args, current_dir, i, now, output_dir, pvs_set, pvs_set_0, prip_set, n_values, n_actions) = task
     tag = f"[{current_dir} / run {i}]"
     try:
 
@@ -60,14 +60,14 @@ def run_experiment(task):
         print(f"{tag} PREPROCESSING PVS...")
         ## PVS
         print("PREPROCESSING PVS...")
-        P_list, J_list, w, country_dict = FormalisationObjects(filename=pvs_sets[i], delimiter=',', weights=args.w,
+        P_list, J_list, w, country_dict = FormalisationObjects(filename=pvs_set, delimiter=',', weights=args.w,
                                                                n_values=n_values, n_actions=n_actions)
-        pvs_df = pd.read_csv(pvs_sets[0])
+        pvs_df = pd.read_csv(pvs_set_0)
         ### Below is only used for col headings when saving to a file
         values_list = list([col for col in pvs_df.columns if 'P__' in col])
         actions_list = list([col for col in pvs_df.columns if 'VA__' in col])
         ## PriPs
-        prip_df = pd.read_csv(prip_sets[i])
+        prip_df = pd.read_csv(prip_set)
         filename = f"DIR_{current_dir}_RUN_{i}_{now}.csv"
         rows = []
         # Run aggregations
@@ -154,7 +154,6 @@ if __name__ == '__main__':
 
     # Looking for the number of agents? This is not explicitly defined and can be found from the corresponding pvs_dir and prip_dir of each experiment.
     args = parser.parse_args()
-    """
     # Note, these are lists
     n_values_list = args.n_values
     n_actions_list = args.n_actions
@@ -184,15 +183,15 @@ if __name__ == '__main__':
         n_values = n_values_list[idx] if idx < len(n_values_list) else n_values_list[-1]
         n_actions = n_actions_list[idx] if idx < len(n_actions_list) else n_actions_list[-1]
 
+        pvs_sets_0 = pvs_sets[0]
         for i in range(min(len(pvs_sets), len(prip_sets))):
             tasks.append((args, current_dir, i, now, output_dir,
-                          pvs_sets, prip_sets, n_values, n_actions))
+                          pvs_sets[i], pvs_sets_0, prip_sets[i], n_values, n_actions))
 
     tasks = tasks[:1]
 
     n_workers = args.n_workers or int(os.environ.get('SLURM_CPUS_PER_TASK', mp.cpu_count()))
     print(f"Running {len(tasks)} task(s) across {n_workers} worker process(es)")
-    """
     _worker_init()
     run_experiment(tasks[0])
 
