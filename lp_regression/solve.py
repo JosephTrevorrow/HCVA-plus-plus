@@ -22,6 +22,12 @@ from julia.api import Julia
 jl = Julia(compiled_modules=False)
 from julia import Main
 from julia import PyCall
+## Now import the module!
+action_path = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), 'lp_regression/IRLS-pNorm.jl')
+)
+#Main.eval(f'include("{action_path}")') Note: Include evaluates source code from a file, while using shares a name between two modules. Include should only happen once ever?
+Main.eval("using Main.MyActionModule")
 
 ## Julia using _JL_MAIN
 
