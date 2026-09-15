@@ -172,7 +172,7 @@ def Lp_norm(A,b,p, v):
     x = cp.Variable(v)
     cost = cp.pnorm(A @ x - b, p)
     prob = cp.Problem(cp.Minimize(cost))
-    print("Lp_norm solving")
+    #print("Lp_norm solving")
     prob.solve(solver='GUROBI', verbose=True)
     return prob.value
 
@@ -324,11 +324,11 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
     # 1. Find the consensus principle $p$
     # 1.1 Find the consensus principle preference
     principle_preferences = prip_df["Egalitarian"].astype("float").values.tolist()
-    print("Principle preferences: ", principle_preferences)
+    #print("Principle preferences: ", principle_preferences)
 
     consensus_preference = sum(principle_preferences) / len(principle_preferences)
     consensus_preference = round(consensus_preference, 2)
-    print("HCVA++ Consensus preference is: ", consensus_preference)
+    #print("HCVA++ Consensus preference is: ", consensus_preference)
     # 1.2 Aggregate personal values/action judgements to find the transition point - Not needed if t_point provided
     if transition_p is None:
         _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
@@ -337,7 +337,7 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
     consensus_p = pow(transition_p, (2 * consensus_preference))
     # Round to 2 d.p. for fairness
     consensus_p = round(consensus_p, 2)
-    print("Consensus p is: ", consensus_p)
+    #print("Consensus p is: ", consensus_p)
     # 2. Aggregate all the preference values and action judgements submitted by agents
     # using the average rule as described in the paper. Do this twice, once for vals, other for action judgements
     p, u_pref, cons_pref = aggregate(P_list, J_list, w, consensus_p, True)

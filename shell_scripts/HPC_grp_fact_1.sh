@@ -3,7 +3,7 @@
 #SBATCH --job-name=ia23938-grp_fact_1
 #SBATCH --output=grp_fact_1.out
 #SBATCH --error=grp_fact_1.err
-#SBATCH --time=00:30:00
+#SBATCH --time=24:00:00
 #SBATCH --mem=100G
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=140
@@ -47,4 +47,4 @@ mkdir -p "$JULIA_DEPOT_PATH"
 echo Starting Python
 
 # Experiment ``vary_grp_fact'''
-python runner.py -min 0 -max 39 -pvs_dir "value_systems/Synthetic/vary_grp_fact/PVS/" -prip_dir "value_systems/Synthetic/vary_grp_fact/PriP/" -n_values 4 -n_actions 2 -output_dir "results/SYNTH_vary_grp_fact/" -n_workers 7
+python -O runner.py -min 0 -max 39 -pvs_dir "value_systems/Synthetic/vary_grp_fact/PVS/" -prip_dir "value_systems/Synthetic/vary_grp_fact/PriP/" -n_values 4 -n_actions 2 -output_dir "results/SYNTH_vary_grp_fact/" -n_workers 7
