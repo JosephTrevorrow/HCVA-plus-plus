@@ -194,6 +194,7 @@ def mLp(A, b, ps, λs, weight=True):
     prob.solve(solver="GUROBI",
                verbose=True,
                warm_start=True,
+               Threads=140,
                # canon_backend=cp.COO_CANON_BACKEND,
                # Threads=0,
                # Method=2,
@@ -208,7 +209,7 @@ def mLp(A, b, ps, λs, weight=True):
                verbose=True,
                warm_start=True,
                canon_backend=cp.COO_CANON_BACKEND,
-               Threads=72,
+               Threads=140,
                NumericFocus=1,
                Presolve=2,
                )
@@ -227,7 +228,7 @@ def mLp(A, b, ps, λs, weight=True):
                warm_start=True,
                canon_backend=cp.COO_CANON_BACKEND,
                cplex_params={
-                   "threads": 72,
+                   "threads": 140,
                    "barrier.display": 2,
                    "emphasis.numerical": 1,
                    "preprocessing.presolve": 1,
@@ -242,7 +243,7 @@ def mLp(A, b, ps, λs, weight=True):
                warm_start=True,
                canon_backend=cp.COO_CANON_BACKEND,
                cplex_params={
-                   "threads": 1,
+                   "threads": 140,
                    "emphasis.numerical": 1,
                    "preprocessing.presolve": 1,
                },

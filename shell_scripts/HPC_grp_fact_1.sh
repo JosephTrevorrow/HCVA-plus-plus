@@ -3,8 +3,10 @@
 #SBATCH --job-name=ia23938-grp_fact_1
 #SBATCH --output=grp_fact_1.out
 #SBATCH --error=grp_fact_1.err
-#SBATCH --time=24:00:00
+#SBATCH --time=00:30:00
 #SBATCH --mem=100G
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=140
 
 cd "${SLURM_SUBMIT_DIR}"
 
