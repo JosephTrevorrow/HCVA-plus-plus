@@ -185,34 +185,30 @@ def mLp(A, b, ps, λs, weight=True):
     x = cp.Variable(v)
     print("X", v)
     constraints = [x >= 0]
-    A = cp.Parameter(shape=A.shape, value=A)
     cost = cp.sum([wp * cp.pnorm(A @ x - b, p) for wp, p in zip(wps, ps)])
     prob = cp.Problem(cp.Minimize(cost), constraints=constraints)
-    """
     print("mLp solving")
     print("My ps are: ", ps)
     import time
     start = time.time()
     prob.solve(solver="GUROBI",
-               verbose=False,
+               verbose=True,
                warm_start=True,
-               #canon_backend=cp.COO_CANON_BACKEND,
-               #Threads=0,
-               #Method=2,
-               #Crossover=0,
-               #NumericFocus=1,
-               #Presolve=2,
-    )
+               # canon_backend=cp.COO_CANON_BACKEND,
+               # Threads=0,
+               # Method=2,
+               # Crossover=0,
+               # NumericFocus=1,
+               # Presolve=2,
+               )
     end = time.time()
-    gurobi_time = end-start
+    gurobi_time = end - start
     start = time.time()
     prob.solve(solver="GUROBI",
-               verbose=False,
+               verbose=True,
                warm_start=True,
                canon_backend=cp.COO_CANON_BACKEND,
-               Threads=0,
-               Method=2,
-               Crossover=0,
+               Threads=72,
                NumericFocus=1,
                Presolve=2,
                )
@@ -220,20 +216,19 @@ def mLp(A, b, ps, λs, weight=True):
     gurobi_args_time = end - start
     start = time.time()
     prob.solve(solver="CPLEX",
-               verbose=v,
+               verbose=True,
                warm_start=True,
                )
     end = time.time()
     cplex_time = end - start
     start = time.time()
     prob.solve(solver="CPLEX",
-               verbose=False,
+               verbose=True,
                warm_start=True,
                canon_backend=cp.COO_CANON_BACKEND,
                cplex_params={
-                   "threads": 0,
-                   "lpmethod": 4,  # barrier (Gurobi Method=2 equivalent)
-                   "solutiontype": 2,  # skip crossover, return interior-point solution
+                   "threads": 72,
+                   "barrier.display": 2,
                    "emphasis.numerical": 1,
                    "preprocessing.presolve": 1,
                },
@@ -242,15 +237,12 @@ def mLp(A, b, ps, λs, weight=True):
     cplex_args_time = end - start
 
     print("SUMMARY: cplex: ", cplex_time, " cplex_args: ", cplex_args_time, " gurobi: ", gurobi_time, " gurobi_args: ", gurobi_args_time, "")
-    """
     prob.solve(solver="CPLEX",
-               verbose=False,
+               verbose=True,
                warm_start=True,
                canon_backend=cp.COO_CANON_BACKEND,
                cplex_params={
-                   "threads": 0,
-                   "lpmethod": 4,  # barrier (Gurobi Method=2 equivalent)
-                   "solutiontype": 2,  # skip crossover, return interior-point solution
+                   "threads": 1,
                    "emphasis.numerical": 1,
                    "preprocessing.presolve": 1,
                },
@@ -258,7 +250,6 @@ def mLp(A, b, ps, λs, weight=True):
     #res = np.abs(A @ x.value - b)
     #psi = np.var([wp * np.linalg.norm(res, p) for wp, p in zip(wps, ps)])
     return x.value, None, prob.value / sum(wps), None
-
 #### RUNNER FUNCTIONS HERE ######
 
 def find_transition_and_aggregate(P_list, J_list, w, output_dir, filename_limits, e, args):
