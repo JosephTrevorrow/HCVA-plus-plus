@@ -198,12 +198,12 @@ if __name__ == '__main__':
     print(f"Running {len(tasks)} task(s) across {n_workers} worker process(es)")
 
     # non-parallel
+    """
     _worker_init()
     for task in tasks:
         run_experiment(task)
-
-    """ The parallelisation bit """
     """
+    """ The parallelisation bit """
     # 'spawn' (not the Linux default 'fork') is required: each worker boots
     # its own independent Julia runtime in _worker_init, and forking a
     # process that already has Julia loaded is unsupported.
@@ -216,4 +216,3 @@ if __name__ == '__main__':
                 print(f"FAILED: {current_dir} run {i}\n{err}")
 
     print(f"Finished. {len(tasks) - len(failures)}/{len(tasks)} succeeded.")
-    """

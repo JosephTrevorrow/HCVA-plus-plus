@@ -194,9 +194,8 @@ def mLp(A, b, ps, λs, weight=True):
     prob.solve(solver="GUROBI",
                verbose=True,
                warm_start=True,
-               Threads=140,
                # canon_backend=cp.COO_CANON_BACKEND,
-               # Threads=0,
+               Threads=20,
                # Method=2,
                # Crossover=0,
                # NumericFocus=1,
@@ -204,12 +203,13 @@ def mLp(A, b, ps, λs, weight=True):
                )
     end = time.time()
     gurobi_time = end - start
+    """
     start = time.time()
     prob.solve(solver="GUROBI",
                verbose=True,
                warm_start=True,
                canon_backend=cp.COO_CANON_BACKEND,
-               Threads=140,
+               Threads=72,
                NumericFocus=1,
                Presolve=2,
                )
@@ -228,7 +228,7 @@ def mLp(A, b, ps, λs, weight=True):
                warm_start=True,
                canon_backend=cp.COO_CANON_BACKEND,
                cplex_params={
-                   "threads": 140,
+                   "threads": 72,
                    "barrier.display": 2,
                    "emphasis.numerical": 1,
                    "preprocessing.presolve": 1,
@@ -243,11 +243,12 @@ def mLp(A, b, ps, λs, weight=True):
                warm_start=True,
                canon_backend=cp.COO_CANON_BACKEND,
                cplex_params={
-                   "threads": 140,
+                   "threads": 1,
                    "emphasis.numerical": 1,
                    "preprocessing.presolve": 1,
                },
     )
+    """
     #res = np.abs(A @ x.value - b)
     #psi = np.var([wp * np.linalg.norm(res, p) for wp, p in zip(wps, ps)])
     return x.value, None, prob.value / sum(wps), None
