@@ -5,8 +5,8 @@
 #SBATCH --error=hcva.err
 #SBATCH --time=24:00:00
 #SBATCH --mem=100G
-#SBATCH --nodes=6
-#SBATCH --cpus-per-task=840
+#SBATCH --nodes=3
+#SBATCH --cpus-per-task=384
 
 cd "${SLURM_SUBMIT_DIR}"
 
@@ -31,4 +31,4 @@ mkdir -p "$JULIA_DEPOT_PATH"
 echo Starting Python
 
 # Experiment ``vary_grp_fact'''
-python -O runner.py -values_dir "value_systems/Synthetic/vary_grp_fact" "value_systems/Synthetic/vary_mup_vamu" "value_systems/Synthetic/vary_prip_grp_fact" "value_systems/Synthetic/vary_pvs_prip" "value_systems/Synthetic/vary_sigma_prip_MINIMISE" "value_systems/Synthetic/randoms" -n_values 4 -n_actions 2 -n_workers 42
+python -O runner.py -values_dir "value_systems/Synthetic/vary_grp_fact" "value_systems/Synthetic/vary_mup_vamu" "value_systems/Synthetic/vary_prip_grp_fact" "value_systems/Synthetic/vary_pvs_prip" "value_systems/Synthetic/vary_sigma_prip_MINIMISE" "value_systems/Synthetic/randoms" -n_values 4 -n_actions 2 -n_workers 24
