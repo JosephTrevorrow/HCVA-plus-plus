@@ -137,16 +137,13 @@ def run_experiment(task):
 if __name__ == '__main__':
     parser = ap.ArgumentParser()
     ## FILE ARGS
-    parser.add_argument('-pvs_dir', type=str, help='Directory pointing to the pvs csvs used in the experiment')
-    parser.add_argument('-prip_dir', type=str, help='Directory pointing to the prips csvs used in the experiment')
+    parser.add_argument('-values_dir', nargs="*", type=str, help='Array of directories pointing to the values used in the experiment')
+    #parser.add_argument('-prip_dir', nargs="*", type=str, help='Array of directories pointing to the pvs csvs used in the experiment')
     ## ENV ARGS
     parser.add_argument("-n_values", nargs="*", type=int, default=[4], help='Number of values')
     parser.add_argument("-n_actions",nargs="*", type=int, default=[2], help='Number of actions')
     parser.add_argument('-e', type=float, default=1e-4, help='Epsilon cut-point for T')
     parser.add_argument('-w', type=int, default=0, help='Weights')
-    parser.add_argument('-max', type=int, default=40, help='maximum dir to search')
-    parser.add_argument('-min', type=int, default=0, help='minimum dir to search')
-    parser.add_argument('-output_dir', type=str, default="output", help='Directory to save the output files')
     parser.add_argument('-n_workers', type=int, default=None,
                          help='Worker pool size. Defaults to $SLURM_CPUS_PER_TASK, then os.cpu_count().')
 
@@ -156,35 +153,42 @@ if __name__ == '__main__':
     # Note, these are lists
     n_values_list = args.n_values
     n_actions_list = args.n_actions
-    output_dir = args.output_dir
+    #output_dir = args.output_dir
     now = str(date.today())
     print(now)
-    os.makedirs(output_dir, exist_ok=True)
-    all_dirs = sort_nicely(os.listdir(args.pvs_dir))[args.min:args.max]
-
     tasks = []
-    for idx, current_dir in enumerate(all_dirs):
-        if not os.path.isdir(args.pvs_dir + current_dir):
-            continue
+    # For each dir in pvs dirs, make some tasks:
+    for values_dir in args.values_dir:
+        pvs_dir = values_dir + "/PVS/"
+        prip_dir = values_dir + "/PriP/"
+        print("looking at pvs_dir: ", pvs_dir)
+        # make an output dir for this:
+        pvs_name = pvs_dir.split("/")[2]
+        output_dir = "results/"+pvs_name+"/"
+        os.makedirs(output_dir, exist_ok=True)
+        all_dirs = sort_nicely(os.listdir(args.pvs_dir))
+        for idx, current_dir in enumerate(all_dirs):
+            if not os.path.isdir(args.pvs_dir + current_dir):
+                continue
 
-        pvs_dir = args.pvs_dir + current_dir + "/"
-        pvs_sets = sort_nicely([pvs_dir + f for f in os.listdir(pvs_dir) if f.endswith(".csv")])
+            pvs_dir = args.pvs_dir + current_dir + "/"
+            pvs_sets = sort_nicely([pvs_dir + f for f in os.listdir(pvs_dir) if f.endswith(".csv")])
 
-        prip_dir = args.prip_dir + current_dir + "/"
-        prip_sets = sort_nicely([prip_dir + f for f in os.listdir(prip_dir) if f.endswith(".csv")])
+            prip_dir = args.prip_dir + current_dir + "/"
+            prip_sets = sort_nicely([prip_dir + f for f in os.listdir(prip_dir) if f.endswith(".csv")])
 
-        if len(pvs_sets) != len(prip_sets):
-            print(f"WARNING: {current_dir} has {len(pvs_sets)} pvs set(s) but "
-                  f"{len(prip_sets)} prip set(s) — only the first "
-                  f"{min(len(pvs_sets), len(prip_sets))} will be run.")
+            if len(pvs_sets) != len(prip_sets):
+                print(f"WARNING: {current_dir} has {len(pvs_sets)} pvs set(s) but "
+                      f"{len(prip_sets)} prip set(s) — only the first "
+                      f"{min(len(pvs_sets), len(prip_sets))} will be run.")
 
-        n_values = n_values_list[idx] if idx < len(n_values_list) else n_values_list[-1]
-        n_actions = n_actions_list[idx] if idx < len(n_actions_list) else n_actions_list[-1]
+            n_values = n_values_list[idx] if idx < len(n_values_list) else n_values_list[-1]
+            n_actions = n_actions_list[idx] if idx < len(n_actions_list) else n_actions_list[-1]
 
-        pvs_sets_0 = pvs_sets[0]
-        for i in range(min(len(pvs_sets), len(prip_sets))):
-            tasks.append((args, current_dir, i, now, output_dir,
-                          pvs_sets[i], pvs_sets_0, prip_sets[i], n_values, n_actions))
+            pvs_sets_0 = pvs_sets[0]
+            for i in range(min(len(pvs_sets), len(prip_sets))):
+                tasks.append((args, current_dir, i, now, output_dir,
+                              pvs_sets[i], pvs_sets_0, prip_sets[i], n_values, n_actions))
 
     n_workers = args.n_workers or int(os.environ.get('SLURM_CPUS_PER_TASK', mp.cpu_count()))
     n_workers = min(n_workers, len(tasks))
