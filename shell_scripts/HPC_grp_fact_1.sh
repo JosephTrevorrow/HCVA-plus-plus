@@ -47,4 +47,4 @@ mkdir -p "$JULIA_DEPOT_PATH"
 echo Starting Python
 
 # Experiment ``vary_grp_fact'''
-python runner.py -min 0 -max 39 -pvs_dir "value_systems/Synthetic/vary_grp_fact/PVS/" -prip_dir "value_systems/Synthetic/vary_grp_fact/PriP/" -n_values 4 -n_actions 2 -output_dir "results/SYNTH_vary_grp_fact/" -n_workers 7
+python -O runner.py -min 0 -max 39 -pvs_dir "value_systems/Synthetic/vary_grp_fact/PVS/" -prip_dir "value_systems/Synthetic/vary_grp_fact/PriP/" -n_values 4 -n_actions 2 -output_dir "results/SYNTH_vary_grp_fact/" -n_workers 7
