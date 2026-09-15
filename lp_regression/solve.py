@@ -183,16 +183,16 @@ def mLp(A, b, ps, λs, weight=True):
     v = A.shape[1]
     wps = [λ / Lp_norm(A, b, p, v) if weight else λ for λ, p in zip(λs, ps)]
     x = cp.Variable(v)
-    print("X", v)
+    #print("X", v)
     constraints = [x >= 0]
     cost = cp.sum([wp * cp.pnorm(A @ x - b, p) for wp, p in zip(wps, ps)])
     prob = cp.Problem(cp.Minimize(cost), constraints=constraints)
-    print("mLp solving")
-    print("My ps are: ", ps)
-    import time
-    start = time.time()
+    #print("mLp solving")
+    #print("My ps are: ", ps)
+    #import time
+    #start = time.time()
     prob.solve(solver="GUROBI",
-               verbose=True,
+               verbose=False,
                warm_start=True,
                # canon_backend=cp.COO_CANON_BACKEND,
                Threads=20,
@@ -201,9 +201,10 @@ def mLp(A, b, ps, λs, weight=True):
                # NumericFocus=1,
                # Presolve=2,
                )
+    """
     end = time.time()
     gurobi_time = end - start
-    """
+    
     start = time.time()
     prob.solve(solver="GUROBI",
                verbose=True,
