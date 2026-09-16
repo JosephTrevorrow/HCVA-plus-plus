@@ -174,7 +174,7 @@ if __name__ == '__main__':
             pvs_dir = pvs_dir + current_dir + "/"
             pvs_sets = sort_nicely([pvs_dir + f for f in os.listdir(pvs_dir) if f.endswith(".csv")])
 
-            prip_dir = args.prip_dir + current_dir + "/"
+            prip_dir = prip_dir + current_dir + "/"
             prip_sets = sort_nicely([prip_dir + f for f in os.listdir(prip_dir) if f.endswith(".csv")])
 
             if len(pvs_sets) != len(prip_sets):
