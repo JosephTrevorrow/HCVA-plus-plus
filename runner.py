@@ -166,12 +166,12 @@ if __name__ == '__main__':
         pvs_name = pvs_dir.split("/")[2]
         output_dir = "results/"+pvs_name+"/"
         os.makedirs(output_dir, exist_ok=True)
-        all_dirs = sort_nicely(os.listdir(args.pvs_dir))
+        all_dirs = sort_nicely(os.listdir(pvs_dir))
         for idx, current_dir in enumerate(all_dirs):
-            if not os.path.isdir(args.pvs_dir + current_dir):
+            if not os.path.isdir(pvs_dir + current_dir):
                 continue
 
-            pvs_dir = args.pvs_dir + current_dir + "/"
+            pvs_dir = pvs_dir + current_dir + "/"
             pvs_sets = sort_nicely([pvs_dir + f for f in os.listdir(pvs_dir) if f.endswith(".csv")])
 
             prip_dir = args.prip_dir + current_dir + "/"
