@@ -19,10 +19,12 @@ _JL_MAIN = None  # set once per worker by _worker_init
 def _worker_init():
     """Runs once when each worker process starts."""
     global _JL_MAIN
-    from julia.api import Julia
-    Julia(compiled_modules=False)
-    from julia import Main
-    from julia import PyCall
+    #from julia.api import Julia
+    #Julia(compiled_modules=False)
+    #from julia import Main
+    #from julia import PyCall
+
+    from juliacall import Main
     action_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), 'lp_regression/IRLS-pNorm.jl')
     )

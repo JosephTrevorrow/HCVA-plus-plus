@@ -4,10 +4,12 @@
 #SBATCH --output=hcva.out
 #SBATCH --error=hcva.err
 #SBATCH --time=24:00:00
-#SBATCH --mem=100G
+#SBATCH --mem=64G
 #SBATCH --nodes=6
 #SBATCH --ntasks-per-node=2
 #SBATCH --cpus-per-task=72
+
+# An hour into computation mem use is sitting at around 8 gig, so can request much less than 100G
 
 cd "${SLURM_SUBMIT_DIR}"
 
