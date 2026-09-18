@@ -196,7 +196,7 @@ if __name__ == '__main__':
     n_workers = min(n_workers, len(tasks))
     print(f"Running {len(tasks)} task(s) across {n_workers} worker process(es)")
 
-    #boot julia
+    #boot julia first to warm up
     julia_init()
 
     # non-parallel
@@ -211,7 +211,7 @@ if __name__ == '__main__':
     # process that already has Julia loaded is unsupported.
     ctx = mp.get_context('spawn')
     failures = []
-    with ctx.Pool(processes=n_workers) as pool:
+    with ctx.Pool(processes=n_workers, initializer=julia_init) as pool:
         for current_dir, i, ok, err in pool.imap_unordered(run_experiment, tasks):
             if not ok:
                 failures.append((current_dir, i, err))
