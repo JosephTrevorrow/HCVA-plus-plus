@@ -33,7 +33,7 @@ import cvxpy as cp
 
 Main = None
 
-def julia_init(_JL_MAIN):
+def pass_julia_to_solve(_JL_MAIN):
     global Main
     Main = _JL_MAIN
     return

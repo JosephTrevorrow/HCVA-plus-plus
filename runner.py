@@ -57,7 +57,7 @@ def run_experiment(task):
     try:
 
         # Setup Main in solve.py
-        julia_init(_JL_MAIN)
+        pass_julia_to_solve(_JL_MAIN)
 
         ## PVS
         P_list, J_list, w, country_dict = FormalisationObjects(filename=pvs_set, delimiter=',', weights=args.w,
