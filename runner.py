@@ -56,9 +56,6 @@ def run_experiment(task):
     tag = f"[{current_dir} / run {i}]"
     try:
         global _JL_MAIN
-        # Setup Main in solve.py
-        pass_julia_to_solve(_JL_MAIN)
-
         ## PVS
         P_list, J_list, w, country_dict = FormalisationObjects(filename=pvs_set, delimiter=',', weights=args.w,
                                                                n_values=n_values, n_actions=n_actions)
@@ -76,23 +73,23 @@ def run_experiment(task):
         filename_limits = "LIMITS_DIR_" + str(current_dir) + "_RUN_" + str(i) + "_" + now + "limits.csv"
         p, u_pref, cons_pref, u_act, cons_act, t_point = find_transition_and_aggregate(P_list, J_list, w,
                                                                                        output_dir, filename_limits,
-                                                                                       args.e, args)
+                                                                                       args.e, args, jlmain=_JL_MAIN)
         rows.append(["T", p, u_pref, u_act, cons_pref, cons_act, t_point, t_point, 0.5])
         ## SLM
         p, _, cons_pref, _, cons_act, converted_principles = find_slm_and_aggregate(P_list, J_list, w, prip_df, t_point,
-                                                                                    args)
+                                                                                    args, jlmain=_JL_MAIN)
         ## Chop off half of cons_act, as output format has VA_p, and then VA_n. We are not interested in N, so we disregard
         cons_act = cons_act[:len(cons_act) // 2]
         rows.append(["SLM", p, _, _, cons_pref, cons_act, 0, converted_principles, 0, ])
         ## HCVA
-        p, u_pref, u_act, cons_pref, cons_act, con_p = find_hcva_and_aggregate(P_list, J_list, w, prip_df, args)
+        p, u_pref, u_act, cons_pref, cons_act, con_p = find_hcva_and_aggregate(P_list, J_list, w, prip_df, args, jlmain=_JL_MAIN)
         # output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
         # Convert HCVA to a preference.
         con_preference = np.log(con_p) / (2 * np.log(t_point))
         rows.append(["HCVA", p, u_pref, u_act, cons_pref, cons_act, None, con_p, con_preference])
         ## HCVA++
         p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference = find_hcva_pp_and_aggregate(
-            P_list, J_list, w, prip_df, t_point, args)
+            P_list, J_list, w, prip_df, t_point, args, jlmain=_JL_MAIN)
         rows.append(["HCVA++", p, u_pref, u_act, cons_pref, cons_act, transition_p, consensus_p, consensus_preference])
         ## EGAL/UTIL
         baseline_ps = [1, np.inf]

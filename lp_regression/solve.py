@@ -11,34 +11,6 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import cvxpy as cp
 
-# Julia for local machine
-#import juliapkg
-#juliapkg.require_julia("=1.10.3")
-#juliapkg.resolve()
-#from juliacall import Main as jl
-
-## Julia for HPC
-#from julia.api import Julia
-#jl = Julia(compiled_modules=False)
-#from julia import Main
-#from julia import PyCall
-## Now import the module!
-#action_path = os.path.abspath(
-#    os.path.join(os.path.dirname(__file__), 'lp_regression/IRLS-pNorm.jl')
-#)
-#Main.eval(f'include("{action_path}")') Note: Include evaluates source code from a file, while using shares a name between two modules. Include should only happen once ever?
-#Main.eval("using Main.MyActionModule")
-
-## Julia using _JL_MAIN
-
-Main = None
-
-def pass_julia_to_solve(_JL_MAIN):
-    global Main
-    Main = _JL_MAIN
-    print(f"[pass_julia_to_solve] set Main, module id={id(sys.modules[__name__])}", flush=True)
-    return
-
 ## L_P REGRESSION FUNCTIONS HERE
 # Note that functions L1, L2, Linf, IRLS,  and Lp are taken from the paper "Aggregating Value Systems for Decision Support" https://www.sciencedirect.com/science/article/pii/S0950705124000881
 def L1(A, b):
@@ -132,9 +104,9 @@ def IRLS(A, b, p, max_iter=int(1e6), e=1e-3, d=1e-4):
     r = np.abs(A @ x - b)
     return x, r, np.linalg.norm(r, p)
 
-def Lp(A, b, p):
+def Lp(A, b, p, jlmain):
+    Main = jlmain
     print(f"[Lp] Main={Main}, module id={id(sys.modules[__name__])}", flush=True)
-
     """OUTPUT:
     cons - the consensus matrix in the same format as the P or J matrix inputted
     r - The value of the solved function ||Ax - b||
@@ -209,10 +181,10 @@ def mLp(A, b, ps, λs, weight=True):
     return x.value, None, prob.value / sum(wps), None
 #### RUNNER FUNCTIONS HERE ######
 
-def find_transition_and_aggregate(P_list, J_list, w, output_dir, filename_limits, e, args):
+def find_transition_and_aggregate(P_list, J_list, w, output_dir, filename_limits, e, args, jlmain):
     """ Compute the transition point, and find an aggregation with that transition point P """
     # 1. Compute transition point
-    p_list, dist_p_list, dist_inf_list, diff_list, t_point = transition_point(P_list, J_list, w, e)
+    p_list, dist_p_list, dist_inf_list, diff_list, t_point = transition_point(P_list, J_list, w, e, jlmain)
     #limit_output(
     #    p_list,
     #    dist_p_list,
@@ -225,12 +197,12 @@ def find_transition_and_aggregate(P_list, J_list, w, output_dir, filename_limits
     _, u_act, cons_act = aggregate(P_list, J_list, w, t_point, False)
     return p, u_pref, cons_pref, u_act, cons_act, t_point
 
-def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args):
+def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args, jlmain):
     # 1. Formalise the principle preferences as matrices
     Pri_P_list, _, Pri_w, Pri_Country_dict = principle_formalisation_objs(
         prip_df, weights=args.w)
     # 2. Aggregate over all principle preferences
-    p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_prefs_only(Pri_P_list, [], Pri_w)
+    p_list, _, cons_list, _, _, cons_1, cons_l = aggregate_prefs_only(Pri_P_list, [], Pri_w, jlmain)
     # 3. Find a cutoff point given $\epsilon$
     cut_point = 10
     incr = 0.1
@@ -273,7 +245,7 @@ def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args):
     _, u_act, cons_act = aggregate(P_list, J_list, w, con_p, False)
     return p, u_pref, u_act, cons_pref, cons_act, con_p
 
-def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
+def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args, jlmain):
     """ Compute the HCVA++ consensus principle, and find an aggregation with that consensus principle P """
     # 1. Find the consensus principle $p$
     # 1.1 Find the consensus principle preference
@@ -285,7 +257,7 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
     #print("HCVA++ Consensus preference is: ", consensus_preference)
     # 1.2 Aggregate personal values/action judgements to find the transition point - Not needed if t_point provided
     if transition_p is None:
-        _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
+        _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e, jlmain)
     # 1.3 Given the transition point (best_p), find the consensus p by finding the
     # p the relative distance away from the transition point.
     consensus_p = pow(transition_p, (2 * consensus_preference))
@@ -298,12 +270,12 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
     _, u_act, cons_act = aggregate(P_list, J_list, w, consensus_p, False)
     return p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference
 
-def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
+def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args, jlmain):
     """ Compute aggregation with Salas-Molina et al. baseline (Many P's) """
     principle_preferences = prip_df["Egalitarian"].astype("float").values.tolist()
     # Convert the principles (which are preferences) into numbers (need to first find transition point
     if transition_p is None:
-        _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e)
+        _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e, jlmain)
     converted_principles = []
     for principle in principle_preferences:
         # Find p by finding the p the relative distance away from the transition point.
@@ -316,7 +288,7 @@ def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args):
     _, _, cons_act = aggregate_slm(P_list, J_list, w, converted_principles, False)
     return p, _, cons_pref, _, cons_act, converted_principles
 
-def transition_point(P_list, J_list, w, e):
+def transition_point(P_list, J_list, w, e, jlmain):
     """
     Find the transition point given personal values
     """
@@ -349,9 +321,9 @@ def transition_point(P_list, J_list, w, e):
     best_p = 0 # base val
     for i in np.arange(1 + incr, p, incr):
         A, b = FormalisationMatrix(P_list, J_list, w, i, True)
-        cons_pref, _, u_pref = Lp(A, b, i)
+        cons_pref, _, u_pref = Lp(A, b, i, jlmain)
         A, b = FormalisationMatrix(P_list, J_list, w, i, False)
-        cons_act, _, u_act = Lp(A, b, i)
+        cons_act, _, u_act = Lp(A, b, i, jlmain)
         cons_act = cons_act[:len(cons_act) // 2]
 
         cons = np.concatenate((cons_pref, cons_act))
@@ -388,10 +360,10 @@ def transition_point(P_list, J_list, w, e):
         #print('Transition point: {:.2f}'.format(best_p))
     return p_list, dist_p_list, dist_inf_list, diff_list, best_p
 
-def aggregate(P_list, J_list, w, p, v):
+def aggregate(P_list, J_list, w, p, v, jlmain):
     """Compute one aggregation using the P specified"""
     A, b = FormalisationMatrix(P_list, J_list, w, p, v)
-    cons, _, u = Lp(A, b, p)
+    cons, _, u = Lp(A, b, p, jlmain)
     if __debug__:
         print('Aggregate: p: {:.2f}, cons: '.format(p), cons)
     if not v:
@@ -431,9 +403,9 @@ def aggregate_all_p(P_list, J_list, w, incr):
     while p < 10:
         p += incr
         A, b = FormalisationMatrix(P_list, J_list, w, p, True)
-        cons_pref, _, u_pref = Lp(A, b, p)
+        cons_pref, _, u_pref = Lp(A, b, p, jlmain)
         A, b = FormalisationMatrix(P_list, J_list, w, p, False)
-        cons_act, _, u_act = Lp(A, b, p)
+        cons_act, _, u_act = Lp(A, b, p, jlmain)
         cons_act = cons_act[:len(cons_act) // 2]
         cons = np.concatenate((cons_pref, cons_act))
         u = np.array([u_pref, u_act])
@@ -448,7 +420,7 @@ def aggregate_all_p(P_list, J_list, w, incr):
         # print('{:.2f} \t \t {:.4f}'.format(p, ub))
     return p_list, u_list, cons_list, dist_1p_list, dist_pl_list, cons_1, cons_l
 
-def aggregate_prefs_only(P_list, J_list, w):
+def aggregate_prefs_only(P_list, J_list, w, jlmain):
     """This function is used by the HCVA to aggregate over all principle preferences in main.py"""
     A, b = FormalisationMatrix(P_list, J_list, w, 1, True)
     cons_1_pref, _, u_1_pref = L1(A, b)
@@ -469,7 +441,7 @@ def aggregate_prefs_only(P_list, J_list, w):
     while p < 10:
         p += incr
         A, b = FormalisationMatrix(P_list, J_list, w, p, True)
-        cons_pref, _, u_pref = Lp(A, b, p)
+        cons_pref, _, u_pref = Lp(A, b, p, jlmain)
         p_list.append(p)
         u_list.append(u_pref)
         cons_list.append(cons_pref)
@@ -506,7 +478,7 @@ def aggregate_slm(P_list, J_list, w, list_of_ps, v):
         print("b min/max:", np.min(np.asarray(b, dtype=float)), np.max(np.asarray(b, dtype=float)))
         print("Type of min:", type(np.min(np.asarray(A, dtype=float)).item()))
     # Aggregate over all principles together using the matrix
-    cons, _, _, _ = mLp(A, b, ps, λs, False)
+    cons, _, _, _ = mLp(A, b, ps, λs, False, jlmain)
     return list_of_ps, _, cons
 
 def aggregate_inf(P_list, J_list, w, p, v):
