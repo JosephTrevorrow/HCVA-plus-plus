@@ -60,7 +60,7 @@ def L1(A, b):
     cost = cp.sum(t)
     prob = cp.Problem(cp.Minimize(cost), constraints)
     # optimise model
-    prob.solve(solver='ECOS', verbose=False, solver_verbose=False)
+    prob.solve(solver='GUROBI', verbose=False, solver_verbose=False)
     cons = list(x.value)
     cons = np.array(cons)
     obj = prob.value
@@ -95,7 +95,7 @@ def Linf(A, b):
     constraints = constraint1 + constraint2
     prob = cp.Problem(cp.Minimize(t), constraints)
     # optimise model
-    prob.solve(solver='ECOS', verbose=False, solver_verbose=False)
+    prob.solve(solver='GUROBI', verbose=False, solver_verbose=False)
     # prob.solve(solver='GLPK', verbose=True)
     cons = list(x.value)
     cons = np.array(cons)

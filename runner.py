@@ -16,7 +16,7 @@ import multiprocessing as mp
 
 _JL_MAIN = None  # set once per worker by _worker_init
 
-def _worker_init():
+def julia_init():
     """Runs once when each worker process starts."""
     global _JL_MAIN
     #from julia.api import Julia
@@ -196,6 +196,9 @@ if __name__ == '__main__':
     n_workers = min(n_workers, len(tasks))
     print(f"Running {len(tasks)} task(s) across {n_workers} worker process(es)")
 
+    #boot julia
+    julia_init()
+
     # non-parallel
     """
     _worker_init()
@@ -208,7 +211,7 @@ if __name__ == '__main__':
     # process that already has Julia loaded is unsupported.
     ctx = mp.get_context('spawn')
     failures = []
-    with ctx.Pool(processes=n_workers, initializer=_worker_init) as pool:
+    with ctx.Pool(processes=n_workers) as pool:
         for current_dir, i, ok, err in pool.imap_unordered(run_experiment, tasks):
             if not ok:
                 failures.append((current_dir, i, err))
