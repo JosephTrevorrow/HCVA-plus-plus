@@ -3,8 +3,8 @@
 #SBATCH --job-name=ia23938-hcva
 #SBATCH --output=hcva.out
 #SBATCH --error=hcva.err
-#SBATCH --time=24:00:00
-#SBATCH --mem=64G
+#SBATCH --time=00:30:00
+#SBATCH --mem=32G
 #SBATCH --nodes=6
 #SBATCH --ntasks-per-node=2
 #SBATCH --cpus-per-task=72
@@ -30,6 +30,10 @@ echo Julia path set
 
 export JULIA_DEPOT_PATH=$HOME/julia_depot/global
 mkdir -p "$JULIA_DEPOT_PATH"
+
+echo setting PYTHON_JULIAPKG_EXE
+
+export PYTHON_JULIAPKG_EXE=$HOME/julia-1.11.7/bin/julia
 
 echo Starting Python
 
