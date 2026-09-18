@@ -55,7 +55,7 @@ def run_experiment(task):
     (args, current_dir, i, now, output_dir, pvs_set, pvs_set_0, prip_set, n_values, n_actions) = task
     tag = f"[{current_dir} / run {i}]"
     try:
-
+        global _JL_MAIN
         # Setup Main in solve.py
         pass_julia_to_solve(_JL_MAIN)
 
