@@ -36,6 +36,7 @@ Main = None
 def pass_julia_to_solve(_JL_MAIN):
     global Main
     Main = _JL_MAIN
+    print(f"[pass_julia_to_solve] set Main, module id={id(sys.modules[__name__])}", flush=True)
     return
 
 ## L_P REGRESSION FUNCTIONS HERE
@@ -132,6 +133,8 @@ def IRLS(A, b, p, max_iter=int(1e6), e=1e-3, d=1e-4):
     return x, r, np.linalg.norm(r, p)
 
 def Lp(A, b, p):
+    print(f"[Lp] Main={Main}, module id={id(sys.modules[__name__])}", flush=True)
+
     """OUTPUT:
     cons - the consensus matrix in the same format as the P or J matrix inputted
     r - The value of the solved function ||Ax - b||
