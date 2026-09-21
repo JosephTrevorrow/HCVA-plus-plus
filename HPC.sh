@@ -31,6 +31,10 @@ echo Julia path set
 export JULIA_DEPOT_PATH=$HOME/julia_depot/global
 mkdir -p "$JULIA_DEPOT_PATH"
 
+# These lines should do same thing:
+#julia -e 'using Pkg; Pkg.activate("/lfs1i3/home/b35t/jtrevorrow.b35t/miniforge3/envs/hcva/julia_env/Project.toml"); include("lp_regression/IRLS-pNorm.jl")'
+python -c "from runner import _worker_init; _worker_init()"
+
 echo setting PYTHON_JULIAPKG_EXE
 
 export PYTHON_JULIAPKG_EXE=$HOME/julia-1.11.7/bin/julia
