@@ -17,19 +17,18 @@ import multiprocessing as mp
 _JL_MAIN = None  # set once per worker by _worker_init
 
 def julia_init():
-    """Runs once when each worker process starts."""
     global _JL_MAIN
-    #from julia.api import Julia
-    #Julia(compiled_modules=False)
-    #from julia import Main
-    #from julia import PyCall
-
     from juliacall import Main
-    action_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'lp_regression/IRLS-pNorm.jl')
-    )
-    Main.eval(f'include("{action_path}")')
-    Main.eval("using Main.MyActionModule")
+    action_path = os.path.abspath(...)
+    try:
+        Main.include(action_path)
+        Main.seval("using Main.MyActionModule")
+        print(f"[worker {os.getpid()}] Julia init OK, MyActionModule loaded", flush=True)
+    except Exception:
+        import traceback
+        print(f"[worker {os.getpid()}] Julia init FAILED:", flush=True)
+        traceback.print_exc()
+        raise
     _JL_MAIN = Main
 
 ## CREDIT: https://nedbatchelder.com/blog/200712/human_sorting
