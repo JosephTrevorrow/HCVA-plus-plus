@@ -480,7 +480,7 @@ def aggregate_slm(P_list, J_list, w, list_of_ps, v, jlmain):
         print("b min/max:", np.min(np.asarray(b, dtype=float)), np.max(np.asarray(b, dtype=float)))
         print("Type of min:", type(np.min(np.asarray(A, dtype=float)).item()))
     # Aggregate over all principles together using the matrix
-    cons, _, _, _ = mLp(A, b, ps, λs, False, jlmain)
+    cons, _, _, _ = mLp(A, b, ps, λs, False)
     return list_of_ps, _, cons
 
 def aggregate_inf(P_list, J_list, w, p, v):
