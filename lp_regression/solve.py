@@ -108,7 +108,7 @@ def IRLS(A, b, p, max_iter=int(1e6), e=1e-3, d=1e-4):
 
 def Lp(A, b, p, jlmain):
     Main = jlmain
-    print(f"[Lp] Main={Main}, module id={id(sys.modules[__name__])}", flush=True)
+    #print(f"[Lp] Main={Main}, module id={id(sys.modules[__name__])}", flush=True)
     """OUTPUT:
     cons - the consensus matrix in the same format as the P or J matrix inputted
     r - The value of the solved function ||Ax - b||
