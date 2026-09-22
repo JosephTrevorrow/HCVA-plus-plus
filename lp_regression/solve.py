@@ -286,8 +286,8 @@ def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args, jlmai
         converted_p = round(converted_p, 2)
         converted_p = max(1, converted_p)
         converted_principles.append(float(converted_p))
-    p, _, cons_pref = aggregate_slm(P_list, J_list, w, converted_principles, True)
-    _, _, cons_act = aggregate_slm(P_list, J_list, w, converted_principles, False)
+    p, _, cons_pref = aggregate_slm(P_list, J_list, w, converted_principles, True, jlmain)
+    _, _, cons_act = aggregate_slm(P_list, J_list, w, converted_principles, False, jlmain)
     return p, _, cons_pref, _, cons_act, converted_principles
 
 def transition_point(P_list, J_list, w, e, jlmain):
@@ -454,7 +454,7 @@ def aggregate_prefs_only(P_list, J_list, w, jlmain):
         # print('{:.2f} \t \t {:.4f}'.format(p, ub))
     return p_list, u_list, cons_list, dist_1p_list, dist_pl_list, cons_1_pref, cons_l_pref
 
-def aggregate_slm(P_list, J_list, w, list_of_ps, v):
+def aggregate_slm(P_list, J_list, w, list_of_ps, v, jlmain):
     p_list = []
     u_list = []
     cons_list = []
