@@ -106,8 +106,8 @@ def run_experiment(task):
                 cons_act = cons_act[:len(cons_act) // 2]
             else:
                 # Some other singular p
-                _, u_pref, cons_pref = aggregate(P_list, J_list, w, p, True)
-                _, u_act, cons_act = aggregate(P_list, J_list, w, p, False)
+                _, u_pref, cons_pref = aggregate(P_list, J_list, w, p, True, jlmain=_JL_MAIN)
+                _, u_act, cons_act = aggregate(P_list, J_list, w, p, False, jlmain=_JL_MAIN)
                 cons_act = cons_act[:len(cons_act) // 2]
             # output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
             if p == np.inf:
