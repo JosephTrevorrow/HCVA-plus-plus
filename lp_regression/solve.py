@@ -193,8 +193,8 @@ def find_transition_and_aggregate(P_list, J_list, w, output_dir, filename_limits
     #    output_dir,
     #    filename_limits)
     # 2. Aggregate and store to a file.
-    p, u_pref, cons_pref = aggregate(P_list, J_list, w, t_point, True)
-    _, u_act, cons_act = aggregate(P_list, J_list, w, t_point, False)
+    p, u_pref, cons_pref = aggregate(P_list, J_list, w, t_point, True, jlmain)
+    _, u_act, cons_act = aggregate(P_list, J_list, w, t_point, False, jlmain)
     return p, u_pref, cons_pref, u_act, cons_act, t_point
 
 def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args, jlmain):
@@ -241,8 +241,8 @@ def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args, jlmain):
             # to convert from ordinal list num to corresponding p
             con_p = (j / 10) + 1
     #print("Nearest P to mean con_vals is: ", con_p)
-    p, u_pref, cons_pref = aggregate(P_list, J_list, w, con_p, True)
-    _, u_act, cons_act = aggregate(P_list, J_list, w, con_p, False)
+    p, u_pref, cons_pref = aggregate(P_list, J_list, w, con_p, True, jlmain)
+    _, u_act, cons_act = aggregate(P_list, J_list, w, con_p, False, jlmain)
     return p, u_pref, u_act, cons_pref, cons_act, con_p
 
 def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args, jlmain):
@@ -266,8 +266,8 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args, j
     #print("Consensus p is: ", consensus_p)
     # 2. Aggregate all the preference values and action judgements submitted by agents
     # using the average rule as described in the paper. Do this twice, once for vals, other for action judgements
-    p, u_pref, cons_pref = aggregate(P_list, J_list, w, consensus_p, True)
-    _, u_act, cons_act = aggregate(P_list, J_list, w, consensus_p, False)
+    p, u_pref, cons_pref = aggregate(P_list, J_list, w, consensus_p, True, jlmain)
+    _, u_act, cons_act = aggregate(P_list, J_list, w, consensus_p, False, jlmain)
     return p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference
 
 def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args, jlmain):
