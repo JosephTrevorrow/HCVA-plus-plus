@@ -25,7 +25,7 @@ def julia_init():
     try:
         Main.include(action_path)
         Main.seval("using Main.MyActionModule")
-        print(f"[worker {os.getpid()}] Julia init OK, MyActionModule loaded", flush=True)
+        #print(f"[worker {os.getpid()}] Julia init OK, MyActionModule loaded", flush=True)
     except Exception:
         import traceback
         print(f"[worker {os.getpid()}] Julia init FAILED:", flush=True)
