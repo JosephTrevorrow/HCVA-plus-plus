@@ -2,6 +2,8 @@ import argparse as ap
 import copy
 import csv
 
+import sys
+
 import numpy as np
 import os
 from lp_regression.matrices import FormalisationObjects, FormalisationMatrix, principle_formalisation_objs
