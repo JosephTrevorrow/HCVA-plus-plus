@@ -168,7 +168,10 @@ if __name__ == '__main__':
         os.makedirs(output_dir, exist_ok=True)
         all_dirs = sort_nicely(os.listdir(pvs_dir))
         for idx, current_dir in enumerate(all_dirs):
+            print("pvs_dir: ", pvs_dir)
+            print("current_dir: ", current_dir)
             if not os.path.isdir(pvs_dir + current_dir):
+                print("WARNING: ", pvs_dir + current_dir, " is not a directory. Skipping.")
                 continue
 
             pvs_dir = pvs_dir + current_dir + "/"

@@ -3,10 +3,10 @@
 #SBATCH --job-name=ia23938-hcva
 #SBATCH --output=hcva.out
 #SBATCH --error=hcva.err
-#SBATCH --time=12:00:00
-#SBATCH --mem=64G
-#SBATCH --nodes=6
-#SBATCH --ntasks-per-node=2
+#SBATCH --time=00:10:00
+#SBATCH --mem=32G
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=72
 
 # An hour into computation mem use is sitting at around 8 gig, so can request much less than 100G
