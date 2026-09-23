@@ -3,8 +3,8 @@
 #SBATCH --job-name=ia23938-hcva
 #SBATCH --output=hcva.out
 #SBATCH --error=hcva.err
-#SBATCH --time=00:30:00
-#SBATCH --mem=32G
+#SBATCH --time=12:00:00
+#SBATCH --mem=64G
 #SBATCH --nodes=6
 #SBATCH --ntasks-per-node=2
 #SBATCH --cpus-per-task=72
@@ -33,7 +33,7 @@ mkdir -p "$JULIA_DEPOT_PATH"
 
 # These lines should do same thing:
 #julia -e 'using Pkg; Pkg.activate("/lfs1i3/home/b35t/jtrevorrow.b35t/miniforge3/envs/hcva/julia_env/Project.toml"); include("lp_regression/IRLS-pNorm.jl")'
-python -c "from runner import _worker_init; _worker_init()"
+python -c "from runner import julia_init; julia_init()"
 
 echo setting PYTHON_JULIAPKG_EXE
 
