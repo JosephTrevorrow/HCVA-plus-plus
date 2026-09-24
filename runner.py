@@ -159,6 +159,7 @@ if __name__ == '__main__':
     tasks = []
     # For each dir in pvs dirs, make some tasks:
     for values_dir in args.values_dir:
+        # values_dir will look like: value_systems/Synthetic/vary_grp_fact
         pvs_dir = values_dir + "/PVS/"
         prip_dir = values_dir + "/PriP/"
         print("looking at pvs_dir: ", pvs_dir)
@@ -168,17 +169,18 @@ if __name__ == '__main__':
         os.makedirs(output_dir, exist_ok=True)
         all_dirs = sort_nicely(os.listdir(pvs_dir))
         for idx, current_dir in enumerate(all_dirs):
+            # current_dir will look like: 0, 1, ...
             print("pvs_dir: ", pvs_dir)
             print("current_dir: ", current_dir)
             if not os.path.isdir(pvs_dir + current_dir):
                 print("WARNING: ", pvs_dir + current_dir, " is not a directory. Skipping.")
                 continue
 
-            pvs_dir = pvs_dir + current_dir + "/"
-            pvs_sets = sort_nicely([pvs_dir + f for f in os.listdir(pvs_dir) if f.endswith(".csv")])
+            pvs_dir_temp = pvs_dir + current_dir + "/"
+            pvs_sets = sort_nicely([pvs_dir_temp + f for f in os.listdir(pvs_dir_temp) if f.endswith(".csv")])
 
-            prip_dir = prip_dir + current_dir + "/"
-            prip_sets = sort_nicely([prip_dir + f for f in os.listdir(prip_dir) if f.endswith(".csv")])
+            prip_dir_temp = prip_dir + current_dir + "/"
+            prip_sets = sort_nicely([prip_dir_temp + f for f in os.listdir(prip_dir_temp) if f.endswith(".csv")])
 
             if len(pvs_sets) != len(prip_sets):
                 print(f"WARNING: {current_dir} has {len(pvs_sets)} pvs set(s) but "
