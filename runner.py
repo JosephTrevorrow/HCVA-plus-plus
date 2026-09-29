@@ -13,6 +13,7 @@ import numpy as np
 #from julia import PyCall
 import re
 import multiprocessing as mp
+import json
 
 _JL_MAIN = None  # set once per worker by _worker_init
 
@@ -150,6 +151,10 @@ if __name__ == '__main__':
     # Looking for the number of agents? This is not explicitly defined and can be found from the corresponding pvs_dir and prip_dir of each experiment.
     args = parser.parse_args()
 
+    ## SLURM Multiprocessing
+    rank = int(os.environ.get('SLURM_PROCID', 0))
+    world_size = int(os.environ.get('SLURM_NTASKS', 1))
+
     # Note, these are lists
     n_values_list = args.n_values
     n_actions_list = args.n_actions
@@ -195,10 +200,12 @@ if __name__ == '__main__':
                 tasks.append((args, current_dir, i, now, output_dir,
                               pvs_sets[i], pvs_sets_0, prip_sets[i], n_values, n_actions))
 
-    n_workers = args.n_workers or int(os.environ.get('SLURM_CPUS_PER_TASK', mp.cpu_count()))
-    n_workers = min(n_workers, len(tasks))
-    print(f"Running {len(tasks)} task(s) across {n_workers} worker process(es)")
+    # Now I've found all the tasks, chop off the ones the other processes are doing
+    tasks = tasks[rank::world_size]
 
+    n_workers = args.n_workers or int(os.environ.get('SLURM_CPUS_PER_TASK', mp.cpu_count()))
+    print(f"[rank {rank}/{world_size}] Running {len(tasks)} task(s) across {n_workers} worker process(es)")
+    
     #boot julia first to warm up
     julia_init()
 
@@ -221,3 +228,7 @@ if __name__ == '__main__':
                 print(f"FAILED: {current_dir} run {i}\n{err}")
 
     print(f"Finished. {len(tasks) - len(failures)}/{len(tasks)} succeeded.")
+    print("saving fails now...")
+    os.makedirs("results", exist_ok=True)
+    with open(f"results/failures_rank{rank}.json", "w") as f:
+        json.dump(failures, f, indent=2)
