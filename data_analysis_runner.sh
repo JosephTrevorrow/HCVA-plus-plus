@@ -7,6 +7,16 @@
 #SBATCH --mem=200G
 #SBATCH --nodes=1
 
+cd "${SLURM_SUBMIT_DIR}"
+
+echo Time is "$(date)"
+echo Directory is "$(pwd)"
+
+source ~/miniforge3/bin/activate
+
+conda activate hcva
+
+
 ###### ESS DATA EXP. ######
 
 # Experiment ``ESS Country-level'': Run on ESS data, at a country level abstraction (default)
