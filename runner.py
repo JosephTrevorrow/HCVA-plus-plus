@@ -160,14 +160,14 @@ if __name__ == '__main__':
     n_actions_list = args.n_actions
     #output_dir = args.output_dir
     now = str(date.today())
-    print(now)
+    #print(now)
     tasks = []
     # For each dir in pvs dirs, make some tasks:
     for values_dir in args.values_dir:
         # values_dir will look like: value_systems/Synthetic/vary_grp_fact
         pvs_dir = values_dir + "/PVS/"
         prip_dir = values_dir + "/PriP/"
-        print("looking at pvs_dir: ", pvs_dir)
+        #print("looking at pvs_dir: ", pvs_dir)
         # make an output dir for this:
         pvs_name = pvs_dir.split("/")[2]
         output_dir = "results/"+pvs_name+"/"
@@ -175,8 +175,8 @@ if __name__ == '__main__':
         all_dirs = sort_nicely(os.listdir(pvs_dir))
         for idx, current_dir in enumerate(all_dirs):
             # current_dir will look like: 0, 1, ...
-            print("pvs_dir: ", pvs_dir)
-            print("current_dir: ", current_dir)
+            #print("pvs_dir: ", pvs_dir)
+            #print("current_dir: ", current_dir)
             if not os.path.isdir(pvs_dir + current_dir):
                 print("WARNING: ", pvs_dir + current_dir, " is not a directory. Skipping.")
                 continue

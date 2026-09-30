@@ -241,17 +241,19 @@ def plot_synth(args, experiment_name):
         dir_dict[int(dir)] = [normalised_cons_sets, normalised_agents_df]
 
     print("Time to plot!")
+    print("Cleaned values list is: ")
+    print(cleaned_values_list)
     ## STEP 2: use dir_dict to find the mean of resiudals
     # PVS
-    #plot_mean_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name+"pvs_100_runs_residual", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name+"pvs_100_runs_residual", output_dir=args.output_dir)
     ### Just VAs
-    #plot_mean_residuals(dir_dict, actions_list, experiment_name+"va_100_runs_residual", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, actions_list, experiment_name+"va_100_runs_residual", output_dir=args.output_dir)
     ### Just Ps
-    #plot_mean_residuals(dir_dict, cleaned_values_list, experiment_name+"p_100_runs_residual", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, cleaned_values_list, experiment_name+"p_100_runs_residual", output_dir=args.output_dir)
     ### PriPs Residuals
-    #plot_mean_residuals(dir_dict, ['Egalitarian'], experiment_name+"prip_100_runs_residual", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, ['Egalitarian'], experiment_name+"prip_100_runs_residual", output_dir=args.output_dir)
     # PVSs and PriPs
-    #plot_mean_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'], experiment_name+"pvs_prip_100_runs_residual", output_dir=args.output_dir)
+    plot_mean_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'], experiment_name+"pvs_prip_100_runs_residual", output_dir=args.output_dir)
 
     ## GINI
     ### PVS

@@ -3,8 +3,8 @@
 #SBATCH --job-name=ia23938-hcva-da
 #SBATCH --output=hcva-da.out
 #SBATCH --error=hcva-da.err
-#SBATCH --time=1:00:00
-#SBATCH --mem=200G
+#SBATCH --time=0:30:00
+#SBATCH --mem=100G
 #SBATCH --nodes=1
 
 cd "${SLURM_SUBMIT_DIR}"
