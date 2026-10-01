@@ -158,6 +158,8 @@ def mLp(A, b, ps, λs, weight=False):
     This function is used by the -slm arg to run the mLp method for finding consensus using multiple p values.
     This function is taken from the following repo: https://github.com/filippobistaffa/social-choice-pnorm    """
     v = A.shape[1]
+    print(f"λs = {λs}, range = [{min(λs)}, {max(λs)}]")
+    print(f"A finite = {np.all(np.isfinite(A))}, b finite = {np.all(np.isfinite(b))}")
     wps = [λ / Lp_norm(A, b, p, v) if weight else λ for λ, p in zip(λs, ps)]
     x = cp.Variable(v)
     #print("X", v)
