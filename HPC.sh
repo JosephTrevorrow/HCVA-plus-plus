@@ -3,8 +3,8 @@
 #SBATCH --job-name=ia23938-hcva
 #SBATCH --output=hcva.out
 #SBATCH --error=hcva.err
-#SBATCH --time=24:00:00
-#SBATCH --mem=200G
+#SBATCH --time=00:30:00
+#SBATCH --mem=100G
 #SBATCH --nodes=3
 #SBATCH --ntasks-per-node=2
 #SBATCH --cpus-per-task=72
