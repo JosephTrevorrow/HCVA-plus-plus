@@ -153,7 +153,7 @@ def Lp_norm(A,b,p, v):
     prob.solve(solver='GUROBI', verbose=True)
     return prob.value
 
-def mLp(A, b, ps, λs, weight=True):
+def mLp(A, b, ps, λs, weight=False):
     """
     This function is used by the -slm arg to run the mLp method for finding consensus using multiple p values.
     This function is taken from the following repo: https://github.com/filippobistaffa/social-choice-pnorm    """
