@@ -19,6 +19,8 @@ _JL_MAIN = None  # set once per worker by _worker_init
 
 def julia_init():
     global _JL_MAIN
+    # Give each worker a depot to avoid race conditions hanging processes.
+    os.environ['JULIA_DEPOT_PATH'] = f"{base_depot}/worker_{os.getpid()}"
     from juliacall import Main
     action_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), 'lp_regression/IRLS-pNorm.jl')
