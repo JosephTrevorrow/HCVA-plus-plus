@@ -44,4 +44,4 @@ python -c "from runner import julia_init; julia_init()" || { echo "Julia pre-war
 export PYTHON_JULIAPKG_OFFLINE=yes
 
 # Experiment ``vary_grp_fact'''
-srun --ntasks=$SLURM_NTASKS --cpus-per-task=$SLURM_CPUS_PER_TASK python -O runner.py -values_dir "value_systems/Synthetic/vary_grp_fact" "value_systems/Synthetic/vary_mup_vamu" "value_systems/Synthetic/vary_prip_grp_fact" "value_systems/Synthetic/vary_sigma_prip" "value_systems/Synthetic/vary_sigma_prip_MINIMISE" "value_systems/Synthetic/randoms" -n_values 4 -n_actions 2
+srun --export=ALL --ntasks=$SLURM_NTASKS --cpus-per-task=$SLURM_CPUS_PER_TASK python -O runner.py -values_dir "value_systems/Synthetic/vary_grp_fact" "value_systems/Synthetic/vary_mup_vamu" "value_systems/Synthetic/vary_prip_grp_fact" "value_systems/Synthetic/vary_sigma_prip" "value_systems/Synthetic/vary_sigma_prip_MINIMISE" "value_systems/Synthetic/randoms" -n_values 4 -n_actions 2
