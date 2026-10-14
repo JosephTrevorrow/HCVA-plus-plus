@@ -4,10 +4,14 @@
 #SBATCH --output=hcva.out
 #SBATCH --error=hcva.err
 #SBATCH --time=24:00:00
-#SBATCH --mem=200G
-#SBATCH --nodes=2
-#SBATCH --ntasks-per-node=2
+#SBATCH --mem=100G
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=72
+
+# Some args:
+export N_WORKERS=2
+export GUROBI_THREADS=$((SLURM_CPUS_PER_TASK / N_WORKERS))
 
 cd "${SLURM_SUBMIT_DIR}"
 
@@ -42,4 +46,4 @@ python -c "from runner import julia_init; julia_init()" || { echo "Julia pre-war
 export PYTHON_JULIAPKG_OFFLINE=yes
 
 # Experiment ``vary_grp_fact'''
-srun --export=ALL --ntasks=$SLURM_NTASKS --cpus-per-task=$SLURM_CPUS_PER_TASK python -O runner.py -values_dir "value_systems/Synthetic/vary_grp_fact" "value_systems/Synthetic/vary_mup_vamu" "value_systems/Synthetic/vary_prip_grp_fact" "value_systems/Synthetic/vary_sigma_prip" "value_systems/Synthetic/vary_sigma_prip_MINIMISE" "value_systems/Synthetic/randoms" -n_values 4 -n_actions 2
+srun --export=ALL --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK python -O runner.py -n_workers $N_WORKERS -values_dir "value_systems/Synthetic/vary_grp_fact" "value_systems/Synthetic/vary_mup_vamu" "value_systems/Synthetic/vary_prip_grp_fact" "value_systems/Synthetic/vary_sigma_prip" "value_systems/Synthetic/vary_sigma_prip_MINIMISE" "value_systems/Synthetic/randoms" -n_values 4 -n_actions 2

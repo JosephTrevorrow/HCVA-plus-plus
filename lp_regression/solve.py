@@ -150,7 +150,7 @@ def Lp_norm(A,b,p, v):
     cost = cp.pnorm(A @ x - b, p)
     prob = cp.Problem(cp.Minimize(cost))
     #print("Lp_norm solving")
-    prob.solve(solver='GUROBI', verbose=True)
+    prob.solve(solver='GUROBI', Threads=int(os.environ.get("GUROBI_THREADS", 1)), verbose=True)
     return prob.value
 
 def mLp(A, b, ps, λs, weight=False):
@@ -172,7 +172,7 @@ def mLp(A, b, ps, λs, weight=False):
                verbose=False,
                warm_start=True,
                # canon_backend=cp.COO_CANON_BACKEND,
-               Threads=20,
+               Threads=int(os.environ.get("GUROBI_THREADS", 1)),
                # Method=2,
                # Crossover=0,
                # NumericFocus=1,
