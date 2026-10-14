@@ -5,11 +5,9 @@
 #SBATCH --error=hcva.err
 #SBATCH --time=24:00:00
 #SBATCH --mem=200G
-#SBATCH --nodes=3
+#SBATCH --nodes=2
 #SBATCH --ntasks-per-node=2
 #SBATCH --cpus-per-task=72
-
-## 1728 cpus
 
 cd "${SLURM_SUBMIT_DIR}"
 
