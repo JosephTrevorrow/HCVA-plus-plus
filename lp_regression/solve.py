@@ -168,7 +168,7 @@ def mLp(A, b, ps, λs, weight=False):
     #print("My ps are: ", ps)
     #import time
     #start = time.time()
-    prob.solve(solver="GUROBI",
+    prob.solve(solver="CLARABEL",
                verbose=False,
                warm_start=True,
                # canon_backend=cp.COO_CANON_BACKEND,
