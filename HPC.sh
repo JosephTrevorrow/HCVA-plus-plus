@@ -3,16 +3,16 @@
 #SBATCH --job-name=ia23938-hcva
 #SBATCH --output=hcva.out
 #SBATCH --error=hcva.err
-#SBATCH --time=24:00:00
+#SBATCH --time=1:00:00
 #SBATCH --mem=150G
-#SBATCH --nodes=2
-#SBATCH --ntasks-per-node=2
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=72
 
 # Some args:
 export N_WORKERS=1
 export GUROBI_THREADS=$((SLURM_CPUS_PER_TASK / N_WORKERS))
-export N_TASKS=4
+export N_TASKS=1
 
 cd "${SLURM_SUBMIT_DIR}"
 
