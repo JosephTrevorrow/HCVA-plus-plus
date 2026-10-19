@@ -143,15 +143,18 @@ def plot_synth(args, experiment_name):
             continue
         dir_id = match.group(1)
         run_id = match.group(2)
+        print(dir_id, run_id)
+        # I know my max amount of steps, if I find a file with the max, I know we have a complete dir.
         if run_id == str(args.steps):
             list_of_output_dirs.append(dir_id)
+        # Now add the file anyway, even if it isn't an end of line.
         cons_files_by_dir.setdefault(dir_id, [])
         cons_files_by_dir[dir_id].append(os.path.join(args.cons_dir, fname))
     # Sort: (Note, these are filenames for cons sets)
     list_of_output_dirs = sort_nicely(list(set(list_of_output_dirs)))
 
     # CAUTION: Cutting for debug
-    list_of_output_dirs = list_of_output_dirs[:2]
+    #list_of_output_dirs = list_of_output_dirs[:2]
 
     # Construct dir_dict of form {dir_id: [normalised_cons, normalised_agents], ...}
     dir_dict = {}

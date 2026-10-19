@@ -1,4 +1,4 @@
-HPC.sh#!/bin/bash
+#!/bin/bash
 
 #SBATCH --job-name=ia23938-hcva-2
 #SBATCH --output=hcva-2.out
