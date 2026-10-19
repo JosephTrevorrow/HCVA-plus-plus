@@ -1,0 +1,21 @@
+Traceback (most recent call last):
+  File "/lfs1i3/home/b35t/jtrevorrow.b35t/HCVA-plus-plus/data_analysis/data_analysis_main.py", line 305, in <module>
+    plot_synth(args, experiment_name)
+  File "/lfs1i3/home/b35t/jtrevorrow.b35t/HCVA-plus-plus/data_analysis/data_analysis_main.py", line 258, in plot_synth
+    plot_mean_gini(dir_dict, cleaned_values_list + actions_list, title=experiment_name+"pvs_gini",output_dir=args.output_dir)
+                             ^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'cleaned_values_list' where it is not associated with a value
+Traceback (most recent call last):
+  File "/lfs1i3/home/b35t/jtrevorrow.b35t/HCVA-plus-plus/data_analysis/data_analysis_main.py", line 305, in <module>
+    plot_synth(args, experiment_name)
+  File "/lfs1i3/home/b35t/jtrevorrow.b35t/HCVA-plus-plus/data_analysis/data_analysis_main.py", line 258, in plot_synth
+    plot_mean_gini(dir_dict, cleaned_values_list + actions_list, title=experiment_name+"pvs_gini",output_dir=args.output_dir)
+                             ^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'cleaned_values_list' where it is not associated with a value
+Traceback (most recent call last):
+  File "/lfs1i3/home/b35t/jtrevorrow.b35t/HCVA-plus-plus/data_analysis/data_analysis_main.py", line 305, in <module>
+    plot_synth(args, experiment_name)
+  File "/lfs1i3/home/b35t/jtrevorrow.b35t/HCVA-plus-plus/data_analysis/data_analysis_main.py", line 258, in plot_synth
+    plot_mean_gini(dir_dict, cleaned_values_list + actions_list, title=experiment_name+"pvs_gini",output_dir=args.output_dir)
+                             ^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'cleaned_values_list' where it is not associated with a value
