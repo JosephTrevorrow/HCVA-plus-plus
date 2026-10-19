@@ -223,7 +223,7 @@ def process_all_country_actions(ess_df, country_col_name, value_preferences, act
     return action_judgements
 
 if __name__ == '__main__':
-    df = pd.read_csv("ESS9-private/ESS9e03_2.csv")
+    df = pd.read_csv("ESS9-private/ESS9e03_3.csv", low_memory=False)
     higher_order_values_dict = {
         "Self-Transcendence" : ["Universalism", "Benevolence"],
         "Conservation" : ["Tradition", "Conformity", "Security"], 

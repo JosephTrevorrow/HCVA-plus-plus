@@ -11,5 +11,3 @@ Labelled 4_val_2_act:
 
 Labelled 10_val_2_act:
 - Ditto as 4_val_2_act, but 10 values are 10 Schwartz main values.
-
-
