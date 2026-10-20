@@ -329,15 +329,13 @@ def transition_point(P_list, J_list, w, e, jlmain):
         A, b = FormalisationMatrix(P_list, J_list, w, i, False)
         cons_act, _, u_act = Lp(A, b, i, jlmain)
         cons_act = cons_act[:len(cons_act) // 2]
-
         cons = np.concatenate((cons_pref, cons_act))
         #print('p: {:.2f}, cons: '.format(i), cons)
         dist_1p = np.linalg.norm(cons_1 - cons, i)
         dist_pl = np.linalg.norm(cons_l - cons, i)
         # Go to at least 3. SLM note that p >= 3 is not significantly different to p = \infty
-        if i > 3.0:
-            #abs(dist_1p - dist_pl) < e and
-            best_p = i
+        if i > 5.0:
+            #abs(dist_1p - dist_pl) < e and best_p = i
             if __debug__:
                 print('Not improving anymore, stopping!')
             # Stop this for performance.

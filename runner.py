@@ -113,7 +113,6 @@ def run_experiment(task):
                 # Some other singular p
                 _, u_pref, cons_pref = aggregate(P_list, J_list, w, p, True, jlmain=_JL_MAIN)
                 _, u_act, cons_act = aggregate(P_list, J_list, w, p, False, jlmain=_JL_MAIN)
-                cons_act = cons_act[:len(cons_act) // 2]
             # output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
             if p == np.inf:
                 rows.append(["inf", p, u_pref, u_act] + list(cons_pref) + list(cons_act) + [0, p, 1])
@@ -122,7 +121,7 @@ def run_experiment(task):
                 rows.append(["1", p, u_pref, u_act] + list(cons_pref) + list(cons_act) + [0, p, 0])
                 # save_metadata(filename_metadata, args, 0, p, 0, output_dir)
             else:
-                rows.append(["1", p, u_pref, u_act] + list(cons_pref) + list(cons_act) + [0, p, p])
+                rows.append([p, p, u_pref, u_act] + list(cons_pref) + list(cons_act) + [0, p, 0])
                 # save_metadata(filename_metadata, args, 0, p, p, output_dir)
         # Save the rows to a csv.
         header = ['NAME', 'p', 'U_pref', 'u_act', ] + values_list + actions_list + ['transition_p', 'consensus_p',
@@ -215,7 +214,6 @@ if __name__ == '__main__':
 
     # non-parallel
     """
-    _worker_init()
     for task in tasks:
         run_experiment(task)
     """

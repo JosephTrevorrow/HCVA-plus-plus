@@ -176,7 +176,7 @@ def plot_ess(now, args):
     gini_coefficient(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list, "PVSs_and_PriPs_gini.csv", args)
     """
     ## Limits plot
-    limits_filename = find_limits(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list, "limits.csv", args)
+    limits_filename = "results/ESS_Limits/LIMITS_DIR_0_RUN_0_2026-10-20limits.csv"
     plot_limits(limits_filename)
     return
 

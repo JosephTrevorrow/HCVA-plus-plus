@@ -10,28 +10,6 @@ import matplotlib.pyplot as plt
 from torch.utils.tensorboard import writer
 import pandas as pd
 
-def find_limits(normalised_cons_sets, normalised_agents_df, list_of_params, filename, args):
-    ## Find p=1 and p=inf
-    p1 = normalised_cons_sets['1']
-    pinf = normalised_cons_sets['inf']
-
-    # for every cons in normalised_cons_sets find the p=1 limit and the p=inf limit and append
-    p1_limits, pinf_limits, ps = [], [], []
-    for key, cons in normalised_cons_sets.items():
-        if key == 'T' or key == 'HCVA' or key == 'HCVA++' or key == 'SLM':
-            continue
-        temp_p1= np.abs(cons.iloc[0][list_of_params].to_numpy() - p1.iloc[0][list_of_params].to_numpy()).sum()
-        temp_pinf = np.abs(cons.iloc[0][list_of_params].to_numpy() - pinf.iloc[0][list_of_params].to_numpy()).sum()
-        ps.append(float(key))
-        p1_limits.append(temp_p1)
-        pinf_limits.append(temp_pinf)
-    # save as a csv
-    with open(filename, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(['p','Dist_1', 'Dist_inf'])
-        writer.writerows(zip(ps, p1_limits, pinf_limits))
-    return filename
-
 def plot_limits(filename):
     """
     This function plots the limit P data (-t True).
@@ -43,15 +21,15 @@ def plot_limits(filename):
     plt.style.use("ggplot")
     plt.grid(True)
 
-    plt.plot(data["p"], data["Dist_1"], label="$||P^{(1)}_S-P^{(P)}_S||_p$")
+    plt.plot(data["p"], data["Dist_p"], label="$||P^{(1)}_S-P^{(P)}_S||_p$")
     plt.plot(data["p"], data["Dist_inf"], label="$||P^{(\infty)}_S-P^{(P)}_S||_p$")
 
     # Scale the x-axis
     plt.xlim(1, 3)
-    plt.fill_between(data["p"], data["Dist_1"], data["Dist_inf"],
+    plt.fill_between(data["p"], data["Dist_p"], data["Dist_inf"],
                      where=(data["p"] >= 1.1) & (data["p"] <= 3),
                      color='green', alpha=0.3)
-    plt.fill_between(data["p"], data["Dist_1"], data["Dist_inf"],
+    plt.fill_between(data["p"], data["Dist_p"], data["Dist_inf"],
                      where=(data["p"] >= 3) & (data["p"] <= 10),
                      color='blue', alpha=0.3)
     plt.xlabel("p")
