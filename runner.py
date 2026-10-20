@@ -76,23 +76,23 @@ def run_experiment(task):
         p, u_pref, cons_pref, u_act, cons_act, t_point = find_transition_and_aggregate(P_list, J_list, w,
                                                                                        output_dir, filename_limits,
                                                                                        args.e, args, jlmain=_JL_MAIN)
-        rows.append(["T", p, u_pref, u_act, cons_pref, cons_act, t_point, t_point, 0.5])
+        rows.append(["T", p, u_pref, u_act] + cons_pref + cons_act + [t_point, t_point, 0.5])
         ## SLM
         p, _, cons_pref, _, cons_act, converted_principles = find_slm_and_aggregate(P_list, J_list, w, prip_df, t_point,
                                                                                     args, jlmain=_JL_MAIN)
         ## Chop off half of cons_act, as output format has VA_p, and then VA_n. We are not interested in N, so we disregard
         cons_act = cons_act[:len(cons_act) // 2]
-        rows.append(["SLM", p, _, _, cons_pref, cons_act, 0, converted_principles, 0, ])
+        rows.append(["SLM", p, _, _,] + cons_pref + cons_act + [0, converted_principles, 0, ])
         ## HCVA
         p, u_pref, u_act, cons_pref, cons_act, con_p = find_hcva_and_aggregate(P_list, J_list, w, prip_df, args, jlmain=_JL_MAIN)
         # output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
         # Convert HCVA to a preference.
         con_preference = np.log(con_p) / (2 * np.log(t_point))
-        rows.append(["HCVA", p, u_pref, u_act, cons_pref, cons_act, None, con_p, con_preference])
+        rows.append(["HCVA", p, u_pref, u_act] + cons_pref + cons_act + [None, con_p, con_preference])
         ## HCVA++
         p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference = find_hcva_pp_and_aggregate(
             P_list, J_list, w, prip_df, t_point, args, jlmain=_JL_MAIN)
-        rows.append(["HCVA++", p, u_pref, u_act, cons_pref, cons_act, transition_p, consensus_p, consensus_preference])
+        rows.append(["HCVA++", p, u_pref, u_act] + cons_pref + cons_act + [transition_p, consensus_p, consensus_preference])
         ## EGAL/UTIL
         baseline_ps = [1, np.inf]
         for p in baseline_ps:
@@ -112,16 +112,16 @@ def run_experiment(task):
                 cons_act = cons_act[:len(cons_act) // 2]
             # output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
             if p == np.inf:
-                rows.append(["inf", p, u_pref, u_act, cons_pref, cons_act, 0, p, 1])
+                rows.append(["inf", p, u_pref, u_act] + cons_pref + cons_act + [0, p, 1])
                 # save_metadata(filename_metadata, args, 0, p, 1, output_dir)
             elif p == 1:
-                rows.append(["1", p, u_pref, u_act, cons_pref, cons_act, 0, p, 0])
+                rows.append(["1", p, u_pref, u_act] + cons_pref + cons_act + [0, p, 0])
                 # save_metadata(filename_metadata, args, 0, p, 0, output_dir)
             else:
-                rows.append(["1", p, u_pref, u_act, cons_pref, cons_act, 0, p, p])
+                rows.append(["1", p, u_pref, u_act] + cons_pref + cons_act + [0, p, p])
                 # save_metadata(filename_metadata, args, 0, p, p, output_dir)
         # Save the rows to a csv.
-        header = ['p', 'U_pref', 'u_act', ] + values_list + actions_list + ['transition_p', 'consensus_p',
+        header = ['NAME', 'p', 'U_pref', 'u_act', ] + values_list + actions_list + ['transition_p', 'consensus_p',
                                                                             'consensus_preference']
         with open(output_dir + filename, 'w', newline='') as csvfile:
             # writing file
