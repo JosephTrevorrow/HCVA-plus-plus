@@ -65,7 +65,7 @@ def output_latex_table_of_cons(cons_dir, savename, list_of_ids, toFile, toLatex)
 
 if __name__ == "__main__":
 
-    cons_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/ESS_COUNTRY/4_val_2_acts/"
-    list_of_ids = ["HCVApp", "SLM", "T", "HCVA", "1", "inf"]
-    savename = "ESS_COUNTRY_4_val_2_acts_table_of_cons.csv"
+    cons_dir = "/Users/josephtrevorrow/Documents/GitHub/HCVA-plus-plus/results/Country/DIR_0_RUN_0_2026-10-20.csv "
+    list_of_ids = ["HCVA++", "SLM", "T", "HCVA", "1", "inf"]
+    savename = "ESS_Cons.csv"
     output_latex_table_of_cons(cons_dir, savename, list_of_ids, False, True)

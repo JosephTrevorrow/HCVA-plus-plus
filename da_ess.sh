@@ -20,7 +20,7 @@ value_systems/ESS//PVS/
 ###### ESS DATA EXP. ######
 
 # Experiment ``ESS Country-level'': Run on ESS data, at a country level abstraction (default)
-python data_analysis/data_analysis_main.py -ess -cons_dir "/results/Country" -agents_pvs_dir "/value_systems/ESS/Country/PVS/" -agents_prip_dir "/value_systems/ESS/Country/PriP/" -output_dir "/plots/ESS/"
+python data_analysis/data_analysis_main.py -ess -cons_dir "results/Country/" -agents_pvs_dir "value_systems/ESS/Country/PVS/" -agents_prip_dir "value_systems/ESS/Country/PriP/" -output_dir "plots/ESS/"
 
 #python data_analysis/data_analysis_main.py -single_timestep_plots -cons_dir "/results/ESS_COUNTRY/4_val_3_acts/" -agents_pvs_dir "/value_systems/ESS/Country/4_val_3_act/PVS/" -agents_prip_dir "/value_systems/ESS/Country/4_val_3_act/PriP/" -output_dir "/ESS_4_val_3_act/"
 
