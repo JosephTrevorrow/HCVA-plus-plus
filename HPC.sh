@@ -3,7 +3,7 @@
 #SBATCH --job-name=ia23938-hcva
 #SBATCH --output=hcva.out
 #SBATCH --error=hcva.err
-#SBATCH --time=24:00:00
+#SBATCH --time=5:00:00
 #SBATCH --mem=150G
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=2
