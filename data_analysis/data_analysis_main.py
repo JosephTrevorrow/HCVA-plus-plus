@@ -173,7 +173,7 @@ def plot_ess(now, args):
 
     ## GINI
     ### PVS
-    gini_coefficient(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list, "PVSs_and_PriPs_gini.csv", args)
+    gini_coefficient(normalised_cons_sets, normalised_agents_df, cleaned_values_list+actions_list, "PVS_gini.csv", args)
     """
     ## Limits plot
     limits_filename = "results/ESS_Limits/LIMITS_DIR_0_RUN_0_2026-10-20limits.csv"
@@ -184,6 +184,7 @@ def plot_synth(args, experiment_name):
     """This method computes plots from synthetic data"""
     # Find output_dirs/sum
     all_cons_files = os.listdir(args.cons_dir)
+    print(all_cons_files)
     cons_files_by_dir = {}
     list_of_output_dirs = []
     for fname in all_cons_files:
@@ -203,7 +204,7 @@ def plot_synth(args, experiment_name):
     list_of_output_dirs = sort_nicely(list(set(list_of_output_dirs)))
 
     # CAUTION: Cutting for debug
-    #list_of_output_dirs = list_of_output_dirs[:2]
+    # list_of_output_dirs = list_of_output_dirs[:2]
 
     # Construct dir_dict of form {dir_id: [normalised_cons, normalised_agents], ...}
     dir_dict = {}
@@ -211,9 +212,12 @@ def plot_synth(args, experiment_name):
         agents_list = []
         # input every single agent, place in a list of df (form: [t1_agents, t2_agents, etc.
         ag_pvs = glob.glob(args.agents_pvs_dir + str(dir) + "/" + "*PVS*")
+        print(ag_pvs)
+        print(args.agents_pvs_dir + str(dir) + "/" + "*PVS*")
         ag_prip = glob.glob(args.agents_prip_dir + str(dir) + "/" + "*PriP*")
         sorted_ag_pvs = sort_nicely(ag_pvs)
         sorted_ag_prip = sort_nicely(ag_prip)
+        print(sorted_ag_pvs)
 
         # Use the agents header col to name cons_pref and cons_act.
         # These should be stable for all timesteps in the same dir.
@@ -228,26 +232,12 @@ def plot_synth(args, experiment_name):
         for cons_file in cons_run_files:
             cons_run_df = pd.read_csv(
                 cons_file,
-                header=None,
-                names=[
-                    "name",
-                    "p",
-                    "u_pref",
-                    "u_act",
-                    "cons_pref",
-                    "cons_act",
-                    "t_point",
-                    "con_p",
-                    "cons_preference",
-                ],
             )
             for _, row in cons_run_df.iterrows():
-                key = str(row["name"])
-                cons_pref = parse_vector_cell(row["cons_pref"])
-                cons_act = parse_vector_cell(row["cons_act"])
+                key = str(row["NAME"])
                 # Make a dataframe after unpacking the values from cons_pref and cons_act, append the Egalitarian pref.
                 cons_df = pd.DataFrame(
-                    [[*cons_pref, *cons_act, row["cons_preference"]]],
+                    [[*row[pref_cols], *row[act_cols], row["consensus_preference"]]],
                     columns=pref_cols + act_cols + ["Egalitarian"],
                 )
                 cons_sets_parts.setdefault(key, []).append(cons_df)
@@ -291,6 +281,7 @@ def plot_synth(args, experiment_name):
         normalised_cons_sets = normalise_cons_time_series(cons_sets)
         normalised_agents_df = normalise_agents_time_series(agents_list)
         dir_dict[int(dir)] = [normalised_cons_sets, normalised_agents_df]
+
 
     print("Time to plot!")
     print("Cleaned values list is: ")
