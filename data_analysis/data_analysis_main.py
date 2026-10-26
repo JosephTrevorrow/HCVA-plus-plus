@@ -288,15 +288,33 @@ def plot_synth(args, experiment_name):
     print(cleaned_values_list)
     ## STEP 2: use dir_dict to find the mean of resiudals
     # PVS
-    find_and_store_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name+"pvs_100_runs_residual", output_dir=args.output_dir)
+    find_and_store_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name+"pvs_100_runs_residual", output_dir=args.output_dir, difference=False)
     ### Just VAs
-    find_and_store_residuals(dir_dict, actions_list, experiment_name+"va_100_runs_residual", output_dir=args.output_dir)
+    find_and_store_residuals(dir_dict, actions_list, experiment_name+"va_100_runs_residual", output_dir=args.output_dir, difference=False)
     ### Just Ps
-    find_and_store_residuals(dir_dict, cleaned_values_list, experiment_name+"p_100_runs_residual", output_dir=args.output_dir)
+    find_and_store_residuals(dir_dict, cleaned_values_list, experiment_name+"p_100_runs_residual", output_dir=args.output_dir, difference=False)
     ### PriPs Residuals
-    find_and_store_residuals(dir_dict, ['Egalitarian'], experiment_name+"prip_100_runs_residual", output_dir=args.output_dir)
+    find_and_store_residuals(dir_dict, ['Egalitarian'], experiment_name+"prip_100_runs_residual", output_dir=args.output_dir, difference=False)
     # PVSs and PriPs
-    find_and_store_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'], experiment_name+"pvs_prip_100_runs_residual", output_dir=args.output_dir)
+    find_and_store_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'], experiment_name+"pvs_prip_100_runs_residual", output_dir=args.output_dir, difference=False)
+
+    ## STEP 2: use dir_dict to find the mean of resiudals
+    # PVS
+    find_and_store_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name + "pvs_100_runs_residual_difference",
+                             output_dir=args.output_dir, difference=True)
+    ### Just VAs
+    find_and_store_residuals(dir_dict, actions_list, experiment_name + "va_100_runs_residual_difference",
+                             output_dir=args.output_dir, difference=True)
+    ### Just Ps
+    find_and_store_residuals(dir_dict, cleaned_values_list, experiment_name + "p_100_runs_residual_difference",
+                             output_dir=args.output_dir, difference=True)
+    ### PriPs Residuals
+    find_and_store_residuals(dir_dict, ['Egalitarian'], experiment_name + "prip_100_runs_residual_difference",
+                             output_dir=args.output_dir, difference=True)
+    # PVSs and PriPs
+    find_and_store_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'],
+                             experiment_name + "pvs_prip_100_runs_residual_difference", output_dir=args.output_dir,
+                             difference=True)
 
     ## GINI
     ### PVS
