@@ -1,22 +1,3 @@
-#!/bin/bash
-
-#SBATCH --job-name=ia23938-hcva-da
-#SBATCH --output=hcva-da.out
-#SBATCH --error=hcva-da.err
-#SBATCH --time=10:00:00
-#SBATCH --mem=150G
-#SBATCH --nodes=1
-
-cd "${SLURM_SUBMIT_DIR}"
-
-echo Time is "$(date)"
-echo Directory is "$(pwd)"
-
-source ~/miniforge3/bin/activate
-
-conda activate hcva
-
-
 ###### ESS DATA EXP. ######
 
 # Experiment ``ESS Country-level'': Run on ESS data, at a country level abstraction (default)

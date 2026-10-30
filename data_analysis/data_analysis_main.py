@@ -46,7 +46,6 @@ def parse_vector_cell(cell):
 def plot_ess(now, args):
     # Find output_dirs/sum
     all_cons_files = os.listdir(args.cons_dir)
-    print(all_cons_files)
     cons_files_by_dir = {}
     list_of_output_dirs = []
     for fname in all_cons_files:
@@ -55,7 +54,6 @@ def plot_ess(now, args):
             continue
         dir_id = match.group(1)
         run_id = match.group(2)
-        print(dir_id, run_id)
         # I know my max amount of steps, if I find a file with the max, I know we have a complete dir.
         if run_id == str(args.steps):
             list_of_output_dirs.append(dir_id)
@@ -74,12 +72,9 @@ def plot_ess(now, args):
         agents_list = []
         # input every single agent, place in a list of df (form: [t1_agents, t2_agents, etc.
         ag_pvs = glob.glob(args.agents_pvs_dir + str(dir) + "/" + "*PVS*")
-        print(ag_pvs)
-        print(args.agents_pvs_dir + str(dir) + "/" + "*PVS*")
         ag_prip = glob.glob(args.agents_prip_dir + str(dir) + "/" + "*PriP*")
         sorted_ag_pvs = sort_nicely(ag_pvs)
         sorted_ag_prip = sort_nicely(ag_prip)
-        print(sorted_ag_pvs)
 
         # Use the agents header col to name cons_pref and cons_act.
         # These should be stable for all timesteps in the same dir.
@@ -183,8 +178,9 @@ def plot_ess(now, args):
 def plot_synth(args, experiment_name):
     """This method computes plots from synthetic data"""
     # Find output_dirs/sum
+
+    ## Something wrong here, things not being read for all runs. we also need to make sure these things are sorted as well -> cons_files_by_dir is not being sorted.
     all_cons_files = os.listdir(args.cons_dir)
-    print(all_cons_files)
     cons_files_by_dir = {}
     list_of_output_dirs = []
     for fname in all_cons_files:
@@ -193,18 +189,28 @@ def plot_synth(args, experiment_name):
             continue
         dir_id = match.group(1)
         run_id = match.group(2)
-        print(dir_id, run_id)
-        # I know my max amount of steps, if I find a file with the max, I know we have a complete dir.
-        if run_id == str(args.steps):
-            list_of_output_dirs.append(dir_id)
         # Now add the file anyway, even if it isn't an end of line.
         cons_files_by_dir.setdefault(dir_id, [])
         cons_files_by_dir[dir_id].append(os.path.join(args.cons_dir, fname))
     # Sort: (Note, these are filenames for cons sets)
-    list_of_output_dirs = sort_nicely(list(set(list_of_output_dirs)))
+    for temp_dir_list in cons_files_by_dir.values():
+        temp_dir_list = sort_nicely(temp_dir_list) # This says unused, but debug mode shows that it is being sorted, so is being treated as a pointer.
+
+    # Remove all runs that failed (there is one .csv missing from their list.
+    temp_dict = copy.deepcopy(cons_files_by_dir)
+    for key, temp_dir_list in temp_dict.items():
+        if len(temp_dir_list) != int(args.steps)+1:
+            del cons_files_by_dir[key]
 
     # CAUTION: Cutting for debug
-    # list_of_output_dirs = list_of_output_dirs[:2]
+    """
+    list_of_output_dirs = list(cons_files_by_dir.keys())[:2]
+    temp_dict = {key: cons_files_by_dir[key] for key in list_of_output_dirs}
+    cons_files_by_dir = temp_dict
+    """
+
+    ## Non-debug version:
+    list_of_output_dirs = list(cons_files_by_dir.keys())
 
     # Construct dir_dict of form {dir_id: [normalised_cons, normalised_agents], ...}
     dir_dict = {}
@@ -212,12 +218,9 @@ def plot_synth(args, experiment_name):
         agents_list = []
         # input every single agent, place in a list of df (form: [t1_agents, t2_agents, etc.
         ag_pvs = glob.glob(args.agents_pvs_dir + str(dir) + "/" + "*PVS*")
-        print(ag_pvs)
-        print(args.agents_pvs_dir + str(dir) + "/" + "*PVS*")
         ag_prip = glob.glob(args.agents_prip_dir + str(dir) + "/" + "*PriP*")
         sorted_ag_pvs = sort_nicely(ag_pvs)
         sorted_ag_prip = sort_nicely(ag_prip)
-        print(sorted_ag_pvs)
 
         # Use the agents header col to name cons_pref and cons_act.
         # These should be stable for all timesteps in the same dir.
@@ -288,32 +291,32 @@ def plot_synth(args, experiment_name):
     print(cleaned_values_list)
     ## STEP 2: use dir_dict to find the mean of resiudals
     # PVS
-    find_and_store_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name+"pvs_100_runs_residual", output_dir=args.output_dir, difference=False)
+    find_and_store_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name+"pvs_residual", output_dir=args.output_dir, difference=False)
     ### Just VAs
-    find_and_store_residuals(dir_dict, actions_list, experiment_name+"va_100_runs_residual", output_dir=args.output_dir, difference=False)
+    find_and_store_residuals(dir_dict, actions_list, experiment_name+"va_residual", output_dir=args.output_dir, difference=False)
     ### Just Ps
-    find_and_store_residuals(dir_dict, cleaned_values_list, experiment_name+"p_100_runs_residual", output_dir=args.output_dir, difference=False)
+    find_and_store_residuals(dir_dict, cleaned_values_list, experiment_name+"p_residual", output_dir=args.output_dir, difference=False)
     ### PriPs Residuals
-    find_and_store_residuals(dir_dict, ['Egalitarian'], experiment_name+"prip_100_runs_residual", output_dir=args.output_dir, difference=False)
+    find_and_store_residuals(dir_dict, ['Egalitarian'], experiment_name+"prip_residual", output_dir=args.output_dir, difference=False)
     # PVSs and PriPs
-    find_and_store_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'], experiment_name+"pvs_prip_100_runs_residual", output_dir=args.output_dir, difference=False)
+    find_and_store_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'], experiment_name+"pvs_prip_residual", output_dir=args.output_dir, difference=False)
 
     ## STEP 2: use dir_dict to find the mean of resiudals
     # PVS
-    find_and_store_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name + "pvs_100_runs_residual_difference",
+    find_and_store_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name + "pvs_residual_difference",
                              output_dir=args.output_dir, difference=True)
     ### Just VAs
-    find_and_store_residuals(dir_dict, actions_list, experiment_name + "va_100_runs_residual_difference",
+    find_and_store_residuals(dir_dict, actions_list, experiment_name + "va_residual_difference",
                              output_dir=args.output_dir, difference=True)
     ### Just Ps
-    find_and_store_residuals(dir_dict, cleaned_values_list, experiment_name + "p_100_runs_residual_difference",
+    find_and_store_residuals(dir_dict, cleaned_values_list, experiment_name + "p_100_dual_difference",
                              output_dir=args.output_dir, difference=True)
     ### PriPs Residuals
-    find_and_store_residuals(dir_dict, ['Egalitarian'], experiment_name + "prip_100_runs_residual_difference",
+    find_and_store_residuals(dir_dict, ['Egalitarian'], experiment_name + "prip_residual_difference",
                              output_dir=args.output_dir, difference=True)
     # PVSs and PriPs
     find_and_store_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'],
-                             experiment_name + "pvs_prip_100_runs_residual_difference", output_dir=args.output_dir,
+                             experiment_name + "pvs_prip_residual_difference", output_dir=args.output_dir,
                              difference=True)
 
     ## GINI
@@ -325,7 +328,7 @@ def plot_synth(args, experiment_name):
     plot_mean_gini(dir_dict, cleaned_values_list + actions_list + ["Egalitarian"], title=experiment_name+"pvs_prips_gini",output_dir=args.output_dir)
 
     ## Individual agents
-    """
+
     find_and_store_residuals(dir_dict, cleaned_values_list+actions_list, title=experiment_name+"pvs_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
     find_and_store_residuals(dir_dict, actions_list, title=experiment_name+"actions_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
     find_and_store_residuals(dir_dict, cleaned_values_list, title=experiment_name+"prefs_residuals_individuals_difference", output_dir=args.output_dir, difference=True)
@@ -344,7 +347,7 @@ def plot_synth(args, experiment_name):
     find_and_store_residuals(dir_dict, cleaned_values_list + actions_list + ["Egalitarian"],
                             title=experiment_name + "pvs_prips_residuals_individuals", output_dir=args.output_dir,
                             difference=False)
-    """
+
 
     return
 

@@ -82,7 +82,6 @@ def normalise_agents(df):
             min_val = 0
             max_val = 1
         if column != 'p' and column != 'country':
-            print(df[column])
             df[column]= (df[column] - min_val) / (max_val - min_val)
     return df
 
@@ -199,7 +198,7 @@ def find_and_store_residuals(dir_dict, list_of_params, title, output_dir, differ
         # create subdicts for every agent, using a default initial agents set
         _, agents = dir_dict[list(dir_dict.keys())[0]]
         lines[key] = {}
-        for i in range (0, len(agents[0])*len(dir_dict)): # Len of 1 runs agents * number of runs
+        for i in range (0, len(agents[0])): # Len of 1 runs agents
             lines[key][i] = []
 
     # Step 2: Iterate over every timestep (each [normalised_cons_sets, normalised_agents_df] in dir_dict)
@@ -207,19 +206,35 @@ def find_and_store_residuals(dir_dict, list_of_params, title, output_dir, differ
     for run, (iteration, data) in enumerate(dir_dict.items()):
         # Unpack
         normalised_cons_sets, normalised_agents = data
-        for key, cons_df in normalised_cons_sets.items():
-            for timestep_id, agent in enumerate(normalised_agents):
-                temp_residual = np.abs(
-                    agent[list_of_params].to_numpy() - cons_df.iloc[timestep_id][list_of_params].to_numpy()).sum(axis=1)
-                if difference and timestep_id > 0:
-                    previous_residual = np.abs(
-                        normalised_agents[timestep_id - 1][list_of_params].to_numpy() - cons_df.iloc[timestep_id - 1][
-                            list_of_params].to_numpy()).sum(axis=1)
-                for i in range(0, len(temp_residual)):
+        try:
+            # For every baseline method in cons_df (T, SLM, HCVA, ...)
+            for key, cons_df in normalised_cons_sets.items():
+                # For every timestep, and associated agents dataframe (normalised_agents is a list `timesteps` long, each item in the list is a dataframe of agents, with each row being an agent, and each col being a p, va, or prip.
+                for timestep_id, agent in enumerate(normalised_agents):
+                    # Find a residual and find a residual of prev. timestep.
+                    temp_residual = np.abs(
+                        agent[list_of_params].to_numpy() - cons_df.iloc[timestep_id][list_of_params].to_numpy()).sum(axis=1)
                     if difference and timestep_id > 0:
-                        lines[key][i + (run * len(agents[0]))].append(temp_residual[i] - previous_residual[i])
-                    else:
-                        lines[key][i + (run * len(agents[0]))].append(temp_residual[i])
+                        previous_residual = np.abs(
+                            normalised_agents[timestep_id - 1][list_of_params].to_numpy() - cons_df.iloc[timestep_id - 1][
+                                list_of_params].to_numpy()).sum(axis=1)
+                    # for each agent's residual, add it to lines. Each list in lines should correspond to a baseline method. Each list should correspond to a run. Each element in the list should correspond to
+                    for i in range(0, len(temp_residual)):
+                        if difference and timestep_id > 0:
+                            lines[key][i].append(temp_residual[i] - previous_residual[i])
+                        else:
+                            #print("Adding to ", key, " with agent ", i, " with residual ", temp_residual[i], ". I am iterating over all agents and methods on timestep ", timestep_id)
+                            lines[key][i].append(temp_residual[i])
+        except IndexError as e:
+            print("IndexError: ", e)
+            print("Normalised agents: ", agent)
+            print("Normalised cons sets: ", cons_df)
+            print("Iteration: ", iteration)
+            print("Run: ", run)
+            print("Key: ", key)
+            print("Timestep id: ", timestep_id)
+            raise
+
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
         print("Created directory: " + output_dir)
@@ -227,7 +242,7 @@ def find_and_store_residuals(dir_dict, list_of_params, title, output_dir, differ
         print("Directory already exists: " + output_dir)
     ## Save all of lines to CSV
     for key, agents in lines.items():
-        with open(output_dir + title + key +"violin.csv", 'w') as f:
+        with open(output_dir + title + key +"residuals.csv", 'w') as f:
             writer = csv.writer(f)
             writer.writerow(["agent_id", "points"])
             for id, list_of_points in agents.items():
