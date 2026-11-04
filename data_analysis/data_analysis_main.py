@@ -289,6 +289,7 @@ def plot_synth(args, experiment_name):
     print("Time to plot!")
     print("Cleaned values list is: ")
     print(cleaned_values_list)
+    """
     ## STEP 2: use dir_dict to find the mean of resiudals
     # PVS
     find_and_store_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name+"pvs_residual", output_dir=args.output_dir, difference=False)
@@ -318,7 +319,12 @@ def plot_synth(args, experiment_name):
     find_and_store_residuals(dir_dict, cleaned_values_list + actions_list + ['Egalitarian'],
                              experiment_name + "pvs_prip_residual_difference", output_dir=args.output_dir,
                              difference=True)
+    """
+    # Find individual timestep residuals
+    timestep_residuals(dir_dict, cleaned_values_list + actions_list, experiment_name + "pvs_timestep_residuals", output_dir=args.output_dir, difference=False)
+    
 
+    """
     ## GINI
     ### PVS
     plot_mean_gini(dir_dict, cleaned_values_list + actions_list, title=experiment_name+"pvs_gini",output_dir=args.output_dir)
@@ -347,7 +353,7 @@ def plot_synth(args, experiment_name):
     find_and_store_residuals(dir_dict, cleaned_values_list + actions_list + ["Egalitarian"],
                             title=experiment_name + "pvs_prips_residuals_individuals", output_dir=args.output_dir,
                             difference=False)
-
+    """
 
     return
 

@@ -250,6 +250,54 @@ def find_and_store_residuals(dir_dict, list_of_params, title, output_dir, differ
                 writer.writerow(row)
     return
 
+def timestep_residuals(dir_dict, list_of_params, title, output_dir, difference):
+    """
+    Save every agent residual in a separate timestep column for each method.
+
+    Residuals from all runs are appended to the corresponding timestep column.
+    When ``difference`` is true, timestep zero contains the residual and later
+    timesteps contain the change from the previous timestep.
+    """
+    residuals_by_method = {}
+
+    for iteration, (normalised_cons_sets, normalised_agents) in dir_dict.items():
+        for key, cons_df in normalised_cons_sets.items():
+            timestep_residuals_for_method = residuals_by_method.setdefault(key, [])
+
+            for timestep_id, agents_df in enumerate(normalised_agents):
+                while len(timestep_residuals_for_method) <= timestep_id:
+                    timestep_residuals_for_method.append([])
+
+                residuals = np.abs(
+                    agents_df[list_of_params].to_numpy()
+                    - cons_df.iloc[timestep_id][list_of_params].to_numpy()
+                ).sum(axis=1)
+
+                if difference and timestep_id > 0:
+                    previous_residuals = np.abs(
+                        normalised_agents[timestep_id - 1][list_of_params].to_numpy()
+                        - cons_df.iloc[timestep_id - 1][list_of_params].to_numpy()
+                    ).sum(axis=1)
+                    residuals = residuals - previous_residuals
+
+                timestep_residuals_for_method[timestep_id].extend(
+                    float(residual) for residual in residuals
+                )
+
+    os.makedirs(output_dir, exist_ok=True)
+    for key, residuals_per_timestep in residuals_by_method.items():
+        filename = os.path.join(output_dir, f"{title}{key}residuals.csv")
+        with open(filename, "w", newline="") as output_file:
+            writer = csv.writer(output_file)
+            writer.writerow(
+                [f"timestep_{timestep_id}" for timestep_id in range(len(residuals_per_timestep))]
+            )
+            for row_id in range(max(map(len, residuals_per_timestep), default=0)):
+                writer.writerow([
+                    residuals[row_id] if row_id < len(residuals) else ""
+                    for residuals in residuals_per_timestep
+                ])
+
 def plot_mean_gini(dir_dict, list_of_params, title, output_dir):
     """Plots a line graph. Each line is the mean residual of a method over time. By time, we mean the varying of a parameter (e.g. increasing mu_p and mu_va).
             INPUTS:
