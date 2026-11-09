@@ -44,7 +44,8 @@ def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_
     _, _, cons_act_1 = aggregate_one(P_list, J_list, w, 1, False)
     cons_act_1 = cons_act_1[:len(cons_act_1) // 2]
     # For each agent, find their residual to the egalitarian (inf) and utilitarian (1) consensus.
-    # Minimising strategy: assign the PrIP whose consensus is closest to the agent's own preferences.
+    # Maximising strategy: assign the PrIP whose consensus is closest to the agent's own preferences.
+    #    If not maximising, always be utilitarian
     # If the egalitarian consensus is closer (inf_diff < ones_diff), centre PrIP on 1 (high egalitarian).
     # If the utilitarian consensus is closer, centre PrIP on 0.
     prips = {}
@@ -63,6 +64,7 @@ def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_
             a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
             prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)
         else:
+            # Find some value close to 0 (utilitarian) that is truncated to be between 0 and 1.
             loc = 0
             a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
             prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)

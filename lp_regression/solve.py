@@ -36,6 +36,7 @@ def L1(A, b):
     prob = cp.Problem(cp.Minimize(cost), constraints)
     # optimise model
     prob.solve(solver='ECOS', verbose=False, solver_verbose=False)
+
     cons = list(x.value)
     cons = np.array(cons)
     obj = prob.value
@@ -71,7 +72,7 @@ def Linf(A, b):
     prob = cp.Problem(cp.Minimize(t), constraints)
     # optimise model
     prob.solve(solver='ECOS', verbose=False, solver_verbose=False)
-    # prob.solve(solver='GLPK', verbose=True)
+    # prob.solve(solver='GLPK', verbose=False)
     cons = list(x.value)
     cons = np.array(cons)
     obj = prob.value
@@ -150,7 +151,8 @@ def Lp_norm(A,b,p, v):
     cost = cp.pnorm(A @ x - b, p)
     prob = cp.Problem(cp.Minimize(cost))
     #print("Lp_norm solving")
-    prob.solve(solver='GUROBI', Threads=int(os.environ.get("GUROBI_THREADS", 1)), verbose=True)
+    print("Solving Lp problem with GUROBI solver...")
+    prob.solve(solver='GUROBI', Threads=int(os.environ.get("GUROBI_THREADS", 1)), verbose=False)
     return prob.value
 
 def mLp(A, b, ps, λs, weight=False):
@@ -168,6 +170,7 @@ def mLp(A, b, ps, λs, weight=False):
     #print("My ps are: ", ps)
     #import time
     #start = time.time()
+    print("Solving mLp problem with CLARABEL solver...")
     prob.solve(solver="CLARABEL",
                verbose=False,
                warm_start=True,
@@ -480,7 +483,7 @@ def aggregate_slm(P_list, J_list, w, list_of_ps, v, jlmain):
         print("b min/max:", np.min(np.asarray(b, dtype=float)), np.max(np.asarray(b, dtype=float)))
         print("Type of min:", type(np.min(np.asarray(A, dtype=float)).item()))
     # Aggregate over all principles together using the matrix
-    cons, _, _, _ = mLp(A, b, ps, λs, False)
+    cons, _, _, _ = mLp(A, b, ps, λs, True)
     return list_of_ps, _, cons
 
 def aggregate_inf(P_list, J_list, w, p, v):

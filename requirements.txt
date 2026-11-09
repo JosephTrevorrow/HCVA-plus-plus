@@ -2,6 +2,7 @@ pandas
 argparse
 numpy
 scikit-learn
+scipy
 juliapkg
 juliacall
 matplotlib
