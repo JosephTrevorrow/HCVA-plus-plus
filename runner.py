@@ -80,13 +80,14 @@ def run_experiment(task):
         print(type(cons_act))
         rows.append(["T", p, u_pref, u_act] + list(cons_pref) + list(cons_act) + [t_point, t_point, 0.5])
         print("DONE!")
+        
         ## SLM
         p, _, cons_pref, _, cons_act, converted_principles = find_slm_and_aggregate(P_list, J_list, w, prip_df, t_point,
                                                                                     args, jlmain=_JL_MAIN)
         ## Chop off half of cons_act, as output format has VA_p, and then VA_n. We are not interested in N, so we disregard
         cons_act = cons_act[:len(cons_act) // 2]
-        rows.append(["SLM", p, _, _,] + list(cons_pref) + list(cons_act) + [0, converted_principles, 0, ])
-
+        rows.append(["SLM_REWEIGHTED", p, _, _,] + list(cons_pref) + list(cons_act) + [0, converted_principles, 0, ])
+        """
         ## HCVA
         p, u_pref, u_act, cons_pref, cons_act, con_p = find_hcva_and_aggregate(P_list, J_list, w, prip_df, args, jlmain=_JL_MAIN)
         # output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
@@ -123,6 +124,7 @@ def run_experiment(task):
             else:
                 rows.append([p, p, u_pref, u_act] + list(cons_pref) + list(cons_act) + [0, p, 0])
                 # save_metadata(filename_metadata, args, 0, p, p, output_dir)
+        """
         # Save the rows to a csv.
         header = ['NAME', 'p', 'U_pref', 'u_act', ] + values_list + actions_list + ['transition_p', 'consensus_p',
                                                                             'consensus_preference']
@@ -173,7 +175,7 @@ if __name__ == '__main__':
         #print("looking at pvs_dir: ", pvs_dir)
         # make an output dir for this:
         pvs_name = pvs_dir.split("/")[2]
-        output_dir = "results_TEMP_EXP/"+pvs_name+"/"
+        output_dir = "results_SLM_REWEIGHTED/"+pvs_name+"/"
         os.makedirs(output_dir, exist_ok=True)
         all_dirs = sort_nicely(os.listdir(pvs_dir))
         for idx, current_dir in enumerate(all_dirs):
