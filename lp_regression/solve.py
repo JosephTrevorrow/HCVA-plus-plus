@@ -151,8 +151,11 @@ def Lp_norm(A,b,p, v):
     cost = cp.pnorm(A @ x - b, p)
     prob = cp.Problem(cp.Minimize(cost))
     #print("Lp_norm solving")
-    print("Solving Lp problem with GUROBI solver...")
-    prob.solve(solver='GUROBI', Threads=int(os.environ.get("GUROBI_THREADS", 1)), verbose=False)
+    print("Solving Lp problem with CLARABEL solver...")
+    prob.solve(solver="CLARABEL",
+               verbose=False,
+               warm_start=True,
+               max_threads=int(os.environ.get("CVXPY_THREADS", 1)),)
     return prob.value
 
 def mLp(A, b, ps, λs, weight=False):
