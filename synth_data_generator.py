@@ -55,19 +55,35 @@ def generate_prips(agent_ids, ps, vas, pvs_filename, n_values, n_actions, sigma_
         ones_diff = np.abs(cons_pref_1 - ps[agent].flatten()).sum() + np.abs(cons_act_1 - vas_flat).sum()
         a_trunc = 0
         b_trunc = 1
-        if inf_diff < ones_diff and maximise:
-            # if we want egal to be closer to 1
-            # loc and scale are just mean and std for normal.
-            # We start with mu = p, scale = 0.08.
-            #   To truncate this, you have to normalise this. truncnorm expects the trunc points to be stds away from the mean, rather than points on the x-axis
-            loc = 1
-            a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
-            prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)
+        if maximise:
+            if inf_diff < ones_diff and maximise:
+                # if we want egal to be closer to 1
+                # loc and scale are just mean and std for normal.
+                # We start with mu = p, scale = 0.08.
+                #   To truncate this, you have to normalise this. truncnorm expects the trunc points to be stds away from the mean, rather than points on the x-axis
+                loc = 1
+                a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
+                prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)
+            else:
+                # Find some value close to 0 (utilitarian) that is truncated to be between 0 and 1.
+                loc = 0
+                a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
+                prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)
         else:
-            # Find some value close to 0 (utilitarian) that is truncated to be between 0 and 1.
-            loc = 0
-            a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
-            prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)
+            ## If we are minimising, we want the exact same logic, but reversed. If the egalitarian consensus is closer, we want to be utilitarian (0). If the utilitarian consensus is closer, we want to be egalitarian (1).
+            if inf_diff < ones_diff:
+                # if we want egal to be closer to 1, but we are minimising, we put loc as 0
+                # loc and scale are just mean and std for normal.
+                # We start with mu = p, scale = 0.08.
+                #   To truncate this, you have to normalise this. truncnorm expects the trunc points to be stds away from the mean, rather than points on the x-axis
+                loc = 0
+                a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
+                prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)
+            else:
+                # opposite again.
+                loc = 1
+                a, b = (a_trunc - loc) / sigma_prip, (b_trunc - loc) / sigma_prip
+                prip = truncnorm.rvs(a, b, loc=loc, scale=sigma_prip, size=1, random_state=rng)
         np.clip(prip, 0, 1, out=prip)
         prips[agent] = prip[0]
     return prips
@@ -276,7 +292,7 @@ def generate_randoms(n_values, n_actions, n_agents,  pvs_filename="default", pri
 if __name__ == "__main__":
     output_dir = "value_systems/Synthetic/"
     for run in range(500):
-        """
+        
         ### Initial: agents, values, actions
         for ag in range(2, 30,1):
             generate(n_values=4, n_actions=2, n_agents=ag, sigma_prip=0.5, p_group_factor=0.5,
@@ -287,6 +303,7 @@ if __name__ == "__main__":
         for act in range(1, 10, 1):
             generate(n_values=4, n_actions=act, n_agents=30, sigma_prip=0.5, p_group_factor=0.5,
                      mu_p=0.85, va_mu=0.85, maximise=True, pvs_filename="vary_actions_" + str(act), prip_filename="vary_actions_" + str(act), pvs_output_dir=output_dir+"vary_acts/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_acts/PriP/"+str(run)+"/")
+        
         """
         ## MAJ/MIN SPLIT
         grp_facts = np.linspace(0.5, 1, 10)
@@ -309,14 +326,15 @@ if __name__ == "__main__":
         
         ## What if every person is completely random?
         generate_randoms(n_values=4, n_actions=2, n_agents=30, pvs_filename="randoms", prip_filename="randoms", pvs_output_dir=output_dir+"randoms/PVS/"+str(run)+"/", prip_output_dir=output_dir+"randoms/PriP/"+str(run)+"/")
-
+        """
         ## What if every person minimised their PriP strategy?
         sigma_prips = np.linspace(0, 1, 10)
         sigma_prips = np.delete(sigma_prips, 0)
         for sigma_prip in sigma_prips:
             generate(n_values=4, n_actions=2, n_agents=30, sigma_prip=sigma_prip, p_group_factor=0.5,
-                     mu_p=0.85, va_mu=0.85, maximise=False, pvs_filename="vary_sigma_prip_MINIMISE"+str(sigma_prip), prip_filename="vary_sigma_prip_MINIMISE"+str(sigma_prip), pvs_output_dir=output_dir+"vary_sigma_prip_MINIMISE/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_sigma_prip_MINIMISE/PriP/"+str(run)+"/")
+                     mu_p=0.85, va_mu=0.85, maximise=False, pvs_filename="vary_sigma_prip_minimise_strategy"+str(sigma_prip), prip_filename="vary_sigma_prip_minimise_strategy"+str(sigma_prip), pvs_output_dir=output_dir+"vary_sigma_prip_minimise_strategy/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_sigma_prip_minimise_strategy/PriP/"+str(run)+"/")
 
+        """
         ## What if there are varying sizes of groups A and B for $PriP$ selection, having no $PVS-PriP$ alignment with agents' $PVS$.
         prip_grp_facts = np.linspace(0, 1, 10)
         prip_grp_facts = np.delete(prip_grp_facts, 0)
@@ -324,3 +342,4 @@ if __name__ == "__main__":
             generate(n_values=4, n_actions=2, n_agents=30, sigma_prip=0.5, p_group_factor=0.5,
                      mu_p=0.85, va_mu=0.85, maximise=False, pvs_filename="vary_prip_grp_fact"+str(prip_grp_fact), prip_filename="vary_prip_grp_fact"+str(prip_grp_fact), pvs_output_dir=output_dir+"vary_prip_grp_fact/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_prip_grp_fact/PriP/"+str(run)+"/",
                      prip_groups=True, prip_group_factor=prip_grp_fact)
+        """
