@@ -220,14 +220,15 @@ if __name__ == '__main__':
     julia_init()
 
     # non-parallel
-    """
+    
     for task in tasks:
         run_experiment(task)
-    """
+    
     """ The parallelisation bit """
     # 'spawn' (not the Linux default 'fork') is required: each worker boots
     # its own independent Julia runtime in _worker_init, and forking a
     # process that already has Julia loaded is unsupported.
+    """
     ctx = mp.get_context('spawn')
     failures = []
     with ctx.Pool(processes=n_workers, initializer=julia_init) as pool:
@@ -241,3 +242,4 @@ if __name__ == '__main__':
     os.makedirs("results", exist_ok=True)
     with open(f"results/failures_rank{rank}.json", "w") as f:
         json.dump(failures, f, indent=2)
+    """
