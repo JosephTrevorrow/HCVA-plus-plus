@@ -275,6 +275,7 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args, j
     #    _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e, jlmain)
     # 1.3 Given the transition point (best_p), find the consensus p by finding the
     # p the relative distance away from the transition point.
+    _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e, jlmain)
     consensus_p = pow(transition_p, (2 * consensus_preference))
     # Round to 2 d.p. for fairness
     consensus_p = round(consensus_p, 2)
@@ -293,6 +294,7 @@ def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args, jlmai
     # Convert the principles (which are preferences) into numbers (need to first find transition point)
     #if transition_p is None:
     #    _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e, jlmain)
+    _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e, jlmain)
     converted_principles = []
     for principle in principle_preferences:
         # Find p by finding the p the relative distance away from the transition point.
