@@ -211,10 +211,10 @@ if __name__ == '__main__':
                               pvs_sets[i], pvs_sets_0, prip_sets[i], n_values, n_actions))
 
     # Now I've found all the tasks, chop off the ones the other processes are doing
-    tasks = tasks[rank::world_size]
+    #tasks = tasks[rank::world_size]
 
-    n_workers = args.n_workers or int(os.environ.get('SLURM_CPUS_PER_TASK', mp.cpu_count()))
-    print(f"[rank {rank}/{world_size}] Running {len(tasks)} task(s) across {n_workers} worker process(es)")
+    #n_workers = args.n_workers or int(os.environ.get('SLURM_CPUS_PER_TASK', mp.cpu_count()))
+    #print(f"[rank {rank}/{world_size}] Running {len(tasks)} task(s) across {n_workers} worker process(es)")
     
     #boot julia first to warm up
     julia_init()
