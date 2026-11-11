@@ -142,7 +142,7 @@ function pNorm(ϵ,A,b,p,C,d, x, lb)
 
     # Check if the initial solution is 0. In that case return 0.
     if current^p ==0					                             	
-        #println("Norm = 0")
+        println("Norm = 0")
         #println("Max gradient entry:", max_gradient_entry)
         return x
     end

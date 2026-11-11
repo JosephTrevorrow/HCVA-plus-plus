@@ -3,6 +3,7 @@ import copy
 import csv
 
 import sys
+from time import time
 
 import numpy as np
 import os
@@ -151,7 +152,6 @@ def Lp_norm(A,b,p, v):
     cost = cp.pnorm(A @ x - b, p)
     prob = cp.Problem(cp.Minimize(cost))
     #print("Lp_norm solving")
-    print("Solving Lp problem with CLARABEL solver...")
     prob.solve(solver="CLARABEL",
                verbose=False,
                warm_start=True,
@@ -193,8 +193,9 @@ def mLp(A, b, ps, λs, weight=False):
 
 def find_transition_and_aggregate(P_list, J_list, w, output_dir, filename_limits, e, args, jlmain):
     """ Compute the transition point, and find an aggregation with that transition point P """
+    start_time = time()
     # 1. Compute transition point
-    p_list, dist_p_list, dist_inf_list, diff_list, t_point = transition_point(P_list, J_list, w, e, jlmain)
+    p_list, dist_p_list, dist_inf_list, diff_list, t_point, = transition_point(P_list, J_list, w, e, jlmain)
     #limit_output(
     #    p_list,
     #    dist_p_list,
@@ -205,10 +206,12 @@ def find_transition_and_aggregate(P_list, J_list, w, output_dir, filename_limits
     # 2. Aggregate and store to a file.
     p, u_pref, cons_pref = aggregate(P_list, J_list, w, t_point, True, jlmain)
     _, u_act, cons_act = aggregate(P_list, J_list, w, t_point, False, jlmain)
-    return p, u_pref, cons_pref, u_act, cons_act, t_point
+    sol_time = time() - start_time
+    return p, u_pref, cons_pref, u_act, cons_act, t_point, sol_time
 
 def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args, jlmain):
     # 1. Formalise the principle preferences as matrices
+    start_time = time()
     Pri_P_list, _, Pri_w, Pri_Country_dict = principle_formalisation_objs(
         prip_df, weights=args.w)
     # 2. Aggregate over all principle preferences
@@ -253,10 +256,12 @@ def find_hcva_and_aggregate(P_list, J_list, w, prip_df, args, jlmain):
     #print("Nearest P to mean con_vals is: ", con_p)
     p, u_pref, cons_pref = aggregate(P_list, J_list, w, con_p, True, jlmain)
     _, u_act, cons_act = aggregate(P_list, J_list, w, con_p, False, jlmain)
-    return p, u_pref, u_act, cons_pref, cons_act, con_p
+    sol_time = time() - start_time
+    return p, u_pref, u_act, cons_pref, cons_act, con_p, sol_time
 
 def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args, jlmain):
     """ Compute the HCVA++ consensus principle, and find an aggregation with that consensus principle P """
+    start_time = time()
     # 1. Find the consensus principle $p$
     # 1.1 Find the consensus principle preference
     principle_preferences = prip_df["Egalitarian"].astype("float").values.tolist()
@@ -278,12 +283,14 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args, j
     # using the average rule as described in the paper. Do this twice, once for vals, other for action judgements
     p, u_pref, cons_pref = aggregate(P_list, J_list, w, consensus_p, True, jlmain)
     _, u_act, cons_act = aggregate(P_list, J_list, w, consensus_p, False, jlmain)
-    return p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference
+    sol_time = time() - start_time
+    return p, u_pref, cons_pref, u_act, cons_act, consensus_p, transition_p, consensus_preference, sol_time
 
 def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args, jlmain):
     """ Compute aggregation with Salas-Molina et al. baseline (Many P's) """
+    start_time = time()
     principle_preferences = prip_df["Egalitarian"].astype("float").values.tolist()
-    # Convert the principles (which are preferences) into numbers (need to first find transition point
+    # Convert the principles (which are preferences) into numbers (need to first find transition point)
     if transition_p is None:
         _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e, jlmain)
     converted_principles = []
@@ -296,7 +303,8 @@ def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args, jlmai
         converted_principles.append(float(converted_p))
     p, _, cons_pref = aggregate_slm(P_list, J_list, w, converted_principles, True, jlmain)
     _, _, cons_act = aggregate_slm(P_list, J_list, w, converted_principles, False, jlmain)
-    return p, _, cons_pref, _, cons_act, converted_principles
+    sol_time = time() - start_time
+    return p, _, cons_pref, _, cons_act, converted_principles, sol_time
 
 def transition_point(P_list, J_list, w, e, jlmain):
     """
@@ -342,8 +350,6 @@ def transition_point(P_list, J_list, w, e, jlmain):
         # Go to at least 3. SLM note that p >= 3 is not significantly different to p = \infty
         if i > 5.0:
             #abs(dist_1p - dist_pl) < e and best_p = i
-            if __debug__:
-                print('Not improving anymore, stopping!')
             # Stop this for performance.
             return p_list, dist_p_list, dist_inf_list, diff_list, best_p
         else:
