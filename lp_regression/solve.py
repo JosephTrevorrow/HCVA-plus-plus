@@ -271,8 +271,8 @@ def find_hcva_pp_and_aggregate(P_list, J_list, w, prip_df, transition_p, args, j
     consensus_preference = round(consensus_preference, 2)
     #print("HCVA++ Consensus preference is: ", consensus_preference)
     # 1.2 Aggregate personal values/action judgements to find the transition point - Not needed if t_point provided
-    if transition_p is None:
-        _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e, jlmain)
+    #if transition_p is None:
+    #    _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e, jlmain)
     # 1.3 Given the transition point (best_p), find the consensus p by finding the
     # p the relative distance away from the transition point.
     consensus_p = pow(transition_p, (2 * consensus_preference))
@@ -291,8 +291,8 @@ def find_slm_and_aggregate(P_list, J_list, w, prip_df, transition_p, args, jlmai
     start_time = time()
     principle_preferences = prip_df["Egalitarian"].astype("float").values.tolist()
     # Convert the principles (which are preferences) into numbers (need to first find transition point)
-    if transition_p is None:
-        _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e, jlmain)
+    #if transition_p is None:
+    #    _, _, _, _, transition_p = transition_point(P_list, J_list, w, args.e, jlmain)
     converted_principles = []
     for principle in principle_preferences:
         # Find p by finding the p the relative distance away from the transition point.

@@ -12,8 +12,13 @@ import os
 from collections import defaultdict
 
 ## SEED USED IN ALL EXP.
-seed = 4832095623890
+#seed = 4832095623890
+#rng = np.random.default_rng(seed)
+
+## SEED USED IN COMPLEXITY EXP.
+seed = 6738910547833
 rng = np.random.default_rng(seed)
+
 
 def generate_prips_groupings(agent_ids, n_values, sigma_prip, p_group_factor):
     prips = {}
@@ -95,7 +100,7 @@ def generate_random_prips(agent_ids):
             prips[agent] = rng.random()
         return prips
 
-def generate_ps(agent_ids, n_values, mu=0.75, p_group_factor=0.5):
+def generate_ps(agent_ids, n_values, mu=0.75, p_group_factor=0.5, sigma=0.05):
     agent_ps = defaultdict(lambda: np.empty(shape=(1,n_values)))
     # Assign values to groups
     values_list = [i for i in range(n_values)]
@@ -106,11 +111,11 @@ def generate_ps(agent_ids, n_values, mu=0.75, p_group_factor=0.5):
     # Find strengths for each agent, considering their group and the values that group holds.
     for agent in agent_ids:
         if agent in group_a:
-            samples_a= rng.normal(mu, 0.05, len(strong_vals_group_a))
-            samples_b = rng.normal(1-mu, 0.05, len(values_list)-len(strong_vals_group_a))
+            samples_a= rng.normal(mu, sigma, len(strong_vals_group_a))
+            samples_b = rng.normal(1-mu, sigma, len(values_list)-len(strong_vals_group_a))
         else:
-            samples_a = rng.normal(1-mu, 0.05, len(strong_vals_group_a))
-            samples_b = rng.normal(mu, 0.05, len(values_list)-len(strong_vals_group_a))
+            samples_a = rng.normal(1-mu, sigma, len(strong_vals_group_a))
+            samples_b = rng.normal(mu, sigma, len(values_list)-len(strong_vals_group_a))
         # Save these samples in the right order
         for k in range(0, n_values):
             if k in strong_vals_group_a:
@@ -132,7 +137,7 @@ def generate_ps(agent_ids, n_values, mu=0.75, p_group_factor=0.5):
         agent_ps[agent] = copy.deepcopy(diff_norm)
     return agent_ps
 
-def generate_vas(agent_ids, n_values, n_actions, va_mu):
+def generate_vas(agent_ids, n_values, n_actions, va_mu, sigma=0.05):
     """Generates action judgements for certain actions and preferences, returns as a dict of agents/vas"""
     # Assign actions to values
     values_list = [i for i in range(n_values)]
@@ -149,10 +154,10 @@ def generate_vas(agent_ids, n_values, n_actions, va_mu):
             for value in values_list:
                 if value in promoted_values:
                     # Promoted, so must be closer to 1
-                    va_temp = rng.normal(va_mu, 0.05)
+                    va_temp = rng.normal(va_mu, sigma)
                 else:
                     # Demoted, so must be closer to -1
-                    va_temp = rng.normal(-va_mu, 0.05)
+                    va_temp = rng.normal(-va_mu, sigma)
                 va = np.append(va, copy.deepcopy(va_temp))
             np.clip(va, -1, 1, out=va)
             agent_vas[agent] = np.append(agent_vas[agent], [copy.deepcopy(va)], axis=0)
@@ -247,7 +252,7 @@ def save_prips(prips, agents_ids, filename, output_dir):
     return
 
 def generate(n_values, n_actions, n_agents, sigma_prip=0.3,p_group_factor=0.5,
-             mu_p=0.75, va_mu=0.75, maximise=True, pvs_filename="default", prip_filename="default", pvs_output_dir="", prip_output_dir="", prip_groups=False, prip_group_factor=0.5):
+             mu_p=0.75, va_mu=0.75, sigma_p=0.05, sigma_va=0.05, maximise=True, pvs_filename="default", prip_filename="default", pvs_output_dir="", prip_output_dir="", prip_groups=False, prip_group_factor=0.5):
     """Generates a synthetic data distribution.
     - n_values: number of values
     - n_actions: number of actions
@@ -261,10 +266,10 @@ def generate(n_values, n_actions, n_agents, sigma_prip=0.3,p_group_factor=0.5,
 
     ## Step 1: Sample from a normal distribution to find the strength of values for every agent - Generating P strength.
     # Then, convert these strengths to pairwise preferences
-    ps = generate_ps(agent_ids, n_values, mu_p, p_group_factor)
+    ps = generate_ps(agent_ids, n_values, mu_p, p_group_factor, sigma_p)
     ## Step 1.2: Given the number of actions and values, randomly assign an action 1 or more values it promotes.
     # The remaining values are demoted. This can always be random.
-    vas = generate_vas(agent_ids, n_values, n_actions, va_mu)
+    vas = generate_vas(agent_ids, n_values, n_actions, va_mu, sigma_va)
     ## Step 1.3 Given the ps and vas, save the pvs to a csv.
     pvs_dir = save_pvs(ps, vas, agent_ids, n_values, n_actions, pvs_filename, pvs_output_dir)
 
@@ -291,8 +296,8 @@ def generate_randoms(n_values, n_actions, n_agents,  pvs_filename="default", pri
 
 if __name__ == "__main__":
     output_dir = "value_systems/Synthetic/"
-    for run in range(500):
-        
+    #for run in range(500):
+    """
         ### Initial: agents, values, actions
         for ag in range(2, 30,1):
             generate(n_values=4, n_actions=2, n_agents=ag, sigma_prip=0.5, p_group_factor=0.5,
@@ -304,7 +309,7 @@ if __name__ == "__main__":
             generate(n_values=4, n_actions=act, n_agents=30, sigma_prip=0.5, p_group_factor=0.5,
                      mu_p=0.85, va_mu=0.85, maximise=True, pvs_filename="vary_actions_" + str(act), prip_filename="vary_actions_" + str(act), pvs_output_dir=output_dir+"vary_acts/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_acts/PriP/"+str(run)+"/")
         
-        """
+        
         ## MAJ/MIN SPLIT
         grp_facts = np.linspace(0.5, 1, 10)
         for grp_fact in grp_facts:
@@ -326,7 +331,6 @@ if __name__ == "__main__":
         
         ## What if every person is completely random?
         generate_randoms(n_values=4, n_actions=2, n_agents=30, pvs_filename="randoms", prip_filename="randoms", pvs_output_dir=output_dir+"randoms/PVS/"+str(run)+"/", prip_output_dir=output_dir+"randoms/PriP/"+str(run)+"/")
-        """
         ## What if every person minimised their PriP strategy?
         sigma_prips = np.linspace(0, 1, 10)
         sigma_prips = np.delete(sigma_prips, 0)
@@ -334,7 +338,7 @@ if __name__ == "__main__":
             generate(n_values=4, n_actions=2, n_agents=30, sigma_prip=sigma_prip, p_group_factor=0.5,
                      mu_p=0.85, va_mu=0.85, maximise=False, pvs_filename="vary_sigma_prip_minimise_strategy"+str(sigma_prip), prip_filename="vary_sigma_prip_minimise_strategy"+str(sigma_prip), pvs_output_dir=output_dir+"vary_sigma_prip_minimise_strategy/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_sigma_prip_minimise_strategy/PriP/"+str(run)+"/")
 
-        """
+     
         ## What if there are varying sizes of groups A and B for $PriP$ selection, having no $PVS-PriP$ alignment with agents' $PVS$.
         prip_grp_facts = np.linspace(0, 1, 10)
         prip_grp_facts = np.delete(prip_grp_facts, 0)
@@ -343,3 +347,14 @@ if __name__ == "__main__":
                      mu_p=0.85, va_mu=0.85, maximise=False, pvs_filename="vary_prip_grp_fact"+str(prip_grp_fact), prip_filename="vary_prip_grp_fact"+str(prip_grp_fact), pvs_output_dir=output_dir+"vary_prip_grp_fact/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_prip_grp_fact/PriP/"+str(run)+"/",
                      prip_groups=True, prip_group_factor=prip_grp_fact)
         """
+    ## Space and time complexity experiments
+    ### Increase number of values/actions/agents - Can methods handle bigger matrices?
+    for mult in [1, 2, 3, 4, 5]:
+        generate(n_values=4*mult, n_actions=2*mult, n_agents=30*mult, sigma_prip=0.5, p_group_factor=0.5,
+                    mu_p=0.85, va_mu=0.85, maximise=True, pvs_filename="vary_space_time_complexity_size"+str(mult), prip_filename="vary_space_time_complexity_size"+str(mult), pvs_output_dir=output_dir+"vary_space_time_complexity_size/PVS/"+str(1)+"/", prip_output_dir=output_dir+"vary_space_time_complexity_size/PriP/"+str(1)+"/")
+    ### Increase the spread of values, actions, prips. - Can methods handle more extreme values?
+    mus = [0.6, 0.7, 0.8, 0.9, 1]
+    sigmas = [0.25, 0.2, 0.15, 0.1, 0.05]
+    for mu, sigma in zip(mus, sigmas):
+        generate(n_values=4, n_actions=2, n_agents=30, sigma_prip=sigma, p_group_factor=0.5,
+                    mu_p=mu, va_mu=mu, sigma_p=sigma, sigma_va=sigma, maximise=True, pvs_filename="vary_space_time_complexity_extremes"+str(mu), prip_filename="vary_space_time_complexity_extremes"+str(mu), pvs_output_dir=output_dir+"vary_space_time_complexity_extremes/PVS/"+str(1)+"/", prip_output_dir=output_dir+"vary_space_time_complexity_extremes/PriP/"+str(1)+"/") 

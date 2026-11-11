@@ -1,4 +1,6 @@
 import argparse as ap
+
+from yaml import warnings
 from lp_regression.solve import *
 import lp_regression.matrices as matrices
 from datetime import date
@@ -57,6 +59,10 @@ def run_experiment(task):
     (args, current_dir, i, now, output_dir, pvs_set, pvs_set_0, prip_set, n_values, n_actions) = task
     tag = f"[{current_dir} / run {i}]"
     try:
+        ## SUPPRESS WARNINGS FOR SPEEDTEST
+        import warnings
+        warnings.filterwarnings("ignore")
+        
         global _JL_MAIN
         ## PVS
         P_list, J_list, w, country_dict = FormalisationObjects(filename=pvs_set, delimiter=',', weights=args.w,
