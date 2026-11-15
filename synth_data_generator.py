@@ -222,7 +222,7 @@ def save_pvs(ps, vas, agents_ids, n_values, n_acts, filename, output_dir):
             for i in range(n_values):
                 for j in range(n_values):
                     row.append(float(P[i, j]))
-            # Ensure n_values and n_acts are being used the same when writing columns. Value first is how ESS data is constructed, so we copy this.
+            # Ensure n_values and n_acts are being used the same when writing columns. Value first is how plots-synthetic-ESS data is constructed, so we copy this.
             for i in range(n_values):
                 for k in range(n_acts):
                     # Generate vas generates vas action major, although we want to store it value major.

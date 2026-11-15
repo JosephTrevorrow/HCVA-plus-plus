@@ -180,7 +180,7 @@ if __name__ == '__main__':
         #print("looking at pvs_dir: ", pvs_dir)
         # make an output dir for this:
         pvs_name = pvs_dir.split("/")[2]
-        output_dir = "results_time_complexity/"+pvs_name+"/"
+        output_dir = "results-time_complexity/"+pvs_name+"/"
         os.makedirs(output_dir, exist_ok=True)
         all_dirs = sort_nicely(os.listdir(pvs_dir))
         for idx, current_dir in enumerate(all_dirs):
@@ -239,7 +239,7 @@ if __name__ == '__main__':
 
     print(f"Finished. {len(tasks) - len(failures)}/{len(tasks)} succeeded.")
     print("saving fails now...")
-    os.makedirs("results", exist_ok=True)
-    with open(f"results/failures_rank{rank}.json", "w") as f:
+    os.makedirs("results-synthetic", exist_ok=True)
+    with open(f"results-synthetic/failures_rank{rank}.json", "w") as f:
         json.dump(failures, f, indent=2)
     """

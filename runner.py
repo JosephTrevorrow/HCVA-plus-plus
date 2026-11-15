@@ -86,8 +86,8 @@ def run_experiment(task):
                                                                                     args, jlmain=_JL_MAIN)
         ## Chop off half of cons_act, as output format has VA_p, and then VA_n. We are not interested in N, so we disregard
         cons_act = cons_act[:len(cons_act) // 2]
+        # NOTE: SLM vs SLM_REWEIGHTED. The only change is that the SLM baseline has the reweighting set to True. This can be found in `lp_regression/solve.py/mLp`
         rows.append(["SLM_REWEIGHTED", p, _, _,] + list(cons_pref) + list(cons_act) + [0, converted_principles, 0, ])
-        """
         ## HCVA
         p, u_pref, u_act, cons_pref, cons_act, con_p = find_hcva_and_aggregate(P_list, J_list, w, prip_df, args, jlmain=_JL_MAIN)
         # output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir)
@@ -124,7 +124,6 @@ def run_experiment(task):
             else:
                 rows.append([p, p, u_pref, u_act] + list(cons_pref) + list(cons_act) + [0, p, 0])
                 # save_metadata(filename_metadata, args, 0, p, p, output_dir)
-        """
         # Save the rows to a csv.
         header = ['NAME', 'p', 'U_pref', 'u_act', ] + values_list + actions_list + ['transition_p', 'consensus_p',
                                                                             'consensus_preference']
@@ -233,6 +232,6 @@ if __name__ == '__main__':
 
     print(f"Finished. {len(tasks) - len(failures)}/{len(tasks)} succeeded.")
     print("saving fails now...")
-    os.makedirs("results", exist_ok=True)
-    with open(f"results/failures_rank{rank}.json", "w") as f:
+    os.makedirs("results-synthetic", exist_ok=True)
+    with open(f"results-synthetic/failures_rank{rank}.json", "w") as f:
         json.dump(failures, f, indent=2)

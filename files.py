@@ -19,7 +19,7 @@ def save_metadata(filename, args, transition_p=None, consensus_p=None, consensus
     return None
 
 def output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, actions_list, output_dir=""):
-    """This function writes the results of solving the lp-regression for a single p"""
+    """This function writes the results-synthetic of solving the lp-regression for a single p"""
     csv_rows = []
     header = ['p', 'U_pref', 'u_act'] + values_list + actions_list
     csv_rows.append(header)
@@ -42,7 +42,7 @@ def output_single(p, u_pref, u_act, cons_pref, cons_act, filename, values_list, 
 
 def output_file(p_list, U_list, cons_list, dist_1p_list, dist_lp_list, cons_1, cons_l, filename,values_list, actions_list):
     """
-    This function writes the results of solving the lp-regression for different p's.
+    This function writes the results-synthetic of solving the lp-regression for different p's.
     INPUT: p -- int, U -- list (Up distance function values), cons -- list of list
            (values of the consensus achieved per p), dist_1 -- list (distance from
            the consensus achieved for p=1 and the one for current p), dist_l -- list

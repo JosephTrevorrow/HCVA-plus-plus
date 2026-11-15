@@ -58,7 +58,7 @@ def process_all_country_principles(ess_df, country_col_name, values_dict):
 
 def process_all_country_values(ess_df, country_col_name, values_dict, higher_order_values_index_list, abstract):
     """
-    :param ess_df: The dataframe containing all ESS value_systems
+    :param ess_df: The dataframe containing all plots-synthetic-ESS value_systems
     :param country_col_name: typically 'cntry', the col that will state which country each row belongs to
     :param values_dict: Dict of form str(value): [question_id's that relates to each value]
     """
