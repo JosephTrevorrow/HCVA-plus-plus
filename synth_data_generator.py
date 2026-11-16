@@ -297,7 +297,6 @@ def generate_randoms(n_values, n_actions, n_agents,  pvs_filename="default", pri
 if __name__ == "__main__":
     output_dir = "value_systems/Synthetic/"
     #for run in range(500):
-    """
         ### Initial: agents, values, actions
         for ag in range(2, 30,1):
             generate(n_values=4, n_actions=2, n_agents=ag, sigma_prip=0.5, p_group_factor=0.5,
@@ -346,7 +345,7 @@ if __name__ == "__main__":
             generate(n_values=4, n_actions=2, n_agents=30, sigma_prip=0.5, p_group_factor=0.5,
                      mu_p=0.85, va_mu=0.85, maximise=False, pvs_filename="vary_prip_grp_fact"+str(prip_grp_fact), prip_filename="vary_prip_grp_fact"+str(prip_grp_fact), pvs_output_dir=output_dir+"vary_prip_grp_fact/PVS/"+str(run)+"/", prip_output_dir=output_dir+"vary_prip_grp_fact/PriP/"+str(run)+"/",
                      prip_groups=True, prip_group_factor=prip_grp_fact)
-        """
+
     ## Space and time complexity experiments
     ### Increase number of values/actions/agents - Can methods handle bigger matrices?
     for mult in [1, 2, 3, 4, 5]:
